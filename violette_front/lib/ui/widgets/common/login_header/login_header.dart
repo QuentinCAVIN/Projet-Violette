@@ -12,7 +12,7 @@ class LoginHeader extends StackedView<LoginHeaderModel> {
     LoginHeaderModel viewModel,
     Widget? child,
   ) {
-    return const SizedBox.shrink();
+    return const Placeholder(child: Text("Header"));
   }
 
   @override
