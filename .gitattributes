@@ -1,0 +1,31 @@
+# Auto detect text files and perform LF normalization
+*        text=auto eol=lf
+# Always perform LF normalization on these files
+*.dart   text eol=lf
+*.gradle text eol=lf
+*.html   text eol=lf
+*.java   text eol=lf
+*.json   text eol=lf
+*.md     text eol=lf
+*.py     text eol=lf
+*.sh     text eol=lf
+*.txt    text eol=lf
+*.xml    text eol=lf
+*.yaml   text eol=lf
+# Make sure that these Windows files always have CRLF line endings in checkout
+*.bat             text eol=crlf
+*.ps1             text eol=crlf
+*.rc              text eol=crlf
+*.sln             text eol=crlf
+*.props           text eol=crlf
+*.vcxproj         text eol=crlf
+*.vcxproj.filters text eol=crlf
+# Including templatized versions.
+*.sln.tmpl        text eol=crlf
+*.props.tmpl      text eol=crlf
+*.vcxproj.tmpl    text eol=crlf
+# Never perform LF normalization on these files
+*.ico    binary
+*.jar    binary
+*.png    binary
+*.zip    binary
