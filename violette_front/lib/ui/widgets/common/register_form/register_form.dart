@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 
-import 'login_form_model.dart';
+import 'register_form_model.dart';
 
-class LoginForm extends StackedView<LoginFormModel> {
-  const LoginForm({super.key});
+class RegisterForm extends StackedView<RegisterFormModel> {
+  const RegisterForm({super.key});
 
   @override
   Widget builder(
     BuildContext context,
-    LoginFormModel viewModel,
+    RegisterFormModel viewModel,
     Widget? child,
   ) {
     return Column(
@@ -24,17 +24,27 @@ class LoginForm extends StackedView<LoginFormModel> {
           decoration: InputDecoration(labelText: "Mot de passe"),
           keyboardType: TextInputType.visiblePassword,
         ),
+        TextFormField(
+          controller: viewModel.passwordConfirmationController,
+          decoration:
+              InputDecoration(labelText: "Confirmation du mot de passe"),
+          keyboardType: TextInputType.visiblePassword,
+        ),
         ElevatedButton(
-            onPressed: (viewModel.login), child: Text("Se connecter")),
+          onPressed: (viewModel.register),
+          child: Text("Se connecter"),
+        ),
         ElevatedButton(
-            onPressed: (viewModel.register), child: Text("Créer un compte"))
+          onPressed: (viewModel.displayLoginView),
+          child: Text("Compte existant"),
+        )
       ],
     );
   }
 
   @override
-  LoginFormModel viewModelBuilder(
+  RegisterFormModel viewModelBuilder(
     BuildContext context,
   ) =>
-      LoginFormModel();
+      RegisterFormModel();
 }

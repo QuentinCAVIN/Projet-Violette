@@ -12,7 +12,7 @@ class LoginHeader extends StackedView<LoginHeaderModel> {
     LoginHeaderModel viewModel,
     Widget? child,
   ) {
-    return const Placeholder(child: Text("Header"));
+    return const Column(children: [Icon(Icons.spa), Text("VIOLETTE")]);
   }
 
   @override

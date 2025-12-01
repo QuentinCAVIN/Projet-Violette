@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
-import 'package:violette_front/ui/widgets/common/login_form/login_form.dart';
-import 'package:violette_front/ui/widgets/common/login_header/login_header.dart';
+import 'package:violette_front/ui/widgets/common/register_form/register_form.dart';
 
-import 'login_viewmodel.dart';
+import '../../widgets/common/login_header/login_header.dart';
+import 'register_viewmodel.dart';
 
-class LoginView extends StackedView<LoginViewModel> {
-  const LoginView({Key? key}) : super(key: key);
+class RegisterView extends StackedView<RegisterViewModel> {
+  const RegisterView({Key? key}) : super(key: key);
 
   @override
   Widget builder(
     BuildContext context,
-    LoginViewModel viewModel,
+    RegisterViewModel viewModel,
     Widget? child,
   ) {
     return Scaffold(
@@ -30,12 +30,10 @@ class LoginView extends StackedView<LoginViewModel> {
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 25.0),
               child: Column(
-                mainAxisSize: MainAxisSize
-                    .min, // grace à ça Column prends uniquement la taille de ses enfants et donc le Center au dessus fera effet.
-                //(= rien a centrer sur l'axe vertical sinon puisque la colonne occupe toute l'espace)
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   LoginHeader(),
-                  LoginForm(),
+                  RegisterForm(),
                 ],
               ),
             ),
@@ -46,8 +44,8 @@ class LoginView extends StackedView<LoginViewModel> {
   }
 
   @override
-  LoginViewModel viewModelBuilder(
+  RegisterViewModel viewModelBuilder(
     BuildContext context,
   ) =>
-      LoginViewModel();
+      RegisterViewModel();
 }
