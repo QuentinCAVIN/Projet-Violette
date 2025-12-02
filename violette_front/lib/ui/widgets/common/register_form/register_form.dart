@@ -32,7 +32,7 @@ class RegisterForm extends StackedView<RegisterFormModel> {
         ),
         ElevatedButton(
           onPressed: (viewModel.register),
-          child: Text("Se connecter"),
+          child: Text("Créer mon compte "),
         ),
         ElevatedButton(
           onPressed: (viewModel.displayLoginView),
