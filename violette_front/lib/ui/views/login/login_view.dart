@@ -26,7 +26,7 @@ class LoginView extends StackedView<LoginViewModel> {
               ),
             ),
           ),
-          const Center(
+           Center(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 25.0),
               child: Column(
@@ -35,7 +35,12 @@ class LoginView extends StackedView<LoginViewModel> {
                 //(= rien a centrer sur l'axe vertical sinon puisque la colonne occupe toute l'espace)
                 children: [
                   LoginHeader(),
-                  LoginForm(),
+                  LoginForm(
+                    emailController: viewModel.emailController,
+                    passwordController: viewModel.passwordController,
+                    onLogin: viewModel.login,
+                    onNavigateToRegister: viewModel.navigateToRegister, // on utilisait pas des fonctions anonymes?
+                  ),
                 ],
               ),
             ),

@@ -3,15 +3,14 @@ import 'package:stacked/stacked.dart';
 
 import 'register_form_model.dart';
 
-class RegisterForm extends StackedView<RegisterFormModel> {
-  const RegisterForm({super.key});
+import 'package:violette_front/ui/views/register/register_viewmodel.dart';
+
+class RegisterForm extends ViewModelWidget<RegisterViewModel> { // TODO Question ELies : la j'ai gardé une Classe Stacked, mais ça crée un couplage fort avec la vue.
+  const RegisterForm({super.key,});                             // Et au final j'ai 3 WIdget et 3 classes différentes extend
 
   @override
-  Widget builder(
-    BuildContext context,
-    RegisterFormModel viewModel,
-    Widget? child,
-  ) {
+  Widget build(
+    BuildContext context, RegisterViewModel viewModel,) {
     return Column(
       children: [
         TextFormField(
@@ -42,7 +41,6 @@ class RegisterForm extends StackedView<RegisterFormModel> {
     );
   }
 
-  @override
   RegisterFormModel viewModelBuilder(
     BuildContext context,
   ) =>

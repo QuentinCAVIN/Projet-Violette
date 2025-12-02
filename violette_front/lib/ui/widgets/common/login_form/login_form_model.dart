@@ -10,7 +10,7 @@ class LoginFormModel extends BaseViewModel {
   final _navigationService = locator<NavigationService>();
 
   void login() {
-    print("Tentative de connexion");
+    print("Tentative de connexion" + emailController.text + passwordController.text);
   }
 
   void register() {
