@@ -1,3 +1,4 @@
+import 'package:stacked_firebase_auth/stacked_firebase_auth.dart';
 import 'package:violette_front/ui/bottom_sheets/notice/notice_sheet.dart';
 import 'package:violette_front/ui/dialogs/info_alert/info_alert_dialog.dart';
 import 'package:violette_front/ui/views/home/home_view.dart';
@@ -20,6 +21,7 @@ import 'package:violette_front/ui/views/register/register_view.dart';
     LazySingleton(classType: BottomSheetService),
     LazySingleton(classType: DialogService),
     LazySingleton(classType: NavigationService),
+    LazySingleton(classType: FirebaseAuthenticationService),
     // @stacked-service
   ],
   bottomsheets: [
