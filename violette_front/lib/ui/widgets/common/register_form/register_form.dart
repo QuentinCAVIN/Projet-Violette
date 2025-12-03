@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 
-import 'register_form_model.dart';
-
 import 'package:violette_front/ui/views/register/register_viewmodel.dart';
 
-class RegisterForm extends ViewModelWidget<RegisterViewModel> { // TODO Question ELies : la j'ai gardé une Classe Stacked, mais ça crée un couplage fort avec la vue.
-  const RegisterForm({super.key,});                             // Et au final j'ai 3 WIdget et 3 classes différentes extend
+class RegisterForm extends ViewModelWidget<RegisterViewModel> {
+  const RegisterForm({super.key,});
 
   @override
   Widget build(
@@ -34,15 +32,11 @@ class RegisterForm extends ViewModelWidget<RegisterViewModel> { // TODO Question
           child: Text("Créer mon compte "),
         ),
         ElevatedButton(
-          onPressed: (viewModel.displayLoginView),
+          onPressed: (viewModel.navigateToLogin),
           child: Text("Compte existant"),
         )
       ],
     );
   }
 
-  RegisterFormModel viewModelBuilder(
-    BuildContext context,
-  ) =>
-      RegisterFormModel();
 }

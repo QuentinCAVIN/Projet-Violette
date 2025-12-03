@@ -3,7 +3,7 @@ import 'package:stacked/stacked.dart';
 
 import 'login_form_model.dart';
 
-class LoginForm extends StatelessWidget { // TODO Question ELies : J'ai été obligé de changer le StackedView, ça va pas à l'encotre de l'utilisation de Stacked
+class LoginForm extends StackedView<LoginFormModel> {
 
   final TextEditingController emailController;
   final TextEditingController passwordController;
@@ -20,7 +20,7 @@ class LoginForm extends StatelessWidget { // TODO Question ELies : J'ai été ob
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget builder(BuildContext context, LoginFormModel viewModel, _) { // On utilise _ plutot que "Widget? child" par convention car on n'a pas besoin de ce dernier
     return Column(
       children: [
         TextFormField(
@@ -41,7 +41,7 @@ class LoginForm extends StatelessWidget { // TODO Question ELies : J'ai été ob
     );
   }
 
-  @override //TODO Question ELies : ça sert plus à rien du coup ça (ça passe le context au model?) on supprime les model des WIdget?
+  @override //Obligatoire car extends StackView
   LoginFormModel viewModelBuilder(
     BuildContext context,
   ) =>

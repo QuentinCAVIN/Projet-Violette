@@ -1,3 +1,4 @@
+import 'package:stacked_firebase_auth/stacked_firebase_auth.dart';
 import 'package:violette_front/app/app.bottomsheets.dart';
 import 'package:violette_front/app/app.dialogs.dart';
 import 'package:violette_front/app/app.locator.dart';
@@ -8,6 +9,7 @@ import 'package:stacked_services/stacked_services.dart';
 class HomeViewModel extends BaseViewModel {
   final _dialogService = locator<DialogService>();
   final _bottomSheetService = locator<BottomSheetService>();
+  final _authenticationService = locator<FirebaseAuthenticationService>();
 
   String get counterLabel => 'Counter is: $_counter';
 
@@ -32,5 +34,9 @@ class HomeViewModel extends BaseViewModel {
       title: ksHomeBottomSheetTitle,
       description: ksHomeBottomSheetDescription,
     );
+  }
+
+  void logOut(){
+    _authenticationService.logout();
   }
 }

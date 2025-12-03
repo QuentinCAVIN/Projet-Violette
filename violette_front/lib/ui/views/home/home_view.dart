@@ -22,6 +22,14 @@ class HomeView extends StackedView<HomeViewModel> {
                 verticalSpaceLarge,
                 Column(
                   children: [
+                    MaterialButton(
+                      color: kcPrimaryColor,
+                      onPressed: viewModel.logOut,
+                      child: const Text(
+                        'Déconnexion',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
                     const Text(
                       'Hello, STACKED!',
                       style: TextStyle(
