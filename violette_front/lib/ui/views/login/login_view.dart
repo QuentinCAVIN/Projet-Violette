@@ -26,7 +26,7 @@ class LoginView extends StackedView<LoginViewModel> {
               ),
             ),
           ),
-           Center(
+          Center(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 25.0),
               child: Column(
@@ -40,7 +40,8 @@ class LoginView extends StackedView<LoginViewModel> {
                     passwordController: viewModel.passwordController,
                     authError: viewModel.errorMessage,
                     onLogin: viewModel.login,
-                    onNavigateToRegister: viewModel.navigateToRegister, // on utilisait pas des fonctions anonymes?
+                    onNavigateToRegister: viewModel
+                        .navigateToRegister, // on utilisait pas des fonctions anonymes?
                   ),
                 ],
               ),

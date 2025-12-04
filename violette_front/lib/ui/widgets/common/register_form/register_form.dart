@@ -4,11 +4,15 @@ import 'package:stacked/stacked.dart';
 import 'package:violette_front/ui/views/register/register_viewmodel.dart';
 
 class RegisterForm extends ViewModelWidget<RegisterViewModel> {
-  const RegisterForm({super.key,});
+  const RegisterForm({
+    super.key,
+  });
 
   @override
   Widget build(
-    BuildContext context, RegisterViewModel viewModel,) {
+    BuildContext context,
+    RegisterViewModel viewModel,
+  ) {
     return Column(
       children: [
         TextFormField(
@@ -41,7 +45,7 @@ class RegisterForm extends ViewModelWidget<RegisterViewModel> {
               ),
             ),
           ),
-         //*******************************
+        //*******************************
         ElevatedButton(
           onPressed: (viewModel.register),
           child: Text("Créer mon compte "),
@@ -53,5 +57,4 @@ class RegisterForm extends ViewModelWidget<RegisterViewModel> {
       ],
     );
   }
-
 }

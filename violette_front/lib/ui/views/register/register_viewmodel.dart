@@ -5,38 +5,53 @@ import 'package:stacked_services/stacked_services.dart';
 import 'package:violette_front/app/app.locator.dart';
 import 'package:violette_front/app/app.router.dart';
 
+import '../../../services/violette_user_service.dart';
+import 'package:violette_front/models/violette_user.dart';
+
+
 class RegisterViewModel extends BaseViewModel {
-
-
   final _navigationService = locator<NavigationService>();
   final _authenticationService = locator<FirebaseAuthenticationService>();
+  final _userServices = locator<VioletteUserService>();
+
 
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController passwordConfirmationController =
-  TextEditingController();
+      TextEditingController();
 
   String? errorMessage;
 
   Future register() async {
-
     final email = emailController.text.trim();
     final password = passwordController.text;
     final passwordConfirmation = passwordConfirmationController.text;
     if (password != passwordConfirmation) {
-      errorMessage ="Les mots de passe ne correspondent pas"; // on peut pas utiliser les message de FirebaseAuthenticationService
+      errorMessage =
+          "Les mots de passe ne correspondent pas";
       rebuildUi();
       return;
     }
-    print("Tentative d'inscription de l'adresse mail : $email avec le mot de passe : $password");
-    final result = await _authenticationService.createAccountWithEmail(email: email, password: password);
+    print(
+        "Tentative d'inscription de l'adresse mail : $email avec le mot de passe : $password");
 
-    //TODO: Faire un mapper pour les erreurs de Firebase, éviter de signaler via les erreurs qu' compte est bien enregistré dans l'app
+    final result = await _authenticationService.createAccountWithEmail(
+        email: email, password: password);
+    //TODO: Faire un mapper pour les erreurs de Firebase, éviter de signaler via les erreurs qu'un compte est bien enregistré dans l'app
     if (result.hasError) {
       errorMessage = result.errorMessage;
       rebuildUi();
       return;
     }
+    // Inscription réussie
+    String userId = result.user!.uid;
+    VioletteUser user = VioletteUser(
+        uid: userId,
+        firstName: "Prénom-Test",
+        lastName: "Nom-Test",
+        email: email
+    );
+    await _userServices.addUser(user);
     print("Inscription réussie");
   }
 

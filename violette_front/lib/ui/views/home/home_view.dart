@@ -8,8 +8,13 @@ import 'home_viewmodel.dart';
 class HomeView extends StackedView<HomeViewModel> {
   const HomeView({Key? key}) : super(key: key);
 
+  
+
+
   @override
   Widget builder(BuildContext context, HomeViewModel viewModel, Widget? child) {
+    final currentUser = viewModel.currentUser; // COucouou
+    
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -22,6 +27,25 @@ class HomeView extends StackedView<HomeViewModel> {
                 verticalSpaceLarge,
                 Column(
                   children: [
+                    //**********************************************************
+                    //Insertion des infos du User dans la view de base pour test
+                    Column(
+                      children: [
+                        if (viewModel.isBusy)
+                          const CircularProgressIndicator()
+                        else if (currentUser == null)
+                          const Text("Utilisateur introuvable")
+                        else
+                          Text(
+                            "Bienvenue ${currentUser.firstName} ${currentUser.lastName}",
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                      ],
+                    ),
+                    //**********************************************************
                     MaterialButton(
                       color: kcPrimaryColor,
                       onPressed: viewModel.logOut,
@@ -79,4 +103,10 @@ class HomeView extends StackedView<HomeViewModel> {
 
   @override
   HomeViewModel viewModelBuilder(BuildContext context) => HomeViewModel();
+
+  //TODO A virer quand j'aurais rendu le User accecible globalement
+  @override
+  void onViewModelReady(HomeViewModel viewModel) {
+    viewModel.loadUser();
+  }
 }

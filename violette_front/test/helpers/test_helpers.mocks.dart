@@ -10,6 +10,7 @@ import 'package:flutter/material.dart' as _i4;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i3;
 import 'package:stacked_services/stacked_services.dart' as _i2;
+import 'package:violette_front/services/violette_user_service.dart' as _i7;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -682,3 +683,8 @@ class MockDialogService extends _i1.Mock implements _i2.DialogService {
         returnValueForMissingStub: null,
       );
 }
+
+/// A class which mocks [UserService].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockUserService extends _i1.Mock implements _i7.VioletteUserService {}

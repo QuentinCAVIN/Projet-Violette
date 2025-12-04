@@ -7,6 +7,7 @@ import 'package:stacked/stacked_annotations.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:violette_front/ui/views/login/login_view.dart';
 import 'package:violette_front/ui/views/register/register_view.dart';
+import 'package:violette_front/services/violette_user_service.dart';
 // @stacked-import
 
 @StackedApp(
@@ -22,7 +23,8 @@ import 'package:violette_front/ui/views/register/register_view.dart';
     LazySingleton(classType: DialogService),
     LazySingleton(classType: NavigationService),
     LazySingleton(classType: FirebaseAuthenticationService),
-    // @stacked-service
+    LazySingleton(classType: VioletteUserService),
+// @stacked-service
   ],
   bottomsheets: [
     StackedBottomsheet(classType: NoticeSheet),

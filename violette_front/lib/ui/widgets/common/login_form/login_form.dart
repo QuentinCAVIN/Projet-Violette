@@ -4,7 +4,6 @@ import 'package:stacked/stacked.dart';
 import 'login_form_model.dart';
 
 class LoginForm extends StackedView<LoginFormModel> {
-
   final TextEditingController emailController;
   final TextEditingController passwordController;
   final String? authError;
@@ -22,7 +21,8 @@ class LoginForm extends StackedView<LoginFormModel> {
   });
 
   @override
-  Widget builder(BuildContext context, LoginFormModel viewModel, _) { // On utilise _ plutot que "Widget? child" par convention car on n'a pas besoin de ce dernier
+  Widget builder(BuildContext context, LoginFormModel viewModel, _) {
+    // On utilise _ plutot que "Widget? child" par convention car on n'a pas besoin de ce dernier
     return Column(
       children: [
         TextFormField(
@@ -51,8 +51,7 @@ class LoginForm extends StackedView<LoginFormModel> {
             ),
           ),
         //*******************************
-        ElevatedButton(
-            onPressed: (onLogin), child: Text("Se connecter")),
+        ElevatedButton(onPressed: (onLogin), child: Text("Se connecter")),
         ElevatedButton(
             onPressed: (onNavigateToRegister), child: Text("Créer un compte"))
       ],

@@ -24,10 +24,11 @@ class LoginViewModel extends BaseViewModel {
     if (email.isEmpty || password.isEmpty) {
       errorMessage = "les champs ne peuvent pas être vide.";
       rebuildUi();
-      print (errorMessage!); // en attendant
+      print(errorMessage!); // en attendant
       return;
     }
-    final authResponse = await _authenticationService.loginWithEmail(email: email, password: password);
+    final authResponse = await _authenticationService.loginWithEmail(
+        email: email, password: password);
     if (!authResponse.hasError) {
       return; // La redirection se fait dans le listener dans StartupViewModel
     }
