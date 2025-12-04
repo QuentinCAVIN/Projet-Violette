@@ -38,6 +38,7 @@ class LoginView extends StackedView<LoginViewModel> {
                   LoginForm(
                     emailController: viewModel.emailController,
                     passwordController: viewModel.passwordController,
+                    authError: viewModel.errorMessage,
                     onLogin: viewModel.login,
                     onNavigateToRegister: viewModel.navigateToRegister, // on utilisait pas des fonctions anonymes?
                   ),

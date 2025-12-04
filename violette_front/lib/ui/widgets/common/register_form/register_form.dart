@@ -27,6 +27,21 @@ class RegisterForm extends ViewModelWidget<RegisterViewModel> {
               InputDecoration(labelText: "Confirmation du mot de passe"),
           keyboardType: TextInputType.visiblePassword,
         ),
+        //********************************
+        // Affichage du message d'erreur *
+        //********************************
+        if (viewModel.errorMessage != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8.0),
+            child: Text(
+              viewModel.errorMessage!,
+              style: const TextStyle(
+                color: Colors.red,
+                fontSize: 13,
+              ),
+            ),
+          ),
+         //*******************************
         ElevatedButton(
           onPressed: (viewModel.register),
           child: Text("Créer mon compte "),

@@ -12,7 +12,7 @@ class LoginViewModel extends BaseViewModel {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
-  String? authError;
+  String? errorMessage;
 
   Future login() async {
     final email = emailController.text.trim();
@@ -22,16 +22,17 @@ class LoginViewModel extends BaseViewModel {
 
     print("Tentative de connexion : $email / $password");
     if (email.isEmpty || password.isEmpty) {
-      authError = "les champs ne peuvent pas être vide.";
+      errorMessage = "les champs ne peuvent pas être vide.";
       rebuildUi();
-      print (authError!); // en attendant
+      print (errorMessage!); // en attendant
       return;
     }
     final authResponse = await _authenticationService.loginWithEmail(email: email, password: password);
     if (!authResponse.hasError) {
       return; // La redirection se fait dans le listener dans StartupViewModel
     }
-    authError = authResponse.errorMessage;
+    //TODO: Faire un mapper pour les erreurs de Firebase, éviter de signaler via les erreurs qu'un compte est bien enregistré dans l'app
+    errorMessage = authResponse.errorMessage;
     rebuildUi();
   }
 
@@ -48,7 +49,7 @@ class LoginViewModel extends BaseViewModel {
   }
 
   void clearErrorMessage() {
-    authError = null;
+    errorMessage = null;
     rebuildUi();
   }
 }
