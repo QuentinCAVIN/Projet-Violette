@@ -4,39 +4,85 @@ import 'package:stacked_firebase_auth/stacked_firebase_auth.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:violette_front/app/app.locator.dart';
 import 'package:violette_front/app/app.router.dart';
+import 'package:violette_front/ui/views/register/register_view.form.dart';
 
 import '../../../services/violette_user_service.dart';
 import 'package:violette_front/models/violette_user.dart';
 
-
-class RegisterViewModel extends BaseViewModel {
+class RegisterViewModel extends FormViewModel {
   final _navigationService = locator<NavigationService>();
   final _authenticationService = locator<FirebaseAuthenticationService>();
   final _userServices = locator<VioletteUserService>();
 
-
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-  final TextEditingController passwordConfirmationController =
-      TextEditingController();
-
   String? errorMessage;
+  bool formAlreadyValidatedOnce = false;
 
-  Future register() async {
-    final email = emailController.text.trim();
-    final password = passwordController.text;
-    final passwordConfirmation = passwordConfirmationController.text;
-    if (password != passwordConfirmation) {
-      errorMessage =
-          "Les mots de passe ne correspondent pas";
-      rebuildUi();
+  @override
+  void setFormStatus() {
+    // Réinitialisation des messages d'erreur
+
+    setFirstNameValidationMessage(null);
+    setLastNameValidationMessage(null);
+    setEmailValidationMessage(null);
+    setPasswordValidationMessage(null);
+    setPasswordConfirmationValidationMessage(null);
+
+    // Pour ne pas afficher les erreurs avant la validation du formulaire
+    if (!formAlreadyValidatedOnce) {
       return;
     }
+
+    // Prénom
+    if (firstNameValue == null || firstNameValue!.trim().isEmpty) {
+      setFirstNameValidationMessage('Le prénom est obligatoire');
+    }
+
+    // Nom
+    if (lastNameValue == null || lastNameValue!.trim().isEmpty) {
+      setLastNameValidationMessage('Le nom est obligatoire');
+    }
+
+    // Email
+    if (emailValue == null || emailValue!.trim().isEmpty) {
+      setEmailValidationMessage("L'adresse mail est obligatoire");
+    } else if (!emailValue!.contains('@')) {
+      setEmailValidationMessage("Adresse mail invalide");
+    }
+
+    // Mot de passe
+    if (passwordValue == null || passwordValue!.length < 6) {
+      setPasswordValidationMessage(
+        'Mot de passe trop court (min. 6 caractères)',
+      );
+    }
+
+    // Confirmation mot de passe
+     if (passwordConfirmationValue != passwordValue) {
+      setPasswordConfirmationValidationMessage(
+        'Les mots de passe ne correspondent pas',
+      );
+    }
+  }
+
+
+
+  Future register() async {
+
+    formAlreadyValidatedOnce = true;
+    setFormStatus();
+    notifyListeners();
+    final email = emailValue;
+    final password = passwordValue;
     print(
         "Tentative d'inscription de l'adresse mail : $email avec le mot de passe : $password");
 
+
+    if(!isFormValid) {
+      return;
+    }
+
     final result = await _authenticationService.createAccountWithEmail(
-        email: email, password: password);
+        email: email!, password: password!);
     //TODO: Faire un mapper pour les erreurs de Firebase, éviter de signaler via les erreurs qu'un compte est bien enregistré dans l'app
     if (result.hasError) {
       errorMessage = result.errorMessage;
@@ -47,10 +93,9 @@ class RegisterViewModel extends BaseViewModel {
     String userId = result.user!.uid;
     VioletteUser user = VioletteUser(
         uid: userId,
-        firstName: "Prénom-Test",
-        lastName: "Nom-Test",
-        email: email
-    );
+        firstName: firstNameValue!,
+        lastName: lastNameValue!,
+        email: email);
     await _userServices.addUser(user);
     print("Inscription réussie");
   }
@@ -59,13 +104,6 @@ class RegisterViewModel extends BaseViewModel {
     _navigationService.replaceWithLoginView();
   }
 
-  @override
-  void dispose() {
-    emailController.dispose();
-    passwordController.dispose();
-    passwordConfirmationController.dispose();
-    super.dispose();
-  }
 }
 
 //TODO: METTRE EN PRATIQUE CERTAINES REGLES OPQUAST

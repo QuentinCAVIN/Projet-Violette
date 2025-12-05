@@ -10,6 +10,7 @@ import 'package:flutter/material.dart' as _i4;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i3;
 import 'package:stacked_services/stacked_services.dart' as _i2;
+import 'package:violette_front/models/violette_user.dart' as _i8;
 import 'package:violette_front/services/violette_user_service.dart' as _i7;
 
 // ignore_for_file: type=lint
@@ -684,7 +685,41 @@ class MockDialogService extends _i1.Mock implements _i2.DialogService {
       );
 }
 
-/// A class which mocks [UserService].
+/// A class which mocks [VioletteUserService].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockUserService extends _i1.Mock implements _i7.VioletteUserService {}
+class MockVioletteUserService extends _i1.Mock
+    implements _i7.VioletteUserService {
+  @override
+  String get collection => (super.noSuchMethod(
+        Invocation.getter(#collection),
+        returnValue: _i3.dummyValue<String>(
+          this,
+          Invocation.getter(#collection),
+        ),
+        returnValueForMissingStub: _i3.dummyValue<String>(
+          this,
+          Invocation.getter(#collection),
+        ),
+      ) as String);
+
+  @override
+  _i5.Future<void> addUser(_i8.VioletteUser? user) => (super.noSuchMethod(
+        Invocation.method(
+          #addUser,
+          [user],
+        ),
+        returnValue: _i5.Future<void>.value(),
+        returnValueForMissingStub: _i5.Future<void>.value(),
+      ) as _i5.Future<void>);
+
+  @override
+  _i5.Future<_i8.VioletteUser?> getUser(String? uid) => (super.noSuchMethod(
+        Invocation.method(
+          #getUser,
+          [uid],
+        ),
+        returnValue: _i5.Future<_i8.VioletteUser?>.value(),
+        returnValueForMissingStub: _i5.Future<_i8.VioletteUser?>.value(),
+      ) as _i5.Future<_i8.VioletteUser?>);
+}
