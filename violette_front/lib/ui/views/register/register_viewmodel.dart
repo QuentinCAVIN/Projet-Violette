@@ -14,20 +14,19 @@ class RegisterViewModel extends FormViewModel {
   final _authenticationService = locator<FirebaseAuthenticationService>();
   final _userServices = locator<VioletteUserService>();
 
-  String? errorMessage;
+  String? globalErrorMessage;
   bool formAlreadyValidatedOnce = false;
 
   @override
   void setFormStatus() {
     // Réinitialisation des messages d'erreur
-
     setFirstNameValidationMessage(null);
     setLastNameValidationMessage(null);
     setEmailValidationMessage(null);
     setPasswordValidationMessage(null);
     setPasswordConfirmationValidationMessage(null);
 
-    // Pour ne pas afficher les erreurs avant la validation du formulaire
+    // Ne pas afficher les erreurs avant la validation du formulaire
     if (!formAlreadyValidatedOnce) {
       return;
     }
@@ -57,53 +56,53 @@ class RegisterViewModel extends FormViewModel {
     }
 
     // Confirmation mot de passe
-     if (passwordConfirmationValue != passwordValue) {
+    if (passwordConfirmationValue != passwordValue) {
       setPasswordConfirmationValidationMessage(
         'Les mots de passe ne correspondent pas',
       );
     }
   }
 
-
-
   Future register() async {
-
     formAlreadyValidatedOnce = true;
+    globalErrorMessage = null;
+
     setFormStatus();
-    notifyListeners();
-    final email = emailValue;
-    final password = passwordValue;
-    print(
-        "Tentative d'inscription de l'adresse mail : $email avec le mot de passe : $password");
+    rebuildUi();
 
-
-    if(!isFormValid) {
+    if (!isFormValid) {
       return;
     }
 
-    final result = await _authenticationService.createAccountWithEmail(
-        email: email!, password: password!);
-    //TODO: Faire un mapper pour les erreurs de Firebase, éviter de signaler via les erreurs qu'un compte est bien enregistré dans l'app
-    if (result.hasError) {
-      errorMessage = result.errorMessage;
+    final String email = emailValue!.trim().toLowerCase();
+    final String password = passwordValue!;
+
+    final authResult = await _authenticationService.createAccountWithEmail(
+        email: email,
+        password: password);
+
+    //TODO: Faire un mapper pour les erreurs de Firebase,
+    // éviter de signaler via les erreurs qu'un compte existe déja dans l'app
+    if (authResult.hasError) {
+      globalErrorMessage = authResult.errorMessage;
       rebuildUi();
       return;
     }
     // Inscription réussie
-    String userId = result.user!.uid;
+    final String userId = authResult.user!.uid;
+    final String firstName = firstNameValue!.trim();
+    final String lastName = lastNameValue!.trim();
     VioletteUser user = VioletteUser(
         uid: userId,
-        firstName: firstNameValue!,
-        lastName: lastNameValue!,
+        firstName: firstName,
+        lastName: lastName,
         email: email);
     await _userServices.addUser(user);
-    print("Inscription réussie");
   }
 
   void navigateToLogin() {
     _navigationService.replaceWithLoginView();
   }
-
 }
 
 //TODO: METTRE EN PRATIQUE CERTAINES REGLES OPQUAST

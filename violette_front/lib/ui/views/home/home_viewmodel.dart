@@ -23,7 +23,8 @@ class HomeViewModel extends BaseViewModel {
 
   Future<void> loadUser() async {
     setBusy(true);
-    final uid = _authenticationService.currentUser!.uid; // TODO Question Elies -> je peux mettre un ! sur currentUser? si il a acces a la home view il est forcément connécté. Ou laors je prevois dans le code le cas ou il est nul
+    // TODO Question Elies -> je peux mettre un ! sur currentUser? si il a acces a la home view il est forcément connécté. Ou aLors je prevois dans le code le cas ou il est nul
+    final uid = _authenticationService.currentUser!.uid;
     currentUser = await _userServices.getUser(uid);
     setBusy(false);
     rebuildUi();

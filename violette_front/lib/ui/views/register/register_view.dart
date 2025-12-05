@@ -37,8 +37,8 @@ class RegisterView extends StackedView<RegisterViewModel> with $RegisterView {
               ),
             ),
           ),
-          SingleChildScrollView(
-            child: Center(
+          Center(
+            child: SingleChildScrollView(
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 25.0),
                 child: Column(

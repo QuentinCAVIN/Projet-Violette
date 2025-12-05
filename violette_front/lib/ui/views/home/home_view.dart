@@ -10,7 +10,7 @@ class HomeView extends StackedView<HomeViewModel> {
 
   @override
   Widget builder(BuildContext context, HomeViewModel viewModel, Widget? child) {
-    final currentUser = viewModel.currentUser; // COucouou
+    final currentUser = viewModel.currentUser;//Pour test de récupération user
 
     return Scaffold(
       body: SafeArea(

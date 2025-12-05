@@ -12,7 +12,6 @@ class RegisterForm extends ViewModelWidget<RegisterViewModel> {
   // En revanche on est obligé de passer les TextEditingController via le constructeur car les controller sont générés par stacked
   // à partir de l'annotation @FormView et ne sont lié qu'a RegisterView. D'ou l'approche "hybride"
 
-
   final TextEditingController firstNameController;
   final TextEditingController lastNameController;
   final TextEditingController emailController;
@@ -39,24 +38,23 @@ class RegisterForm extends ViewModelWidget<RegisterViewModel> {
           controller: firstNameController,
           decoration: InputDecoration(
             labelText: "Prénom",
-            errorText:viewModel.firstNameValidationMessage,
+            errorText: viewModel.firstNameValidationMessage,
           ),
-          keyboardType: TextInputType.emailAddress,
-
+          keyboardType: TextInputType.name,
         ),
         TextFormField(
           controller: lastNameController,
           decoration: InputDecoration(
             labelText: "Nom",
-            errorText:viewModel.lastNameValidationMessage,
+            errorText: viewModel.lastNameValidationMessage,
           ),
-          keyboardType: TextInputType.emailAddress,
+          keyboardType: TextInputType.name,
         ),
         TextFormField(
           controller: emailController,
           decoration: InputDecoration(
             labelText: "Adresse mail",
-            errorText:viewModel.emailValidationMessage,
+            errorText: viewModel.emailValidationMessage,
           ),
           keyboardType: TextInputType.emailAddress,
         ),
@@ -64,27 +62,26 @@ class RegisterForm extends ViewModelWidget<RegisterViewModel> {
           controller: passwordController,
           decoration: InputDecoration(
             labelText: "Mot de passe",
-            errorText:viewModel.passwordValidationMessage,
+            errorText: viewModel.passwordValidationMessage,
           ),
           keyboardType: TextInputType.visiblePassword,
         ),
         TextFormField(
           controller: passwordConfirmationController,
-          decoration:
-              InputDecoration(
-                labelText: "Confirmation du mot de passe",
-                errorText:viewModel.passwordConfirmationValidationMessage,
-              ),
+          decoration: InputDecoration(
+            labelText: "Confirmation du mot de passe",
+            errorText: viewModel.passwordConfirmationValidationMessage,
+          ),
           keyboardType: TextInputType.visiblePassword,
         ),
         //********************************
         // Affichage du message d'erreur *
         //********************************
-        if (viewModel.errorMessage != null)
+        if (viewModel.globalErrorMessage != null)
           Padding(
             padding: const EdgeInsets.only(bottom: 8.0),
             child: Text(
-              viewModel.errorMessage!,
+              viewModel.globalErrorMessage!,
               style: const TextStyle(
                 color: Colors.red,
                 fontSize: 13,

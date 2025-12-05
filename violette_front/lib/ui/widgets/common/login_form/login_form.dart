@@ -1,49 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
+import 'package:violette_front/ui/views/login/login_viewmodel.dart';
 
-import 'login_form_model.dart';
+import '../../../views/login/login_view.form.dart';
 
-class LoginForm extends StackedView<LoginFormModel> {
+
+class LoginForm extends ViewModelWidget<LoginViewModel> {
   final TextEditingController emailController;
   final TextEditingController passwordController;
-  final String? authError;
-
-  final VoidCallback onLogin;
-  final VoidCallback onNavigateToRegister;
+  final String? authError = null;
 
   const LoginForm({
     super.key,
     required this.emailController,
     required this.passwordController,
-    required this.onLogin,
-    required this.onNavigateToRegister,
-    this.authError,
   });
 
   @override
-  Widget builder(BuildContext context, LoginFormModel viewModel, _) {
-    // On utilise _ plutot que "Widget? child" par convention car on n'a pas besoin de ce dernier
+  Widget build(BuildContext context, LoginViewModel viewModel) {
     return Column(
       children: [
         TextFormField(
           controller: emailController,
-          decoration: InputDecoration(labelText: "Adresse mail"),
+          decoration: InputDecoration(
+            labelText: "Adresse mail",
+            errorText: viewModel.emailValidationMessage,
+          ),
           keyboardType: TextInputType.emailAddress,
         ),
         TextFormField(
           controller: passwordController,
-          decoration: InputDecoration(labelText: "Mot de passe"),
+          decoration: InputDecoration(
+            labelText: "Mot de passe",
+            errorText: viewModel.passwordValidationMessage,
+          ),
           keyboardType: TextInputType.visiblePassword,
         ),
         //TODO Voir avec ELies si on peut faire un Widget avec le message d'erreur (utilisé dans 2 endroits)
         //********************************
         // Affichage du message d'erreur *
         //********************************
-        if (authError != null)
+        if (viewModel.globalErrorMessage != null)
           Padding(
             padding: const EdgeInsets.only(bottom: 8.0),
             child: Text(
-              authError!,
+              viewModel.globalErrorMessage!,
               style: const TextStyle(
                 color: Colors.red,
                 fontSize: 13,
@@ -51,16 +52,12 @@ class LoginForm extends StackedView<LoginFormModel> {
             ),
           ),
         //*******************************
-        ElevatedButton(onPressed: (onLogin), child: Text("Se connecter")),
+        ElevatedButton(onPressed: viewModel.login, child: const Text("Se connecter")),
         ElevatedButton(
-            onPressed: (onNavigateToRegister), child: Text("Créer un compte"))
+          onPressed: viewModel.navigateToRegister,
+          child: const Text("J'ai déja un compte"),
+        )
       ],
     );
   }
-
-  @override //Obligatoire car extends StackView
-  LoginFormModel viewModelBuilder(
-    BuildContext context,
-  ) =>
-      LoginFormModel();
 }

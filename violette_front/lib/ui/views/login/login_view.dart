@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
+import 'package:stacked/stacked_annotations.dart';
 import 'package:violette_front/ui/widgets/common/login_form/login_form.dart';
 import 'package:violette_front/ui/widgets/common/login_header/login_header.dart';
 
+import 'login_view.form.dart';
 import 'login_viewmodel.dart';
 
-class LoginView extends StackedView<LoginViewModel> {
+@FormView(
+  fields: [
+    FormTextField(name: 'email'),
+    FormTextField(name: 'password'),
+  ],
+)
+class LoginView extends StackedView<LoginViewModel> with $LoginView {
   const LoginView({Key? key}) : super(key: key);
 
   @override
@@ -28,6 +36,8 @@ class LoginView extends StackedView<LoginViewModel> {
           ),
           Center(
             child: Padding(
+              //TODO Question Elies: Coté register j'ai wrappé Padding dans un WIdget SingleScrollView
+              // Je devrais faire la même chose ici pour anticiper des écran vraiment trop petit?
               padding: EdgeInsets.symmetric(horizontal: 25.0),
               child: Column(
                 mainAxisSize: MainAxisSize
@@ -36,12 +46,8 @@ class LoginView extends StackedView<LoginViewModel> {
                 children: [
                   LoginHeader(),
                   LoginForm(
-                    emailController: viewModel.emailController,
-                    passwordController: viewModel.passwordController,
-                    authError: viewModel.errorMessage,
-                    onLogin: viewModel.login,
-                    onNavigateToRegister: viewModel
-                        .navigateToRegister, // on utilisait pas des fonctions anonymes?
+                    emailController: emailController,
+                    passwordController: passwordController,
                   ),
                 ],
               ),
@@ -50,6 +56,17 @@ class LoginView extends StackedView<LoginViewModel> {
         ],
       ),
     );
+  }
+
+  @override
+  void onViewModelReady(LoginViewModel viewModel) {
+    syncFormWithViewModel(viewModel);
+  }
+
+  @override
+  void onDispose(LoginViewModel viewModel) {
+    super.onDispose(viewModel);
+    disposeForm();
   }
 
   @override
