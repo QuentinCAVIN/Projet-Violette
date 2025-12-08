@@ -3,7 +3,7 @@ import 'package:stacked/stacked.dart';
 
 import 'package:violette_front/ui/views/register/register_viewmodel.dart';
 
-import '../../../views/register/register_view.form.dart';
+import '../register_view.form.dart';
 
 class RegisterForm extends ViewModelWidget<RegisterViewModel> {
   // Note pour moi-même:

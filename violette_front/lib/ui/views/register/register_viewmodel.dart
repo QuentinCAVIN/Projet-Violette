@@ -78,8 +78,7 @@ class RegisterViewModel extends FormViewModel {
     final String password = passwordValue!;
 
     final authResult = await _authenticationService.createAccountWithEmail(
-        email: email,
-        password: password);
+        email: email, password: password);
 
     //TODO: Faire un mapper pour les erreurs de Firebase,
     // éviter de signaler via les erreurs qu'un compte existe déja dans l'app
@@ -93,10 +92,7 @@ class RegisterViewModel extends FormViewModel {
     final String firstName = firstNameValue!.trim();
     final String lastName = lastNameValue!.trim();
     VioletteUser user = VioletteUser(
-        uid: userId,
-        firstName: firstName,
-        lastName: lastName,
-        email: email);
+        uid: userId, firstName: firstName, lastName: lastName, email: email);
     await _userServices.addUser(user);
   }
 

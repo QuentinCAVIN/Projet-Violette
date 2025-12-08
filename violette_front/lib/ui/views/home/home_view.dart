@@ -10,7 +10,7 @@ class HomeView extends StackedView<HomeViewModel> {
 
   @override
   Widget builder(BuildContext context, HomeViewModel viewModel, Widget? child) {
-    final currentUser = viewModel.currentUser;//Pour test de récupération user
+    final currentUser = viewModel.currentUser; //Pour test de récupération user
 
     return Scaffold(
       body: SafeArea(
@@ -45,6 +45,14 @@ class HomeView extends StackedView<HomeViewModel> {
                     //**********************************************************
                     MaterialButton(
                       color: kcPrimaryColor,
+                      onPressed: viewModel.navigateToAvailabilityChoiceView,
+                      child: const Text(
+                        'Dispos',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                    MaterialButton(
+                      color: kcPrimaryColor,
                       onPressed: viewModel.logOut,
                       child: const Text(
                         'Déconnexion',
@@ -52,7 +60,7 @@ class HomeView extends StackedView<HomeViewModel> {
                       ),
                     ),
                     const Text(
-                      'Hello, STACKED!',
+                      'G.O.A.T.!!',
                       style: TextStyle(
                         fontSize: 35,
                         fontWeight: FontWeight.w900,

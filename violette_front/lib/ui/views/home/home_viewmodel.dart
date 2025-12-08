@@ -2,6 +2,7 @@ import 'package:stacked_firebase_auth/stacked_firebase_auth.dart';
 import 'package:violette_front/app/app.bottomsheets.dart';
 import 'package:violette_front/app/app.dialogs.dart';
 import 'package:violette_front/app/app.locator.dart';
+import 'package:violette_front/app/app.router.dart';
 import 'package:violette_front/ui/common/app_strings.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
@@ -14,16 +15,21 @@ class HomeViewModel extends BaseViewModel {
   final _bottomSheetService = locator<BottomSheetService>();
   final _authenticationService = locator<FirebaseAuthenticationService>();
   final _userServices = locator<VioletteUserService>();
+  final _navigationService = locator<NavigationService>();
 
-  VioletteUser? currentUser; // Voir question ci dessous pour le ?
+  VioletteUser? currentUser; // Pareil com ci dessous
 
   void logOut() {
     _authenticationService.logout();
   }
 
+  void navigateToAvailabilityChoiceView() {
+    _navigationService.navigateToAvailabilityChoiceView();
+  }
+
   Future<void> loadUser() async {
     setBusy(true);
-    // TODO Question Elies -> je peux mettre un ! sur currentUser? si il a acces a la home view il est forcément connécté. Ou aLors je prevois dans le code le cas ou il est nul
+    // Attention le User est forcé (!) car le listener permet d'avoir toujours un User sur la home page
     final uid = _authenticationService.currentUser!.uid;
     currentUser = await _userServices.getUser(uid);
     setBusy(false);

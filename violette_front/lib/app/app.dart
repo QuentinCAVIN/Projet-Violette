@@ -8,6 +8,7 @@ import 'package:stacked_services/stacked_services.dart';
 import 'package:violette_front/ui/views/login/login_view.dart';
 import 'package:violette_front/ui/views/register/register_view.dart';
 import 'package:violette_front/services/violette_user_service.dart';
+import 'package:violette_front/ui/views/availability_choice/availability_choice_view.dart';
 // @stacked-import
 
 @StackedApp(
@@ -16,6 +17,7 @@ import 'package:violette_front/services/violette_user_service.dart';
     MaterialRoute(page: StartupView),
     MaterialRoute(page: LoginView),
     MaterialRoute(page: RegisterView),
+    MaterialRoute(page: AvailabilityChoiceView),
 // @stacked-route
   ],
   dependencies: [

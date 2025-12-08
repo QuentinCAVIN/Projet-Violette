@@ -64,6 +64,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '942876080772',
     projectId: 'violette-1f64e',
     storageBucket: 'violette-1f64e.firebasestorage.app',
+    iosClientId:
+        '942876080772-cqaan3pukk06cfcnir1881qe0r2aebsh.apps.googleusercontent.com',
     iosBundleId: 'com.example.violetteFront',
   );
 
@@ -73,6 +75,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '942876080772',
     projectId: 'violette-1f64e',
     storageBucket: 'violette-1f64e.firebasestorage.app',
+    iosClientId:
+        '942876080772-cqaan3pukk06cfcnir1881qe0r2aebsh.apps.googleusercontent.com',
     iosBundleId: 'com.example.violetteFront',
   );
 

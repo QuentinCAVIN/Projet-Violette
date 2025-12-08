@@ -4,7 +4,6 @@ import 'package:violette_front/ui/views/login/login_viewmodel.dart';
 
 import '../../../views/login/login_view.form.dart';
 
-
 class LoginForm extends ViewModelWidget<LoginViewModel> {
   final TextEditingController emailController;
   final TextEditingController passwordController;
@@ -52,7 +51,8 @@ class LoginForm extends ViewModelWidget<LoginViewModel> {
             ),
           ),
         //*******************************
-        ElevatedButton(onPressed: viewModel.login, child: const Text("Se connecter")),
+        ElevatedButton(
+            onPressed: viewModel.login, child: const Text("Se connecter")),
         ElevatedButton(
           onPressed: viewModel.navigateToRegister,
           child: const Text("J'ai déja un compte"),

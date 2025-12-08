@@ -23,37 +23,33 @@ class LoginView extends StackedView<LoginViewModel> with $LoginView {
     Widget? child,
   ) {
     return Scaffold(
-      body: Stack(
-        children: [
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF4016FF), Color(0xFFCF58FF)],
-              ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF4016FF), Color(0xFFCF58FF)],
+          ),
+        ),
+        child: Center(
+          child: Padding(
+            //TODO Question Elies: Coté register j'ai wrappé Padding dans un WIdget SingleScrollView
+            // Je devrais faire la même chose ici pour anticiper des écran vraiment trop petit? OUI!!!!!!!
+            padding: EdgeInsets.symmetric(horizontal: 25.0),
+            child: Column(
+              mainAxisSize: MainAxisSize
+                  .min, // grace à ça Column prends uniquement la taille de ses enfants et donc le Center au dessus fera effet.
+              //(= rien a centrer sur l'axe vertical sinon puisque la colonne occupe toute l'espace)
+              children: [
+                LoginHeader(),
+                LoginForm(
+                  emailController: emailController,
+                  passwordController: passwordController,
+                ),
+              ],
             ),
           ),
-          Center(
-            child: Padding(
-              //TODO Question Elies: Coté register j'ai wrappé Padding dans un WIdget SingleScrollView
-              // Je devrais faire la même chose ici pour anticiper des écran vraiment trop petit?
-              padding: EdgeInsets.symmetric(horizontal: 25.0),
-              child: Column(
-                mainAxisSize: MainAxisSize
-                    .min, // grace à ça Column prends uniquement la taille de ses enfants et donc le Center au dessus fera effet.
-                //(= rien a centrer sur l'axe vertical sinon puisque la colonne occupe toute l'espace)
-                children: [
-                  LoginHeader(),
-                  LoginForm(
-                    emailController: emailController,
-                    passwordController: passwordController,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

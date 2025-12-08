@@ -59,7 +59,8 @@ class LoginViewModel extends FormViewModel {
 
     if (authResult.hasError) {
       //TODO Faire un mapper pour les erreurs de Firebase
-      globalErrorMessage = "Combinaison adresse mail / mot de passe incorrecte.";
+      globalErrorMessage =
+          "Combinaison adresse mail / mot de passe incorrecte.";
       print(authResult.errorMessage);
       rebuildUi();
       return;
@@ -67,7 +68,9 @@ class LoginViewModel extends FormViewModel {
   }
 
   void navigateToRegister() {
-    _navigationService.replaceWithRegisterView();
+    _navigationService.replaceWith(
+      Routes.registerView,
+      transition: TransitionsBuilders.slideBottom,
+    );
   }
-
 }

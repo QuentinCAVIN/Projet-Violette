@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked/stacked_annotations.dart';
-import 'package:violette_front/ui/widgets/common/register_form/register_form.dart';
+import 'package:violette_front/ui/views/register/_widgets/register_form.dart';
 
 import '../../widgets/common/login_header/login_header.dart';
 import 'register_viewmodel.dart';
@@ -26,38 +26,35 @@ class RegisterView extends StackedView<RegisterViewModel> with $RegisterView {
     Widget? child,
   ) {
     return Scaffold(
-      body: Stack(
-        children: [
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF4016FF), Color(0xFFCF58FF)],
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF4016FF), Color(0xFFCF58FF)],
+          ),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 25.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  LoginHeader(),
+                  RegisterForm(
+                    firstNameController: firstNameController,
+                    lastNameController: lastNameController,
+                    emailController: emailController,
+                    passwordController: passwordController,
+                    passwordConfirmationController:
+                        passwordConfirmationController,
+                  ),
+                ],
               ),
             ),
           ),
-          Center(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 25.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    LoginHeader(),
-                    RegisterForm(
-                      firstNameController: firstNameController,
-                      lastNameController: lastNameController,
-                      emailController: emailController,
-                      passwordController: passwordController,
-                      passwordConfirmationController: passwordConfirmationController,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
