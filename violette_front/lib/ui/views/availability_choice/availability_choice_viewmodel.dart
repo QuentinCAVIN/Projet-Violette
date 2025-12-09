@@ -2,49 +2,26 @@ import 'package:stacked/stacked.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:violette_front/models/show_date.dart';
 import 'package:violette_front/models/availability_status.dart';
+import 'package:violette_front/services/show_date_service.dart';
+
+import '../../../app/app.locator.dart';
 
 class AvailabilityChoiceViewModel extends BaseViewModel {
+  // Attributs du widget DayCell a rajouter ici?
 
-  // Attributs du widget DayCell
+
+  final ShowDateService showDateService = locator<ShowDateService>();
+
 
   CalendarFormat calendarFormat = CalendarFormat.month;
   DateTime focusedDay = DateTime.now();
   DateTime? selectedDay;
 
-//****************************************************************************//
-  // Liste des ShowDate en mémoire pour l’instant
-  final List<ShowDate> showDates = [];
-  AvailabilityChoiceViewModel() {
-    // pour tester le calendrier
-    showDates.addAll([
-      ShowDate(
-        uid: "1",
-        date: DateTime(2025, 12, 10),
-        availabilityStatus: AvailabilityStatus.available,
-      ),
-      ShowDate(
-        uid: "2",
-        date: DateTime(2025, 12, 12),
-        availabilityStatus: AvailabilityStatus.conditional,
-      ),
-      ShowDate(
-        uid: "3",
-        date: DateTime(2025, 12, 15),
-        availabilityStatus: AvailabilityStatus.unavailable,
-      ),
-      ShowDate(
-        uid: "4",
-        date: DateTime(2025, 12, 18),
-        availabilityStatus: AvailabilityStatus.pending,
-      ),
-      ShowDate(
-        uid: "5",
-        date: DateTime(2025, 12, 21),
-        availabilityStatus: AvailabilityStatus.available,
-      ),
-    ]);
+  List<ShowDate> showDates = [];
+
+  Future<void> loadShowDates() async {
+    showDates = await runBusyFuture(showDateService.getAllShowDates());
   }
-//****************************************************************************//
 
   void onDaySelected(DateTime tappedDay, DateTime newFocusedDay) {
     focusedDay = newFocusedDay;

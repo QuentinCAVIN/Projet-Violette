@@ -3,6 +3,7 @@ import 'package:mockito/mockito.dart';
 import 'package:violette_front/app/app.locator.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:violette_front/services/violette_user_service.dart';
+import 'package:violette_front/services/show_date_service.dart';
 // @stacked-import
 
 import 'test_helpers.mocks.dart';
@@ -14,6 +15,7 @@ import 'test_helpers.mocks.dart';
     MockSpec<BottomSheetService>(onMissingStub: OnMissingStub.returnDefault),
     MockSpec<DialogService>(onMissingStub: OnMissingStub.returnDefault),
     MockSpec<VioletteUserService>(onMissingStub: OnMissingStub.returnDefault),
+    MockSpec<ShowDateService>(onMissingStub: OnMissingStub.returnDefault),
 // @stacked-mock-spec
   ],
 )
@@ -22,6 +24,7 @@ void registerServices() {
   getAndRegisterBottomSheetService();
   getAndRegisterDialogService();
   getAndRegisterUserService();
+  getAndRegisterShowDateService();
 // @stacked-mock-register
 }
 
@@ -83,6 +86,13 @@ MockUserService getAndRegisterUserService() {
   _removeRegistrationIfExists<VioletteUserService>();
   final service = MockUserService();
   locator.registerSingleton<VioletteUserService>(service);
+  return service;
+}
+
+MockShowDateService getAndRegisterShowDateService() {
+  _removeRegistrationIfExists<ShowDateService>();
+  final service = MockShowDateService();
+  locator.registerSingleton<ShowDateService>(service);
   return service;
 }
 // @stacked-mock-create

@@ -11,7 +11,10 @@ class AvailabilityChoiceView extends StackedView<AvailabilityChoiceViewModel> {
     BuildContext context,
     AvailabilityChoiceViewModel viewModel,
     Widget? child,
-  ) {
+  )  {
+    if (viewModel.isBusy) {
+      return const Center(child: CircularProgressIndicator());
+    }
     return Scaffold(
       appBar: AppBar(
         title: const Text('Sélection des dates'),
@@ -29,4 +32,11 @@ class AvailabilityChoiceView extends StackedView<AvailabilityChoiceViewModel> {
   @override
   AvailabilityChoiceViewModel viewModelBuilder(BuildContext context) =>
       AvailabilityChoiceViewModel();
+
+  @override
+  void onViewModelReady(AvailabilityChoiceViewModel viewModel) {
+    viewModel.loadShowDates();
+  }
 }
+
+

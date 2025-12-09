@@ -11,6 +11,7 @@ import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i3;
 import 'package:stacked_services/stacked_services.dart' as _i2;
 import 'package:violette_front/models/violette_user.dart' as _i8;
+import 'package:violette_front/services/show_date_service.dart' as _i9;
 import 'package:violette_front/services/violette_user_service.dart' as _i7;
 
 // ignore_for_file: type=lint
@@ -723,3 +724,8 @@ class MockVioletteUserService extends _i1.Mock
         returnValueForMissingStub: _i5.Future<_i8.VioletteUser?>.value(),
       ) as _i5.Future<_i8.VioletteUser?>);
 }
+
+/// A class which mocks [ShowDateService].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockShowDateService extends _i1.Mock implements _i9.ShowDateService {}

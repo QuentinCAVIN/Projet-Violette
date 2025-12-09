@@ -34,3 +34,33 @@ extension AvailabilityStatusX on AvailabilityStatus {
     }
   }
 }
+
+// Ci -dessosu pour les ocnversion Firestore
+AvailabilityStatus availabilityStatusFromString(String value) {
+  switch (value) {
+    case 'available':
+      return AvailabilityStatus.available;
+    case 'conditional':
+      return AvailabilityStatus.conditional;
+    case 'unavailable':
+      return AvailabilityStatus.unavailable;
+    case 'pending':
+    default:
+      return AvailabilityStatus.pending;
+  }
+}
+
+extension AvailabilityStatusFirestoreX on AvailabilityStatus {
+  String get firestoreValue {
+    switch (this) {
+      case AvailabilityStatus.available:
+        return 'available';
+      case AvailabilityStatus.conditional:
+        return 'conditional';
+      case AvailabilityStatus.unavailable:
+        return 'unavailable';
+      case AvailabilityStatus.pending:
+        return 'pending';
+    }
+  }
+}

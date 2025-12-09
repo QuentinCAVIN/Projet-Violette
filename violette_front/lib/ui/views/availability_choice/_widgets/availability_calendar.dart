@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:violette_front/models/availability_status.dart';
 import '../availability_choice_viewmodel.dart';
 import 'day_cell.dart';
 
@@ -66,5 +65,3 @@ class AvailabilityCalendar
     );
   }
 }
-
-

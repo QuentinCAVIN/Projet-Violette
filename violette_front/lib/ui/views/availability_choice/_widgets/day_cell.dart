@@ -29,7 +29,7 @@ class DayCell extends ViewModelWidget<AvailabilityChoiceViewModel> {
       );
     }
 
-    // Cas avec statut → on utilise la couleur de Availability_status
+    // Cas avec status → on utilise la couleur de Availability_status
     return Container(
       margin: const EdgeInsets.all(4),
       decoration: BoxDecoration(
@@ -52,5 +52,4 @@ class DayCell extends ViewModelWidget<AvailabilityChoiceViewModel> {
       ),
     );
   }
-
 }

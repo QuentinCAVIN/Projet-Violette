@@ -9,6 +9,7 @@ import 'package:violette_front/ui/views/login/login_view.dart';
 import 'package:violette_front/ui/views/register/register_view.dart';
 import 'package:violette_front/services/violette_user_service.dart';
 import 'package:violette_front/ui/views/availability_choice/availability_choice_view.dart';
+import 'package:violette_front/services/show_date_service.dart';
 // @stacked-import
 
 @StackedApp(
@@ -26,6 +27,7 @@ import 'package:violette_front/ui/views/availability_choice/availability_choice_
     LazySingleton(classType: NavigationService),
     LazySingleton(classType: FirebaseAuthenticationService),
     LazySingleton(classType: VioletteUserService),
+    LazySingleton(classType: ShowDateService),
 // @stacked-service
   ],
   bottomsheets: [
