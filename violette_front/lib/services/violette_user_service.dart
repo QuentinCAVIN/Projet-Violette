@@ -26,10 +26,11 @@ class VioletteUserService {
     if (userData == null) return null; //
 
     return VioletteUser(
-        uid: doc.id,
-        firstName: userData["firstName"],
-        lastName: userData["lastName"],
-        email: userData["email"]);
+      uid: doc.id,
+      firstName: userData["firstName"],
+      lastName: userData["lastName"],
+      email: userData["email"],
+    );
   }
 }
 

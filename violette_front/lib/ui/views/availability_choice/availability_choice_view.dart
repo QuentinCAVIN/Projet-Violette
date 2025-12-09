@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
-
 import '_widgets/availability_calendar.dart';
 import 'availability_choice_viewmodel.dart';
 
@@ -18,19 +17,16 @@ class AvailabilityChoiceView extends StackedView<AvailabilityChoiceViewModel> {
         title: const Text('Sélection des dates'),
       ),
       backgroundColor: Theme.of(context).colorScheme.background,
-      body: Container(
-        padding: const EdgeInsets.only(left: 25.0, right: 25.0),
-        child:
-        const Center(
-            child: AvailabilityCalendar(),
+      body: const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 25.0),
+        child: Center(
+          child: AvailabilityCalendar(),
         ),
       ),
     );
   }
 
   @override
-  AvailabilityChoiceViewModel viewModelBuilder(
-    BuildContext context,
-  ) =>
+  AvailabilityChoiceViewModel viewModelBuilder(BuildContext context) =>
       AvailabilityChoiceViewModel();
 }

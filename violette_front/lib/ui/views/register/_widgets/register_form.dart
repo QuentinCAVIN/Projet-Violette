@@ -92,6 +92,10 @@ class RegisterForm extends ViewModelWidget<RegisterViewModel> {
         ElevatedButton(
           onPressed: (viewModel.register),
           child: Text("Créer mon compte "),
+          style: Theme.of(context)
+              .elevatedButtonTheme
+              .style, // TODO appliquer le theme partout comme ceci
+          // Le theme est appellé dans le main
         ),
         ElevatedButton(
           onPressed: (viewModel.navigateToLogin),
