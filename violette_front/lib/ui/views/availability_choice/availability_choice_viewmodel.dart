@@ -1,17 +1,21 @@
 import 'package:stacked/stacked.dart';
+import 'package:stacked_services/stacked_services.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:violette_front/app/app.router.dart';
+
 import 'package:violette_front/models/show_date.dart';
 import 'package:violette_front/models/availability_status.dart';
 import 'package:violette_front/services/show_date_service.dart';
 
 import '../../../app/app.locator.dart';
+import '../home/home_view.dart';
 
 class AvailabilityChoiceViewModel extends BaseViewModel {
   // Attributs du widget DayCell a rajouter ici?
 
-
-  final ShowDateService showDateService = locator<ShowDateService>();
-
+  final _navigationService = locator<NavigationService>();
+  final ShowDateService _showDateService = locator<ShowDateService>();
+  final SnackbarService _snackbarService = locator<SnackbarService>();
 
   CalendarFormat calendarFormat = CalendarFormat.month;
   DateTime focusedDay = DateTime.now();
@@ -20,7 +24,8 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
   List<ShowDate> showDates = [];
 
   Future<void> loadShowDates() async {
-    showDates = await runBusyFuture(showDateService.getAllShowDates());
+    //runBusyFuture sert a fair un setBusy true + await + setBusyFalse
+    showDates = await runBusyFuture(_showDateService.getAllShowDates());
   }
 
   void onDaySelected(DateTime tappedDay, DateTime newFocusedDay) {
@@ -56,6 +61,19 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
   bool isSelectedDay(DateTime day) {
     // Retourne true uniquement si 'day' est la date que l’utilisateur a sélectionnée
     return selectedDay != null && isSameDay(day, selectedDay);
+  }
+
+  Future<void> onValidatePressed() async {
+    setBusy(true);
+    await _showDateService.updateAllShowDates(showDates);
+    //await Future.delayed(const Duration(seconds: 3));
+    setBusy(false);
+    _navigationService.replaceWithHomeView;
+    // Affiche le message une fois sur HomeView
+    _snackbarService.showSnackbar(
+      message: "Disponibilités enregistrées !",
+      duration: const Duration(seconds: 3),
+    );
   }
 
 //****************************************************************************//

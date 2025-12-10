@@ -10,6 +10,7 @@ import 'package:violette_front/ui/views/register/register_view.dart';
 import 'package:violette_front/services/violette_user_service.dart';
 import 'package:violette_front/ui/views/availability_choice/availability_choice_view.dart';
 import 'package:violette_front/services/show_date_service.dart';
+import 'package:violette_front/ui/views/create_show_date/create_show_date_view.dart';
 // @stacked-import
 
 @StackedApp(
@@ -19,6 +20,7 @@ import 'package:violette_front/services/show_date_service.dart';
     MaterialRoute(page: LoginView),
     MaterialRoute(page: RegisterView),
     MaterialRoute(page: AvailabilityChoiceView),
+    MaterialRoute(page: CreateShowDateView),
 // @stacked-route
   ],
   dependencies: [
@@ -28,6 +30,7 @@ import 'package:violette_front/services/show_date_service.dart';
     LazySingleton(classType: FirebaseAuthenticationService),
     LazySingleton(classType: VioletteUserService),
     LazySingleton(classType: ShowDateService),
+    LazySingleton(classType: SnackbarService),
 // @stacked-service
   ],
   bottomsheets: [

@@ -31,6 +31,9 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       title: 'Viollette',
       /*theme: ThemeData(
+        snackBarTheme: SnackBarThemeData(
+          backgroundColor: Colors.white,
+        ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: Colors.white,

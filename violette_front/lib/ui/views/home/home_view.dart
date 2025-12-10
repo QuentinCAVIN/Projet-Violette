@@ -45,9 +45,17 @@ class HomeView extends StackedView<HomeViewModel> {
                     //**********************************************************
                     MaterialButton(
                       color: kcPrimaryColor,
+                      onPressed: viewModel.navigateToShowDateFormView,
+                      child: const Text(
+                        'Créer une nouvelle date (vue gérant)',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                    MaterialButton(
+                      color: kcPrimaryColor,
                       onPressed: viewModel.navigateToAvailabilityChoiceView,
                       child: const Text(
-                        'Dispos',
+                        'Sélection des dispos (vue artiste)',
                         style: TextStyle(color: Colors.white),
                       ),
                     ),

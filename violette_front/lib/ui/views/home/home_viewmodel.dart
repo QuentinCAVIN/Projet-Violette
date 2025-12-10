@@ -27,6 +27,10 @@ class HomeViewModel extends BaseViewModel {
     _navigationService.navigateToAvailabilityChoiceView();
   }
 
+  void navigateToShowDateFormView() {
+    _navigationService.navigateToCreateShowDateView();
+  }
+
   Future<void> loadUser() async {
     setBusy(true);
     // Attention le User est forcé (!) car le listener permet d'avoir toujours un User sur la home page

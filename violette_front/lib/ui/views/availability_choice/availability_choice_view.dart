@@ -11,19 +11,39 @@ class AvailabilityChoiceView extends StackedView<AvailabilityChoiceViewModel> {
     BuildContext context,
     AvailabilityChoiceViewModel viewModel,
     Widget? child,
-  )  {
-    if (viewModel.isBusy) {
-      return const Center(child: CircularProgressIndicator());
-    }
+  ) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Sélection des dates'),
       ),
       backgroundColor: Theme.of(context).colorScheme.background,
-      body: const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 25.0),
-        child: Center(
-          child: AvailabilityCalendar(),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 20.0),
+          child: Column(
+            children: [
+              const AvailabilityCalendar(),
+              const SizedBox(height: 30),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    await viewModel.onValidatePressed();
+                  },
+                  child: viewModel.isBusy
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text("Valider"),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -38,5 +58,3 @@ class AvailabilityChoiceView extends StackedView<AvailabilityChoiceViewModel> {
     viewModel.loadShowDates();
   }
 }
-
-

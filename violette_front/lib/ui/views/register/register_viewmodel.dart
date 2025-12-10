@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_firebase_auth/stacked_firebase_auth.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:violette_front/app/app.locator.dart';
 import 'package:violette_front/app/app.router.dart';
+
 import 'package:violette_front/ui/views/register/register_view.form.dart';
 
 import '../../../services/violette_user_service.dart';
@@ -63,7 +63,7 @@ class RegisterViewModel extends FormViewModel {
     }
   }
 
-  Future register() async {
+  Future submitRegisterForm() async {
     formAlreadyValidatedOnce = true;
     globalErrorMessage = null;
 
@@ -97,7 +97,7 @@ class RegisterViewModel extends FormViewModel {
   }
 
   void navigateToLogin() {
-    _navigationService.replaceWithLoginView();
+    _navigationService.replaceWithLoginView;
   }
 }
 
