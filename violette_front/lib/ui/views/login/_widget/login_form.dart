@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:violette_front/ui/views/login/login_viewmodel.dart';
 
-import '../../../views/login/login_view.form.dart';
+import '../login_view.form.dart';
 
 class LoginForm extends ViewModelWidget<LoginViewModel> {
   final TextEditingController emailController;

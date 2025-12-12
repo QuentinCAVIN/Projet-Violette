@@ -4,33 +4,23 @@ import '../models/violette_user.dart';
 
 class VioletteUserService {
   final _db = FirebaseFirestore.instance;
-  final String collection = "users";
+  final String collectionName = "users";
 
   Future<void> addUser(VioletteUser user) async {
-    _db.collection(collection).doc(user.uid).set({
-      "firstName": user.firstName,
-      "lastName": user.lastName,
-      "email": user.email
-    });
+    _db.collection(collectionName).doc(user.uid).set(user.toFirestore());
     print(
-        "${user.firstName} ${user.lastName} adresse mail:${user.email} avec l'uid: ${user.uid} a bien été ajouté au Firestore");
+        "${user.firstName} ${user.lastName} adresse mail:${user.email} avec l'uid: ${user.uid} et le role ${user.roles[0]} a bien été ajouté au Firestore");
   }
 
   Future<VioletteUser?> getUser(String uid) async {
-    final doc = await _db.collection(collection).doc(uid).get();
+    final doc = await _db.collection(collectionName).doc(uid).get();
 
     if (!doc.exists) return null;
 
-    final userData = doc
-        .data(); ///////TODO: Question Elies: au final dans une DB SQL pas de nul possible
+    final userData = doc.data(); ///////TODO: Question Elies: au final dans une DB SQL pas de nul possible, el test
     if (userData == null) return null; //
 
-    return VioletteUser(
-      uid: doc.id,
-      firstName: userData["firstName"],
-      lastName: userData["lastName"],
-      email: userData["email"],
-    );
+    return VioletteUser.fromFirestore(doc,null);
   }
 }
 

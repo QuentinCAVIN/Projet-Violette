@@ -3,6 +3,7 @@ import 'package:stacked/stacked.dart';
 
 import 'package:violette_front/ui/views/register/register_viewmodel.dart';
 
+import '../../../../models/enums/role.dart';
 import '../register_view.form.dart';
 
 class RegisterForm extends ViewModelWidget<RegisterViewModel> {
@@ -67,6 +68,29 @@ class RegisterForm extends ViewModelWidget<RegisterViewModel> {
         ),
         const SizedBox(height: 16),
 
+        // Boutton radio
+        RadioGroup<Role>(
+          groupValue: viewModel.role,
+          onChanged: (Role? value) {
+            viewModel.onRoleChanged(value!);
+          },
+          child: Column(
+            children: <Widget>[
+              ListTile(
+                title: const Text('Artiste'),
+                leading: const Radio<Role>(value: Role.artist),
+                onTap: () => viewModel.onRoleChanged(Role.artist),
+              ),
+              ListTile(
+                title: const Text('Manager'),
+                leading: const Radio<Role>(value: Role.manager),
+                onTap: () => viewModel.onRoleChanged(Role.manager),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
         // Champ Mot de passe
         TextFormField(
           controller: passwordController,
@@ -90,7 +114,7 @@ class RegisterForm extends ViewModelWidget<RegisterViewModel> {
           keyboardType: TextInputType.visiblePassword,
         ),
 
-        //TODO Voir avec ELies si on peut faire un Widget avec le message d'erreur (utilisé dans 2 endroits)
+        //TODO Vu avec ELies : faire un Widget avec le message d'erreur (register et login)
         //********************************
         // Affichage du message d'erreur *
         //********************************

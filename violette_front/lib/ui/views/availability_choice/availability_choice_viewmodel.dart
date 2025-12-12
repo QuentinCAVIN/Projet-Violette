@@ -4,7 +4,7 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:violette_front/app/app.router.dart';
 
 import 'package:violette_front/models/show_date.dart';
-import 'package:violette_front/models/availability_status.dart';
+import 'package:violette_front/models/enums/availability_status.dart';
 import 'package:violette_front/services/show_date_service.dart';
 
 import '../../../app/app.locator.dart';

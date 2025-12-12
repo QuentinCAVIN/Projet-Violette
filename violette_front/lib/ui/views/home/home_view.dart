@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:violette_front/ui/common/ui_helpers.dart';
 
+import '../../../models/enums/role.dart';
 import 'home_viewmodel.dart';
 
 class HomeView extends StackedView<HomeViewModel> {
@@ -43,6 +44,9 @@ class HomeView extends StackedView<HomeViewModel> {
                     ),
                     //**********************************************************
                     const SizedBox(height: 16),
+
+                    // Bouton navigation creation date
+                    if (currentUser!.roles.contains(Role.manager))
                     ElevatedButton(
                       onPressed: viewModel.navigateToShowDateFormView,
                       child: const Text(
@@ -50,6 +54,9 @@ class HomeView extends StackedView<HomeViewModel> {
                       ),
                     ),
                     const SizedBox(height: 12),
+
+                    // Bouton navigation sélection des dispos
+                    if (currentUser.roles.contains(Role.artist))
                     ElevatedButton(
                       onPressed: viewModel.navigateToAvailabilityChoiceView,
                       child: const Text(
@@ -62,12 +69,12 @@ class HomeView extends StackedView<HomeViewModel> {
                       child: const Text('Déconnexion'),
                     ),
                     const SizedBox(height: 24),
-                    const Text(
-                      'G.O.A.T.!!',
-                      style: TextStyle(
-                        fontSize: 35,
-                        fontWeight: FontWeight.w900,
-                      ),
+                     Text(
+                       // TODO rajouter de quoi afficher une liste de role et non pas le premier de la liste
+                      "Grade : ${currentUser.roles[0].label} " ,
+                       style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                         letterSpacing: 1.2,
+                       ),
                     ),
                     verticalSpaceMedium,
                     ElevatedButton(

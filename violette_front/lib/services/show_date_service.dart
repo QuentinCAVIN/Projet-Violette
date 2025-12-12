@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:violette_front/models/show_date.dart';
-import 'package:violette_front/models/availability_status.dart';
+import 'package:violette_front/models/enums/availability_status.dart';
 
 class ShowDateService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -42,6 +42,7 @@ class ShowDateService {
       ..addAll(updatedList);
   }
 
+  //TODO implémenter une methode toFirebase sur SHowDate
   Future<void> addShowDate(ShowDate showDate) async {
     _db.collection(collectionName).add({
       "date": showDate.date,

@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:violette_front/models/availability_status.dart';
+import 'package:violette_front/models/enums/availability_status.dart';
 
 class ShowDate {
   final String? uid;
@@ -7,7 +7,7 @@ class ShowDate {
   AvailabilityStatus availabilityStatus;
 
   //TODO A rajouter plus tard:
-  //La feuille de route de la date, le type d'artiste a qui elle est déstiné (chanteur, danseur)
+  //La feuille de route de la date, le type d'artiste a qui elle est déstiné (chanteur, danseur ect)
 
   ShowDate({
     this.uid,

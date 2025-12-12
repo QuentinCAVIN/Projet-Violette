@@ -705,7 +705,7 @@ class MockDialogService extends _i1.Mock implements _i3.DialogService {
 class MockVioletteUserService extends _i1.Mock
     implements _i8.VioletteUserService {
   @override
-  String get collection => (super.noSuchMethod(
+  String get collectionName => (super.noSuchMethod(
         Invocation.getter(#collection),
         returnValue: _i4.dummyValue<String>(
           this,

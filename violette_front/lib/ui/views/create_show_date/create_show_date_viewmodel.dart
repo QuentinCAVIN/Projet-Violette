@@ -2,7 +2,7 @@ import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:violette_front/app/app.locator.dart';
 import 'package:violette_front/app/app.router.dart';
-import '../../../models/availability_status.dart';
+import '../../../models/enums/availability_status.dart';
 import '../../../models/show_date.dart';
 import '../../../services/show_date_service.dart';
 import 'create_show_date_view.form.dart';
@@ -57,7 +57,7 @@ class CreateShowDateViewModel extends FormViewModel {
       }
     }
 
-    // Prix du cachet
+    // Montant du cachet
     if (feeValue != null && feeValue!.isNotEmpty) {
       final parsed = double.tryParse(feeValue!.replaceAll(',', '.'));
       if (parsed == null || parsed < 0) {
@@ -76,7 +76,6 @@ class CreateShowDateViewModel extends FormViewModel {
     setFormStatus();
     rebuildUi();
   }
-
 
   Future<void> submitShowDateForm() async {
     formAlreadyValidatedOnce = true;
@@ -103,7 +102,6 @@ class CreateShowDateViewModel extends FormViewModel {
     _navigationService.back();
   }
 }
-
 
 
 //TOdo A mettre dans une classe DateHelper

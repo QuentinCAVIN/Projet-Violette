@@ -6,6 +6,7 @@ import 'package:violette_front/app/app.router.dart';
 
 import 'package:violette_front/ui/views/register/register_view.form.dart';
 
+import '../../../models/enums/role.dart';
 import '../../../services/violette_user_service.dart';
 import 'package:violette_front/models/violette_user.dart';
 
@@ -16,6 +17,7 @@ class RegisterViewModel extends FormViewModel {
 
   String? globalErrorMessage;
   bool formAlreadyValidatedOnce = false;
+  Role role = Role.artist;
 
   @override
   void setFormStatus() {
@@ -92,12 +94,17 @@ class RegisterViewModel extends FormViewModel {
     final String firstName = firstNameValue!.trim();
     final String lastName = lastNameValue!.trim();
     VioletteUser user = VioletteUser(
-        uid: userId, firstName: firstName, lastName: lastName, email: email);
+        uid: userId, firstName: firstName, lastName: lastName, email: email, roles: [role]);
     await _userServices.addUser(user);
   }
 
   void navigateToLogin() {
     _navigationService.replaceWithLoginView();
+  }
+
+  void onRoleChanged(Role role) {
+    this.role = role;
+    rebuildUi();
   }
 }
 

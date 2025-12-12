@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:violette_front/ui/views/availability_choice/availability_choice_viewmodel.dart';
 
-import '../../../../models/availability_status.dart';
+import '../../../../models/enums/availability_status.dart';
 
 class DayCell extends ViewModelWidget<AvailabilityChoiceViewModel> {
   final DateTime day;
