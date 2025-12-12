@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
-import 'package:violette_front/ui/common/app_colors.dart';
 import 'package:violette_front/ui/common/ui_helpers.dart';
 
 import 'home_viewmodel.dart';
@@ -43,30 +42,26 @@ class HomeView extends StackedView<HomeViewModel> {
                       ],
                     ),
                     //**********************************************************
-                    MaterialButton(
-                      color: kcPrimaryColor,
+                    const SizedBox(height: 16),
+                    ElevatedButton(
                       onPressed: viewModel.navigateToShowDateFormView,
                       child: const Text(
                         'Créer une nouvelle date (vue gérant)',
-                        style: TextStyle(color: Colors.white),
                       ),
                     ),
-                    MaterialButton(
-                      color: kcPrimaryColor,
+                    const SizedBox(height: 12),
+                    ElevatedButton(
                       onPressed: viewModel.navigateToAvailabilityChoiceView,
                       child: const Text(
                         'Sélection des dispos (vue artiste)',
-                        style: TextStyle(color: Colors.white),
                       ),
                     ),
-                    MaterialButton(
-                      color: kcPrimaryColor,
+                    const SizedBox(height: 12),
+                    ElevatedButton(
                       onPressed: viewModel.logOut,
-                      child: const Text(
-                        'Déconnexion',
-                        style: TextStyle(color: Colors.white),
-                      ),
+                      child: const Text('Déconnexion'),
                     ),
+                    const SizedBox(height: 24),
                     const Text(
                       'G.O.A.T.!!',
                       style: TextStyle(
@@ -75,33 +70,30 @@ class HomeView extends StackedView<HomeViewModel> {
                       ),
                     ),
                     verticalSpaceMedium,
-                    MaterialButton(
-                      color: Colors.black,
-                      onPressed: viewModel.incrementCounter,
-                      child: Text(
-                        viewModel.counterLabel,
-                        style: const TextStyle(color: Colors.white),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black,
+                        foregroundColor: Colors.white,
                       ),
+                      onPressed: viewModel.incrementCounter,
+                      child: Text(viewModel.counterLabel),
                     ),
                   ],
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    MaterialButton(
-                      color: kcDarkGreyColor,
-                      onPressed: viewModel.showDialog,
-                      child: const Text(
-                        'Show Dialog',
-                        style: TextStyle(color: Colors.white),
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: viewModel.showDialog,
+                        child: const Text('Show Dialog'),
                       ),
                     ),
-                    MaterialButton(
-                      color: kcDarkGreyColor,
-                      onPressed: viewModel.showBottomSheet,
-                      child: const Text(
-                        'Show Bottom Sheet',
-                        style: TextStyle(color: Colors.white),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: viewModel.showBottomSheet,
+                        child: const Text('Show Bottom Sheet'),
                       ),
                     ),
                   ],

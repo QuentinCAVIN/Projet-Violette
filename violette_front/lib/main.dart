@@ -5,6 +5,7 @@ import 'package:violette_front/app/app.dialogs.dart';
 import 'package:violette_front/app/app.locator.dart';
 import 'package:violette_front/app/app.router.dart';
 import 'package:stacked_services/stacked_services.dart';
+import 'package:violette_front/ui/common/app_theme.dart';
 
 import 'firebase_options.dart';
 
@@ -30,15 +31,7 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Viollette',
-      /*theme: ThemeData(
-        snackBarTheme: SnackBarThemeData(
-          backgroundColor: Colors.white,
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: Colors.white,
-        )
-      ),*/ //Theme par defaut
+      theme: VioletteTheme.theme,
       initialRoute: Routes.startupView,
       onGenerateRoute: StackedRouter().onGenerateRoute,
       navigatorKey: StackedService.navigatorKey,

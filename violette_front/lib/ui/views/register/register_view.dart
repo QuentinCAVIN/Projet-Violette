@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked/stacked_annotations.dart';
+import 'package:violette_front/ui/common/app_theme.dart';
 import 'package:violette_front/ui/views/register/_widgets/register_form.dart';
+import 'package:violette_front/ui/widgets/common/sparkle_background/sparkle_background.dart';
 
 import '../../widgets/common/login_header/login_header.dart';
 import 'register_viewmodel.dart';
@@ -27,30 +29,37 @@ class RegisterView extends StackedView<RegisterViewModel> with $RegisterView {
   ) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF4016FF), Color(0xFFCF58FF)],
-          ),
-        ),
-        child: Center(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 25.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  LoginHeader(),
-                  RegisterForm(
-                    firstNameController: firstNameController,
-                    lastNameController: lastNameController,
-                    emailController: emailController,
-                    passwordController: passwordController,
-                    passwordConfirmationController:
-                        passwordConfirmationController,
+        decoration: VioletteTheme.gradientBackground,
+        child: SparkleBackground(
+          sparkleCount: 25,
+          child: SafeArea(
+            child: SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: MediaQuery.of(context).size.height -
+                      MediaQuery.of(context).padding.top -
+                      MediaQuery.of(context).padding.bottom,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 60),
+                      const LoginHeader(),
+                      const SizedBox(height: 48),
+                      RegisterForm(
+                        firstNameController: firstNameController,
+                        lastNameController: lastNameController,
+                        emailController: emailController,
+                        passwordController: passwordController,
+                        passwordConfirmationController:
+                            passwordConfirmationController,
+                      ),
+                      const SizedBox(height: 40),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),

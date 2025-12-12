@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked/stacked_annotations.dart';
+import 'package:violette_front/ui/common/app_theme.dart';
 import 'package:violette_front/ui/widgets/common/login_form/login_form.dart';
 import 'package:violette_front/ui/widgets/common/login_header/login_header.dart';
+import 'package:violette_front/ui/widgets/common/sparkle_background/sparkle_background.dart';
 
 import 'login_view.form.dart';
 import 'login_viewmodel.dart';
@@ -24,29 +26,36 @@ class LoginView extends StackedView<LoginViewModel> with $LoginView {
   ) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF4016FF), Color(0xFFCF58FF)],
-          ),
-        ),
-        child: Center(
-          child: Padding(
-            //TODO Question Elies: Coté register j'ai wrappé Padding dans un WIdget SingleScrollView
-            // Je devrais faire la même chose ici pour anticiper des écran vraiment trop petit? OUI!!!!!!!
-            padding: EdgeInsets.symmetric(horizontal: 25.0),
-            child: Column(
-              mainAxisSize: MainAxisSize
-                  .min, // grace à ça Column prends uniquement la taille de ses enfants et donc le Center au dessus fera effet.
-              //(= rien a centrer sur l'axe vertical sinon puisque la colonne occupe toute l'espace)
-              children: [
-                LoginHeader(),
-                LoginForm(
-                  emailController: emailController,
-                  passwordController: passwordController,
+        decoration: VioletteTheme.gradientBackground,
+        child: SparkleBackground(
+          sparkleCount: 25,
+          child: SafeArea(
+            child: SingleChildScrollView(
+              child: ConstrainedBox(
+                // ConstrainedBox permet d'imposer des contraintes de hauteur et largeur
+                constraints: BoxConstraints(
+                  // minHeight définit la hauteur MINIMALE que doit occuper l'enfant. L'objectif ici : faire en sorte que le contenu occupe AU MOINS la hauteur totale disponible à l'écran.
+                  minHeight: MediaQuery.of(context).size.height
+                      - MediaQuery.of(context).padding.top// Représente l'espace que l'application de doit pas recouvrir en haut et en bas (bar de status et de navigation
+                      - MediaQuery.of(context).padding.bottom,//
                 ),
-              ],
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 60),
+                      const LoginHeader(),
+                      const SizedBox(height: 48),
+                      LoginForm(
+                        emailController: emailController,
+                        passwordController: passwordController,
+                      ),
+                      const SizedBox(height: 40),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
         ),

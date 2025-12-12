@@ -34,73 +34,97 @@ class RegisterForm extends ViewModelWidget<RegisterViewModel> {
   ) {
     return Column(
       children: [
+        //Prénom
         TextFormField(
           controller: firstNameController,
           decoration: InputDecoration(
-            labelText: "Prénom",
+            hintText: 'Prénom',
             errorText: viewModel.firstNameValidationMessage,
           ),
           keyboardType: TextInputType.name,
         ),
+        const SizedBox(height: 16),
+
+        // Champ Nom
         TextFormField(
           controller: lastNameController,
           decoration: InputDecoration(
-            labelText: "Nom",
+            hintText: 'Nom',
             errorText: viewModel.lastNameValidationMessage,
           ),
           keyboardType: TextInputType.name,
         ),
+        const SizedBox(height: 16),
+
+        // Champ Email
         TextFormField(
           controller: emailController,
           decoration: InputDecoration(
-            labelText: "Adresse mail",
+            hintText: 'Email',
             errorText: viewModel.emailValidationMessage,
           ),
           keyboardType: TextInputType.emailAddress,
         ),
+        const SizedBox(height: 16),
+
+        // Champ Mot de passe
         TextFormField(
           controller: passwordController,
           decoration: InputDecoration(
-            labelText: "Mot de passe",
+            hintText: 'Mot de passe',
             errorText: viewModel.passwordValidationMessage,
           ),
+          obscureText: true,
           keyboardType: TextInputType.visiblePassword,
         ),
+        const SizedBox(height: 16),
+
+        // Champ Confirmation du mot de passe
         TextFormField(
           controller: passwordConfirmationController,
           decoration: InputDecoration(
-            labelText: "Confirmation du mot de passe",
+            hintText: 'Confirmation du mot de passe',
             errorText: viewModel.passwordConfirmationValidationMessage,
           ),
+          obscureText: true,
           keyboardType: TextInputType.visiblePassword,
         ),
+
+        //TODO Voir avec ELies si on peut faire un Widget avec le message d'erreur (utilisé dans 2 endroits)
         //********************************
         // Affichage du message d'erreur *
         //********************************
         if (viewModel.globalErrorMessage != null)
           Padding(
-            padding: const EdgeInsets.only(bottom: 8.0),
+            padding: const EdgeInsets.only(top: 12.0, bottom: 8.0),
             child: Text(
               viewModel.globalErrorMessage!,
               style: const TextStyle(
-                color: Colors.red,
-                fontSize: 13,
+                color: Colors.redAccent,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
               ),
+              textAlign: TextAlign.center,
             ),
           ),
         //*******************************
-        ElevatedButton(
-          onPressed: (viewModel.submitRegisterForm),
-          child: Text("Créer mon compte "),
-          style: Theme.of(context)
-              .elevatedButtonTheme
-              .style, // TODO appliquer le theme partout comme ceci
-          // Le theme est appellé dans le main
+        const SizedBox(height: 24),
+
+        // Bouton de validation
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: viewModel.submitRegisterForm,
+            child: const Text('Créer mon compte'),
+          ),
         ),
-        ElevatedButton(
-          onPressed: (viewModel.navigateToLogin),
-          child: Text("Compte existant"),
-        )
+
+        const SizedBox(height: 20),
+
+        TextButton(
+          onPressed: viewModel.navigateToLogin,
+          child: const Text('Compte existant'),
+        ),
       ],
     );
   }

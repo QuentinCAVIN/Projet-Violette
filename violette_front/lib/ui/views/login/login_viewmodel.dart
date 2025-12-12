@@ -68,9 +68,6 @@ class LoginViewModel extends FormViewModel {
   }
 
   void navigateToRegister() {
-    _navigationService.replaceWith(
-      Routes.registerView,
-      transition: TransitionsBuilders.slideBottom,
-    );
+    _navigationService.navigateToRegisterView();
   }
 }

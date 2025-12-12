@@ -97,7 +97,7 @@ class RegisterViewModel extends FormViewModel {
   }
 
   void navigateToLogin() {
-    _navigationService.replaceWithLoginView;
+    _navigationService.replaceWithLoginView();
   }
 }
 
