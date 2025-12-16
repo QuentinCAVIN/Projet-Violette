@@ -15,6 +15,7 @@ const String TitleValueKey = 'title';
 const String DateValueKey = 'date';
 const String StartTimeValueKey = 'startTime';
 const String EndTimeValueKey = 'endTime';
+const String AddressValueKey = 'address';
 const String ArtistsCountValueKey = 'artistsCount';
 const String FeeValueKey = 'fee';
 const String DescriptionValueKey = 'description';
@@ -30,6 +31,7 @@ final Map<String, String? Function(String?)?>
   DateValueKey: null,
   StartTimeValueKey: null,
   EndTimeValueKey: null,
+  AddressValueKey: null,
   ArtistsCountValueKey: null,
   FeeValueKey: null,
   DescriptionValueKey: null,
@@ -44,6 +46,8 @@ mixin $CreateShowDateView {
       _getFormTextEditingController(StartTimeValueKey);
   TextEditingController get endTimeController =>
       _getFormTextEditingController(EndTimeValueKey);
+  TextEditingController get addressController =>
+      _getFormTextEditingController(AddressValueKey);
   TextEditingController get artistsCountController =>
       _getFormTextEditingController(ArtistsCountValueKey);
   TextEditingController get feeController =>
@@ -55,6 +59,7 @@ mixin $CreateShowDateView {
   FocusNode get dateFocusNode => _getFormFocusNode(DateValueKey);
   FocusNode get startTimeFocusNode => _getFormFocusNode(StartTimeValueKey);
   FocusNode get endTimeFocusNode => _getFormFocusNode(EndTimeValueKey);
+  FocusNode get addressFocusNode => _getFormFocusNode(AddressValueKey);
   FocusNode get artistsCountFocusNode =>
       _getFormFocusNode(ArtistsCountValueKey);
   FocusNode get feeFocusNode => _getFormFocusNode(FeeValueKey);
@@ -88,6 +93,7 @@ mixin $CreateShowDateView {
     dateController.addListener(() => _updateFormData(model));
     startTimeController.addListener(() => _updateFormData(model));
     endTimeController.addListener(() => _updateFormData(model));
+    addressController.addListener(() => _updateFormData(model));
     artistsCountController.addListener(() => _updateFormData(model));
     feeController.addListener(() => _updateFormData(model));
     descriptionController.addListener(() => _updateFormData(model));
@@ -106,6 +112,7 @@ mixin $CreateShowDateView {
     dateController.addListener(() => _updateFormData(model));
     startTimeController.addListener(() => _updateFormData(model));
     endTimeController.addListener(() => _updateFormData(model));
+    addressController.addListener(() => _updateFormData(model));
     artistsCountController.addListener(() => _updateFormData(model));
     feeController.addListener(() => _updateFormData(model));
     descriptionController.addListener(() => _updateFormData(model));
@@ -122,6 +129,7 @@ mixin $CreateShowDateView {
           DateValueKey: dateController.text,
           StartTimeValueKey: startTimeController.text,
           EndTimeValueKey: endTimeController.text,
+          AddressValueKey: addressController.text,
           ArtistsCountValueKey: artistsCountController.text,
           FeeValueKey: feeController.text,
           DescriptionValueKey: descriptionController.text,
@@ -170,6 +178,7 @@ extension ValueProperties on FormStateHelper {
   String? get dateValue => this.formValueMap[DateValueKey] as String?;
   String? get startTimeValue => this.formValueMap[StartTimeValueKey] as String?;
   String? get endTimeValue => this.formValueMap[EndTimeValueKey] as String?;
+  String? get addressValue => this.formValueMap[AddressValueKey] as String?;
   String? get artistsCountValue =>
       this.formValueMap[ArtistsCountValueKey] as String?;
   String? get feeValue => this.formValueMap[FeeValueKey] as String?;
@@ -222,6 +231,18 @@ extension ValueProperties on FormStateHelper {
     }
   }
 
+  set addressValue(String? value) {
+    this.setData(
+      this.formValueMap..addAll({AddressValueKey: value}),
+    );
+
+    if (_CreateShowDateViewTextEditingControllers.containsKey(
+        AddressValueKey)) {
+      _CreateShowDateViewTextEditingControllers[AddressValueKey]?.text =
+          value ?? '';
+    }
+  }
+
   set artistsCountValue(String? value) {
     this.setData(
       this.formValueMap..addAll({ArtistsCountValueKey: value}),
@@ -269,6 +290,9 @@ extension ValueProperties on FormStateHelper {
   bool get hasEndTime =>
       this.formValueMap.containsKey(EndTimeValueKey) &&
       (endTimeValue?.isNotEmpty ?? false);
+  bool get hasAddress =>
+      this.formValueMap.containsKey(AddressValueKey) &&
+      (addressValue?.isNotEmpty ?? false);
   bool get hasArtistsCount =>
       this.formValueMap.containsKey(ArtistsCountValueKey) &&
       (artistsCountValue?.isNotEmpty ?? false);
@@ -287,6 +311,8 @@ extension ValueProperties on FormStateHelper {
       this.fieldsValidationMessages[StartTimeValueKey]?.isNotEmpty ?? false;
   bool get hasEndTimeValidationMessage =>
       this.fieldsValidationMessages[EndTimeValueKey]?.isNotEmpty ?? false;
+  bool get hasAddressValidationMessage =>
+      this.fieldsValidationMessages[AddressValueKey]?.isNotEmpty ?? false;
   bool get hasArtistsCountValidationMessage =>
       this.fieldsValidationMessages[ArtistsCountValueKey]?.isNotEmpty ?? false;
   bool get hasFeeValidationMessage =>
@@ -302,6 +328,8 @@ extension ValueProperties on FormStateHelper {
       this.fieldsValidationMessages[StartTimeValueKey];
   String? get endTimeValidationMessage =>
       this.fieldsValidationMessages[EndTimeValueKey];
+  String? get addressValidationMessage =>
+      this.fieldsValidationMessages[AddressValueKey];
   String? get artistsCountValidationMessage =>
       this.fieldsValidationMessages[ArtistsCountValueKey];
   String? get feeValidationMessage =>
@@ -319,6 +347,8 @@ extension Methods on FormStateHelper {
       this.fieldsValidationMessages[StartTimeValueKey] = validationMessage;
   setEndTimeValidationMessage(String? validationMessage) =>
       this.fieldsValidationMessages[EndTimeValueKey] = validationMessage;
+  setAddressValidationMessage(String? validationMessage) =>
+      this.fieldsValidationMessages[AddressValueKey] = validationMessage;
   setArtistsCountValidationMessage(String? validationMessage) =>
       this.fieldsValidationMessages[ArtistsCountValueKey] = validationMessage;
   setFeeValidationMessage(String? validationMessage) =>
@@ -332,6 +362,7 @@ extension Methods on FormStateHelper {
     dateValue = '';
     startTimeValue = '';
     endTimeValue = '';
+    addressValue = '';
     artistsCountValue = '';
     feeValue = '';
     descriptionValue = '';
@@ -344,6 +375,7 @@ extension Methods on FormStateHelper {
       DateValueKey: getValidationMessage(DateValueKey),
       StartTimeValueKey: getValidationMessage(StartTimeValueKey),
       EndTimeValueKey: getValidationMessage(EndTimeValueKey),
+      AddressValueKey: getValidationMessage(AddressValueKey),
       ArtistsCountValueKey: getValidationMessage(ArtistsCountValueKey),
       FeeValueKey: getValidationMessage(FeeValueKey),
       DescriptionValueKey: getValidationMessage(DescriptionValueKey),
@@ -370,6 +402,7 @@ void updateValidationData(FormStateHelper model) =>
       DateValueKey: getValidationMessage(DateValueKey),
       StartTimeValueKey: getValidationMessage(StartTimeValueKey),
       EndTimeValueKey: getValidationMessage(EndTimeValueKey),
+      AddressValueKey: getValidationMessage(AddressValueKey),
       ArtistsCountValueKey: getValidationMessage(ArtistsCountValueKey),
       FeeValueKey: getValidationMessage(FeeValueKey),
       DescriptionValueKey: getValidationMessage(DescriptionValueKey),

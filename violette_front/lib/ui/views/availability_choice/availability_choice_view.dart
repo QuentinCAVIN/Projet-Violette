@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
+import 'package:violette_front/ui/widgets/common/show_date_detail/show_date_detail.dart';
 import '_widgets/availability_calendar.dart';
 import 'availability_choice_viewmodel.dart';
 
 class AvailabilityChoiceView extends StackedView<AvailabilityChoiceViewModel> {
-  const AvailabilityChoiceView({Key? key}) : super(key: key);
+  const AvailabilityChoiceView({super.key});
 
   @override
   Widget builder(
@@ -23,6 +24,8 @@ class AvailabilityChoiceView extends StackedView<AvailabilityChoiceViewModel> {
           child: Column(
             children: [
               const AvailabilityCalendar(),
+              if (viewModel.showDatePicked != null)
+                ShowDateDetail(showDate: viewModel.showDatePicked!),
               const SizedBox(height: 30),
               SizedBox(
                 width: double.infinity,

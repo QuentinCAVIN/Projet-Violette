@@ -12,6 +12,25 @@ class HomeView extends StackedView<HomeViewModel> {
   Widget builder(BuildContext context, HomeViewModel viewModel, Widget? child) {
     final currentUser = viewModel.currentUser; //Pour test de récupération user
 
+    // Pour gérer l'erreur du User null
+    if (viewModel.isBusy) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    // TODO -> A retirer probablement inutile?
+    if (currentUser == null) {
+      return const Scaffold(
+        body: Center(
+          child: Text("Utilisateur introuvable"),
+        ),
+      );
+    }
+
+    // 3. Render Main Content only when user is available
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -28,63 +47,52 @@ class HomeView extends StackedView<HomeViewModel> {
                     //Insertion des infos du User dans la view de base pour test
                     Column(
                       children: [
-                        if (viewModel.isBusy)
-                          const CircularProgressIndicator()
-                        else if (currentUser == null)
-                          const Text("Utilisateur introuvable")
-                        else
-                          Text(
-                            "Bienvenue ${currentUser.firstName} ${currentUser.lastName}",
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                        Text(
+                          "Bienvenue ${currentUser.firstName} ${currentUser.lastName}",
+                          style: Theme.of(context).textTheme.headlineLarge,
+                        ),
                       ],
                     ),
                     //**********************************************************
                     const SizedBox(height: 16),
+                    Card(
+                      child: ListTile(
+                        title:Text(
+                          // TODO rajouter de quoi afficher une liste de role et non pas le premier de la liste
+                          "Profil : ${currentUser.roles[0].label} ",
+                          style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                            letterSpacing: 1.2,
+                          ),
 
-                    // Bouton navigation creation date
-                    if (currentUser!.roles.contains(Role.manager))
-                    ElevatedButton(
-                      onPressed: viewModel.navigateToShowDateFormView,
-                      child: const Text(
-                        'Créer une nouvelle date (vue gérant)',
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 12),
 
-                    // Bouton navigation sélection des dispos
+                    verticalSpaceMedium,
+
+                    // Bouton navigation creation date visible par les gérants uniquement
+                    if (currentUser.roles.contains(Role.manager))
+                      ElevatedButton(
+                        onPressed: viewModel.navigateToShowDateFormView,
+                        child: const Text(
+                          'Créer une nouvelle date',
+                        ),
+                      ),
+                    // Bouton navigation sélection des dispos visible par les artistes uniquement
                     if (currentUser.roles.contains(Role.artist))
-                    ElevatedButton(
-                      onPressed: viewModel.navigateToAvailabilityChoiceView,
-                      child: const Text(
-                        'Sélection des dispos (vue artiste)',
+                      ElevatedButton(
+                        onPressed: viewModel.navigateToAvailabilityChoiceView,
+                        child: const Text(
+                          'Sélection des dispos',
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 12),
+                    verticalSpaceMassive,
+
                     ElevatedButton(
                       onPressed: viewModel.logOut,
                       child: const Text('Déconnexion'),
                     ),
-                    const SizedBox(height: 24),
-                     Text(
-                       // TODO rajouter de quoi afficher une liste de role et non pas le premier de la liste
-                      "Grade : ${currentUser.roles[0].label} " ,
-                       style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                         letterSpacing: 1.2,
-                       ),
-                    ),
-                    verticalSpaceMedium,
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
-                        foregroundColor: Colors.white,
-                      ),
-                      onPressed: viewModel.incrementCounter,
-                      child: Text(viewModel.counterLabel),
-                    ),
+
                   ],
                 ),
                 Row(

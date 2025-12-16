@@ -1,44 +1,87 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:violette_front/models/enums/availability_status.dart';
 
+//TODO Définir avec Agathe les champs qui doivent être obligatoire
 class ShowDate {
   final String? uid;
+  final String title;
   final DateTime date;
+  final int startMinutes;
+  final int endMinutes;
+  final String address;
+  final int artistsCount;
+  final double fee;
+  final String? description;
   AvailabilityStatus availabilityStatus;
-
-  //TODO A rajouter plus tard:
-  //La feuille de route de la date, le type d'artiste a qui elle est déstiné (chanteur, danseur ect)
 
   ShowDate({
     this.uid,
+    required this.title,
     required this.date,
     required this.availabilityStatus,
+    required this.startMinutes,
+    required this.endMinutes,
+    required this.address,
+    required this.artistsCount,
+    required this.fee,
+    this.description,
   });
 
-  // TODO Question ELies, cela m'oblige a changer ma methode le jour ou je change de DB
   factory ShowDate.fromFirestore(
     DocumentSnapshot<Map<String, dynamic>> snapshot,
-    SnapshotOptions? options,
+    SnapshotOptions?
+        options, // Option trouvé dans la doc que je ne comprends pas, voir pour la supprimer
   ) {
     final data = snapshot.data();
     return ShowDate(
         uid: snapshot.id,
-        date: data!['date'].toDate(),
-        availabilityStatus: availabilityStatusFromString(
-            data['availability_status'].toString()));
+        title: data!['title'],
+        date: data['date'].toDate(),
+        availabilityStatus:
+            availabilityStatusFromString(data['availabilityStatus']),
+        startMinutes: data['startTime'],
+        endMinutes: data['endTime'],
+        address: data['address'],
+        artistsCount: data['artistsCount'],
+        fee: (data['fee']).toDouble(), // as num? cast?
+        description: data['description']);
   }
-  //récupéré tel quel de la doc : à adapter
-//https://firebase.google.com/docs/firestore/query-data/get-data?hl=fr
 
-  /* Map<String, dynamic> toFirestore() {
+  Map<String, dynamic> toFirestore() {
     return {
-      if (name != null) "name": name,
-      if (state != null) "state": state,
-      if (country != null) "country": country,
-      if (capital != null) "capital": capital,
-      if (population != null) "population": population,
-      if (regions != null) "regions": regions,
+      "title": title,
+      "date": date,
+      "availabilityStatus": availabilityStatus.name,
+      "startTime": startMinutes,
+      "endTime": endMinutes,
+      "address": address,
+      "artistsCount": artistsCount,
+      "fee": fee,
+      if (description != null) "description": description,
     };
   }
-}*/
+}
+
+extension ShowDateX on ShowDate {
+  String get formattedDate => "${date.day}/${date.month}/${date.year}";
+
+  String get formattedStartTime => _minutesToHHmm(startMinutes);
+  String get formattedEndTime => _minutesToHHmm(endMinutes);
+
+  void nextStatus() => availabilityStatus = availabilityStatus.next;
+  }
+
+
+//TODO Reflechir si on laisse ici ou si on met dans un Helper a coté
+String _minutesToHHmm(int minutes) {
+  final h = minutes ~/ 60;
+  final m = minutes % 60;
+  return "${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}";
+}
+//TODO Le parser n'est pas utilisé, corriger ça au moment de la récupération et de l'affichage d'une date
+int hourStringToMinutes(String value) {
+  final parts = value.trim().split(':');
+  final h = int.parse(parts[0]);
+  final m = int.parse(parts[1]);
+  return h * 60 + m;
 }

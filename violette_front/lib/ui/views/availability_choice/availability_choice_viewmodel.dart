@@ -8,8 +8,9 @@ import 'package:violette_front/models/enums/availability_status.dart';
 import 'package:violette_front/services/show_date_service.dart';
 
 import '../../../app/app.locator.dart';
-import '../home/home_view.dart';
 
+// TODO: Refactoriser la classe quand des tests unitaires seront en place
+// certaine variable pourrait être supprimmé comme _lastTappedDay ou selectDay
 class AvailabilityChoiceViewModel extends BaseViewModel {
   // Attributs du widget DayCell a rajouter ici?
 
@@ -17,9 +18,19 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
   final ShowDateService _showDateService = locator<ShowDateService>();
   final SnackbarService _snackbarService = locator<SnackbarService>();
 
-  CalendarFormat calendarFormat = CalendarFormat.month;
+  final CalendarFormat calendarFormat = CalendarFormat.month;
+  // Le mois/la page actuellement affichée dans le calendrier
   DateTime focusedDay = DateTime.now();
+
+  // Le jour surligné (sélection visuelle)
   DateTime? selectedDay;
+
+  // La ShowDate du jour sélectionné (pour afficher le détail en bas)
+  ShowDate? showDatePicked;
+
+  // Sert à détecter un 2e tap sur le même jour
+  DateTime? _lastTappedDay;
+
 
   List<ShowDate> showDates = [];
 
@@ -28,47 +39,58 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
     showDates = await runBusyFuture(_showDateService.getAllShowDates());
   }
 
+  // Appelé quand l'utilisateur tape un jour.
+  // - tappedDay : le jour tapé (événement)
+  // - newFocusedDay : la page/mois à afficher
   void onDaySelected(DateTime tappedDay, DateTime newFocusedDay) {
+    // Remplacer par
+    // void onShowDateTapped(ShowDate tappedShowDate) -> nouveau nom
     focusedDay = newFocusedDay;
 
-    final existing = _findShowDate(tappedDay);
+    final picked = _findShowDate(tappedDay);
 
-    if (existing != null) {
-      // On applique le status uniquement pour les dates avec une ShowDate
-      existing.availabilityStatus = _nextStatus(existing.availabilityStatus);
-      selectedDay = tappedDay; // Pour entourer le jour séléctionné
-    } else {
-      selectedDay = null; // Pour retirer le jour sélectionné
+    // Si aucune ShowDate ce jour-là : on désélectionne tout
+    if (picked == null) {
+      selectedDay = null;
+      showDatePicked = null;
+      _lastTappedDay = null;
+      rebuildUi();
+      return;
     }
+
+    // 1er tap sur ce jour : on sélectionne + on affiche en bas
+    if (_lastTappedDay == null || !_isSameDay(_lastTappedDay!, tappedDay)) {
+      selectedDay = tappedDay; // pour entourer
+      showDatePicked = picked; // pour afficher dans le widget en bas
+      _lastTappedDay = tappedDay; // mémorisation pour détecter le 2e tap
+      rebuildUi();
+      return;
+    }
+
+    // 2e tap sur le même jour : on change le statut
+    picked.nextStatus();
     rebuildUi();
   }
 
-  // Methode proposé en exemple dans la doc table_calendar pour changer le format du Calendar
-  void onFormatChanged(CalendarFormat format) {
-    if (calendarFormat != format) {
-      calendarFormat = format;
-      rebuildUi();
-    }
-  }
+  bool _isSameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
 
-  //Methode proposé dans la doc table_calendar pour changer de mois
+
+  //Methode proposé dans la doc table_calendar appelé quand on swipe vers un autre mois
   void onPageChange(DateTime newFocusedDay) {
     focusedDay = newFocusedDay;
     rebuildUi();
   }
 
-  // Inutilisé pour le moment, va servir dans la vue "récap"
+  // Associé au selectedDayPredicate du TableCalendar pour surligner le jour selectionné
   bool isSelectedDay(DateTime day) {
     // Retourne true uniquement si 'day' est la date que l’utilisateur a sélectionnée
     return selectedDay != null && isSameDay(day, selectedDay);
   }
 
   Future<void> onValidatePressed() async {
-    setBusy(true);
-    await _showDateService.updateAllShowDates(showDates);
-    //await Future.delayed(const Duration(seconds: 3));
-    setBusy(false);
-    _navigationService.replaceWithHomeView;
+    await runBusyFuture(_showDateService.updateAllShowDates(showDates));
+    _navigationService.replaceWithHomeView();
     // Affiche le message une fois sur HomeView
     _snackbarService.showSnackbar(
       message: "Disponibilités enregistrées !",
@@ -84,11 +106,6 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
     return _findShowDate(day)?.availabilityStatus;
   }
 
-  // Pour selectedDayPredicate (condition de selection des dates surr le calendrier
-  bool isDateProposed(DateTime day) {
-    return _findShowDate(day) != null;
-  }
-
   // Récupérer la ShowDate pour un jour
   //TODO Attention a adapter quand il y aura plusieurs dates pour un même jour
   ShowDate? _findShowDate(DateTime day) {
@@ -100,16 +117,4 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
     return null;
   }
 
-  static AvailabilityStatus _nextStatus(AvailabilityStatus current) {
-    switch (current) {
-      case AvailabilityStatus.pending:
-        return AvailabilityStatus.available;
-      case AvailabilityStatus.available:
-        return AvailabilityStatus.conditional;
-      case AvailabilityStatus.conditional:
-        return AvailabilityStatus.unavailable;
-      case AvailabilityStatus.unavailable:
-        return AvailabilityStatus.pending;
-    }
-  }
 }

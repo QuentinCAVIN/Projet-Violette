@@ -10,6 +10,7 @@ class ShowDateService {
   final List<ShowDate> showDates = [];
 
   CollectionReference<Map<String, dynamic>> get collection {
+    // getter, quand je fais collection dans le code je récupére ma collection firestore issue de _db.collection(collectionName)
     return _db.collection(collectionName);
   }
 
@@ -33,7 +34,7 @@ class ShowDateService {
 
     for (final showDates in updatedList) {
       final docRef = collection.doc(showDates.uid);
-      batch.update(docRef, _toMap(showDates));
+      batch.update(docRef, showDates.toFirestore());
     }
     await batch.commit();
     //Mise a jour du cache local
@@ -42,12 +43,8 @@ class ShowDateService {
       ..addAll(updatedList);
   }
 
-  //TODO implémenter une methode toFirebase sur SHowDate
   Future<void> addShowDate(ShowDate showDate) async {
-    _db.collection(collectionName).add({
-      "date": showDate.date,
-      "availability_status": showDate.availabilityStatus.name,
-    });
+    _db.collection(collectionName).add(showDate.toFirestore());
   }
 
 //****************************************************************************//
@@ -55,19 +52,22 @@ class ShowDateService {
 //****************************************************************************//
   Stream<List<ShowDate>> watchShowDates() {
     return collection.snapshots().map(
-          (snapshot) => snapshot.docs.map(_fromDoc).toList(),
+          (snapshot) => snapshot.docs
+              .map<ShowDate>((doc) =>
+                  ShowDate.fromFirestore(doc, null)) // Adapté avec la foctory
+              .toList(),
         );
   }
 
   Future<void> addShowDateObscure(ShowDate showDate) async {
     // On utilise l’uid comme id de document
-    await collection.doc(showDate.uid).set(_toMap(showDate));
+    await collection.doc(showDate.uid).set(showDate.toFirestore());
     showDates.add(showDate);
   }
 
-  /// Met à jour une ShowDate existante (même uid)
+  //Met à jour une ShowDate existante (même uid)
   Future<void> updateShowDate(ShowDate updated) async {
-    await collection.doc(updated.uid).update(_toMap(updated));
+    await collection.doc(updated.uid).update(updated.toFirestore());
 
     final index = showDates.indexWhere((d) => d.uid == updated.uid);
     if (index != -1) {
@@ -78,27 +78,5 @@ class ShowDateService {
   Future<void> deleteShowDate(String uid) async {
     await collection.doc(uid).delete();
     showDates.removeWhere((d) => d.uid == uid);
-  }
-
-//****************************************************************************//
-// HELPERS
-//****************************************************************************//
-  ShowDate _fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
-    final data = doc.data()!;
-
-    return ShowDate(
-      uid: doc.id,
-      date: (data['date'] as Timestamp).toDate(),
-      availabilityStatus: AvailabilityStatus.values.firstWhere(
-        (e) => e.name == data['availabilityStatus'],
-      ),
-    );
-  }
-
-  Map<String, dynamic> _toMap(ShowDate showDate) {
-    return {
-      'date': Timestamp.fromDate(showDate.date),
-      'availability_status': showDate.availabilityStatus.name,
-    };
   }
 }

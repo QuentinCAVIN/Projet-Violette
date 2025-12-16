@@ -706,14 +706,14 @@ class MockVioletteUserService extends _i1.Mock
     implements _i8.VioletteUserService {
   @override
   String get collectionName => (super.noSuchMethod(
-        Invocation.getter(#collection),
+        Invocation.getter(#collectionName),
         returnValue: _i4.dummyValue<String>(
           this,
-          Invocation.getter(#collection),
+          Invocation.getter(#collectionName),
         ),
         returnValueForMissingStub: _i4.dummyValue<String>(
           this,
-          Invocation.getter(#collection),
+          Invocation.getter(#collectionName),
         ),
       ) as String);
 
@@ -800,6 +800,16 @@ class MockShowDateService extends _i1.Mock implements _i10.ShowDateService {
       ) as _i6.Future<void>);
 
   @override
+  _i6.Future<void> addShowDate(_i11.ShowDate? showDate) => (super.noSuchMethod(
+        Invocation.method(
+          #addShowDate,
+          [showDate],
+        ),
+        returnValue: _i6.Future<void>.value(),
+        returnValueForMissingStub: _i6.Future<void>.value(),
+      ) as _i6.Future<void>);
+
+  @override
   _i6.Stream<List<_i11.ShowDate>> watchShowDates() => (super.noSuchMethod(
         Invocation.method(
           #watchShowDates,
@@ -810,9 +820,10 @@ class MockShowDateService extends _i1.Mock implements _i10.ShowDateService {
       ) as _i6.Stream<List<_i11.ShowDate>>);
 
   @override
-  _i6.Future<void> addShowDate(_i11.ShowDate? showDate) => (super.noSuchMethod(
+  _i6.Future<void> addShowDateObscure(_i11.ShowDate? showDate) =>
+      (super.noSuchMethod(
         Invocation.method(
-          #addShowDate,
+          #addShowDateObscure,
           [showDate],
         ),
         returnValue: _i6.Future<void>.value(),

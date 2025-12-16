@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:violette_front/app/app.locator.dart';
@@ -7,13 +8,18 @@ import '../../../models/show_date.dart';
 import '../../../services/show_date_service.dart';
 import 'create_show_date_view.form.dart';
 
-
 class CreateShowDateViewModel extends FormViewModel {
   final _navigationService = locator<NavigationService>();
   final _showDateService = locator<ShowDateService>();
 
   String? globalErrorMessage;
   bool formAlreadyValidatedOnce = false;
+
+  DateTime? selectedDate;
+  TimeOfDay? selectedStartTime;
+  TimeOfDay? selectedEndTime;
+
+  int _timeOfDayToMinutes(TimeOfDay t) => t.hour * 60 + t.minute;
 
   // Appelé à chaque changement de champs par Stacked
   @override
@@ -23,6 +29,7 @@ class CreateShowDateViewModel extends FormViewModel {
     setDateValidationMessage(null);
     setStartTimeValidationMessage(null);
     setEndTimeValidationMessage(null);
+    setAddressValidationMessage(null);
     setArtistsCountValidationMessage(null);
     setFeeValidationMessage(null);
     setDescriptionValidationMessage(null);
@@ -48,6 +55,30 @@ class CreateShowDateViewModel extends FormViewModel {
     if (endTimeValue == null || endTimeValue!.trim().isEmpty) {
       setEndTimeValidationMessage('Heure de fin obligatoire');
     }
+    if (selectedStartTime != null && selectedEndTime != null) {
+      final start = _timeOfDayToMinutes(selectedStartTime!);
+      final end = _timeOfDayToMinutes(selectedEndTime!);
+
+      //Todo: Temporaire: Fixe la date au lendemain quand on fait le tour du cadran (en int minutes)
+      final endAdjusted = (end <= start) ? end + 24 * 60 : end;// cas date de 23h à 1h00
+      final duration = endAdjusted - start;
+      //TODO Voir avec Agathe si on bloque une date supérieur à 12h (auto-entrepreneur)
+      if ( duration.abs() > 12*60 ) {
+        globalErrorMessage= "Un cachet d'intermittent ne peut pas dépasser 12h";
+      }
+    }
+
+    // Adresse
+    if (addressValue == null || addressValue!.trim().isEmpty) {
+      setEndTimeValidationMessage('Adresse obligatoire');
+    }
+
+    if (artistsCountValue != null && artistsCountValue!.isNotEmpty) {
+      final parsed = int.tryParse(artistsCountValue!);
+      if (parsed == null || parsed <= 0) {
+        setArtistsCountValidationMessage('Nombre d’artistes invalide');
+      }
+    }
 
     // Artistes nécessaires
     if (artistsCountValue != null && artistsCountValue!.isNotEmpty) {
@@ -67,12 +98,20 @@ class CreateShowDateViewModel extends FormViewModel {
   }
 
   // methodes appelés depuis le widget pour relancer la validation après un pick
-  void onDateChanged() {
+  void onDateChanged(DateTime date) {
+    selectedDate = date;
     setFormStatus();
     rebuildUi();
   }
 
-  void onTimeChanged() {
+  void onStartTimeChanged(TimeOfDay time) {
+    selectedStartTime = time;
+    setFormStatus();
+    rebuildUi();
+  }
+
+  void onEndTimeChanged(TimeOfDay time) {
+    selectedEndTime = time;
     setFormStatus();
     rebuildUi();
   }
@@ -84,35 +123,31 @@ class CreateShowDateViewModel extends FormViewModel {
     setFormStatus();
     rebuildUi();
 
-    if (!isFormValid) {
+    if (!isFormValid || globalErrorMessage!=null) {
       return;
     }
 
-    // TODO: construire un objet ShowDate avec toute les valeurs plus tard
-    // Pour l'instant on utilise que la date et on fixe le statut à en attente
-     final showDate = ShowDate(
-      date: _dateStringToDateTime(dateValue!),
+    final showDate = ShowDate(
+      title: titleValue!,
+      date: DateTime(
+        selectedDate!.year,
+        selectedDate!.month,
+        selectedDate!.day,
+      ),
       availabilityStatus: AvailabilityStatus.pending,
+      startMinutes: _timeOfDayToMinutes(selectedStartTime!),
+      endMinutes: _timeOfDayToMinutes(selectedEndTime!),
+      address: addressValue!,
+      artistsCount: int.parse(artistsCountValue!),
+      fee: double.parse(feeValue!.replaceAll(',', '.')),
+      description: descriptionValue,
     );
-     await runBusyFuture(_showDateService.addShowDate(showDate));
+
+    await runBusyFuture(_showDateService.addShowDate(showDate));
     _navigationService.replaceWithHomeView();
   }
 
   void navigateBack() {
     _navigationService.back();
   }
-}
-
-
-//TOdo A mettre dans une classe DateHelper
-
-DateTime _dateStringToDateTime(String value) {
-
-    final parts = value.split('/'); // "12/02/2026" -> ["12","02","2026"]
-
-    final day = int.parse(parts[0]);
-    final month = int.parse(parts[1]);
-    final year = int.parse(parts[2]);
-
-    return DateTime(year, month, day);
 }

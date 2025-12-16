@@ -33,9 +33,24 @@ extension AvailabilityStatusX on AvailabilityStatus {
         return Colors.grey;
     }
   }
+
+  // Pour le tapped sur le TableCalendar
+  AvailabilityStatus get next {
+    switch (this) {
+      case AvailabilityStatus.pending:
+        return AvailabilityStatus.available;
+      case AvailabilityStatus.available:
+        return AvailabilityStatus.conditional;
+      case AvailabilityStatus.conditional:
+        return AvailabilityStatus.unavailable;
+      case AvailabilityStatus.unavailable:
+        return AvailabilityStatus.available;
+    }
+  }
+
 }
 
-// Ci -dessosu pour les ocnversion Firestore
+//Pour les conversions Firestore
 AvailabilityStatus availabilityStatusFromString(String value) {
   switch (value) {
     case 'available':
@@ -47,20 +62,5 @@ AvailabilityStatus availabilityStatusFromString(String value) {
     case 'pending':
     default:
       return AvailabilityStatus.pending;
-  }
-}
-
-extension AvailabilityStatusFirestoreX on AvailabilityStatus {
-  String get firestoreValue {
-    switch (this) {
-      case AvailabilityStatus.available:
-        return 'available';
-      case AvailabilityStatus.conditional:
-        return 'conditional';
-      case AvailabilityStatus.unavailable:
-        return 'unavailable';
-      case AvailabilityStatus.pending:
-        return 'pending';
-    }
   }
 }

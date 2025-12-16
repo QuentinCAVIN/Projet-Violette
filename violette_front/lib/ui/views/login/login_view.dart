@@ -35,9 +35,12 @@ class LoginView extends StackedView<LoginViewModel> with $LoginView {
                 // ConstrainedBox permet d'imposer des contraintes de hauteur et largeur
                 constraints: BoxConstraints(
                   // minHeight définit la hauteur MINIMALE que doit occuper l'enfant. L'objectif ici : faire en sorte que le contenu occupe AU MOINS la hauteur totale disponible à l'écran.
-                  minHeight: MediaQuery.of(context).size.height
-                      - MediaQuery.of(context).padding.top// Représente l'espace que l'application de doit pas recouvrir en haut et en bas (bar de status et de navigation
-                      - MediaQuery.of(context).padding.bottom,//
+                  minHeight: MediaQuery.of(context).size.height -
+                      MediaQuery.of(context)
+                          .padding
+                          .top // Représente l'espace que l'application de doit pas recouvrir en haut et en bas (bar de status et de navigation
+                      -
+                      MediaQuery.of(context).padding.bottom, //
                 ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 32.0),

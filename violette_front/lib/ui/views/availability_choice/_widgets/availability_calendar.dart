@@ -13,14 +13,15 @@ class AvailabilityCalendar
     BuildContext context,
     AvailabilityChoiceViewModel viewModel,
   ) {
+
+    //TODO Bouton "2 weeks" sur le calendrier mort, voir pour le faire disparaitre
     return TableCalendar(
       firstDay: DateTime.utc(2010, 10, 16),
       lastDay: DateTime.utc(2030, 3, 14),
       focusedDay: viewModel.focusedDay,
       calendarFormat: viewModel.calendarFormat,
-      selectedDayPredicate: viewModel.isDateProposed,
+      selectedDayPredicate: viewModel.isSelectedDay,
       onDaySelected: viewModel.onDaySelected,
-      onFormatChanged: viewModel.onFormatChanged,
       onPageChanged: viewModel.onPageChange,
       calendarStyle: const CalendarStyle(
         isTodayHighlighted: false,

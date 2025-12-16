@@ -17,10 +17,11 @@ class VioletteUserService {
 
     if (!doc.exists) return null;
 
-    final userData = doc.data(); ///////TODO: Question Elies: au final dans une DB SQL pas de nul possible, el test
+    final userData = doc
+        .data(); ///////TODO: Question Elies: au final dans une DB SQL pas de nul possible, le test
     if (userData == null) return null; //
 
-    return VioletteUser.fromFirestore(doc,null);
+    return VioletteUser.fromFirestore(doc, null);
   }
 }
 

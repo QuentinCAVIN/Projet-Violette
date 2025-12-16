@@ -94,7 +94,11 @@ class RegisterViewModel extends FormViewModel {
     final String firstName = firstNameValue!.trim();
     final String lastName = lastNameValue!.trim();
     VioletteUser user = VioletteUser(
-        uid: userId, firstName: firstName, lastName: lastName, email: email, roles: [role]);
+        uid: userId,
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        roles: [role]);
     await _userServices.addUser(user);
   }
 

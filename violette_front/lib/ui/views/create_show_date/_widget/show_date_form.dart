@@ -4,12 +4,12 @@ import 'package:stacked/stacked.dart';
 import '../create_show_date_viewmodel.dart';
 import '../create_show_date_view.form.dart';
 
-
 class ShowDateForm extends ViewModelWidget<CreateShowDateViewModel> {
   final TextEditingController titleController;
   final TextEditingController dateController;
   final TextEditingController startTimeController;
   final TextEditingController endTimeController;
+  final TextEditingController addressController;
   final TextEditingController artistsCountController;
   final TextEditingController feeController;
   final TextEditingController descriptionController;
@@ -19,6 +19,7 @@ class ShowDateForm extends ViewModelWidget<CreateShowDateViewModel> {
     required this.titleController,
     required this.dateController,
     required this.startTimeController,
+    required this.addressController,
     required this.endTimeController,
     required this.artistsCountController,
     required this.feeController,
@@ -30,9 +31,8 @@ class ShowDateForm extends ViewModelWidget<CreateShowDateViewModel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Sous-titre (optionnel)
         const Text(
-          'Créer une prestation',
+          'Créer une préstation',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
         ),
         const SizedBox(height: 24),
@@ -75,7 +75,12 @@ class ShowDateForm extends ViewModelWidget<CreateShowDateViewModel> {
                   suffixIcon: const Icon(Icons.access_time),
                   errorText: viewModel.startTimeValidationMessage,
                 ),
-                onTap: () => _selectTime(context, viewModel, startTimeController),
+                onTap: () => _selectTime(
+                  context: context,
+                  initialTime: viewModel.selectedStartTime,
+                  controller: startTimeController,
+                  onTimeChanged: viewModel.onStartTimeChanged,
+                ),
               ),
             ),
             const SizedBox(width: 16),
@@ -89,10 +94,26 @@ class ShowDateForm extends ViewModelWidget<CreateShowDateViewModel> {
                   suffixIcon: const Icon(Icons.access_time),
                   errorText: viewModel.endTimeValidationMessage,
                 ),
-                onTap: () => _selectTime(context, viewModel, endTimeController),
+                onTap: () => _selectTime(
+                  context: context,
+                  initialTime: viewModel.selectedEndTime,
+                  controller: endTimeController,
+                  onTimeChanged: viewModel.onEndTimeChanged,
+                ),
               ),
             ),
           ],
+        ),
+        const SizedBox(height: 16),
+
+        // Adresse
+        TextFormField(
+          controller: addressController,
+          decoration: InputDecoration(
+            labelText: 'Adresse',
+            errorText: viewModel.addressValidationMessage,
+          ),
+          textInputAction: TextInputAction.next,
         ),
         const SizedBox(height: 16),
 
@@ -141,7 +162,7 @@ class ShowDateForm extends ViewModelWidget<CreateShowDateViewModel> {
         ),
         const SizedBox(height: 24),
 
-        // Message d'erreur global (optionnel)
+        // Message d'erreur global
         if (viewModel.globalErrorMessage != null)
           Padding(
             padding: const EdgeInsets.only(bottom: 8.0),
@@ -187,31 +208,44 @@ class ShowDateForm extends ViewModelWidget<CreateShowDateViewModel> {
 //DATE ET TIME PICKERS                                                        //
 //****************************************************************************//
   Future<void> _selectDate(
-      BuildContext context, CreateShowDateViewModel viewModel) async {
+    BuildContext context,
+    CreateShowDateViewModel viewModel,
+  ) async {
     final now = DateTime.now();
+
     final picked = await showDatePicker(
       context: context,
       initialDate: now,
-      firstDate: DateTime(now.day),
+      firstDate: DateTime(now.year, now.month, now.day),
       lastDate: DateTime(now.year + 3),
     );
-    if (picked != null) {
-      final formatted =
-          '${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}';
-      dateController.text = formatted;
-      viewModel.onDateChanged(); // pour relancer la validation si tu veux
-    }
+
+    if (picked == null) return;
+
+    dateController.text =
+        '${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}';
+
+    viewModel.onDateChanged(picked);
   }
 
-  Future<void> _selectTime(
-      BuildContext context, CreateShowDateViewModel viewModel, TextEditingController timeController) async {
+  Future<void> _selectTime({
+    required BuildContext context,
+    required TimeOfDay? initialTime,
+    required TextEditingController controller,
+    required void Function(TimeOfDay) onTimeChanged,
+  }) async {
     final picked = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.now(),
+      initialTime: initialTime ?? TimeOfDay.now(),
     );
-    if (picked != null) {
-      timeController.text = picked.format(context);
-      viewModel.onTimeChanged();
-    }
+
+    if (picked == null) return;
+
+    // Format HH:mm
+    controller.text = '${picked.hour.toString().padLeft(2, '0')}:'
+        '${picked.minute.toString().padLeft(2, '0')}';
+
+    // Mise à jour du ViewModel
+    onTimeChanged(picked);
   }
 }

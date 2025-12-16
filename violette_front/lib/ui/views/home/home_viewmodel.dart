@@ -33,8 +33,16 @@ class HomeViewModel extends BaseViewModel {
 
   Future<void> loadUser() async {
     setBusy(true);
-    // Attention le User est forcé (!) car le listener permet d'avoir toujours un User sur la home page
-    final uid = _authenticationService.currentUser!.uid;
+
+    final firebaseUser = _authenticationService.currentUser;
+    if (firebaseUser == null) {
+      setBusy(false);
+
+      _navigationService.replaceWithLoginView();
+      return;
+    }
+
+    final uid = firebaseUser.uid;
     currentUser = await _userServices.getUser(uid);
     setBusy(false);
     rebuildUi();
@@ -54,8 +62,8 @@ class HomeViewModel extends BaseViewModel {
   void showDialog() {
     _dialogService.showCustomDialog(
       variant: DialogType.infoAlert,
-      title: 'Stacked Rocks!',
-      description: 'Give stacked $_counter stars on Github',
+      title: 'Violllleeeeeettttttteeee',
+      description: 'Salut ${currentUser!.firstName} tu es notre ${currentUser!.roles[0]} préféré!',
     );
   }
 

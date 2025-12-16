@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+
 //!!!!!CREATION IA! code testé visuellement uniquement!!!!!//
 /// Widget décoratif qui affiche des paillettes/sparkles animées
 /// inspirées du monde du spectacle
