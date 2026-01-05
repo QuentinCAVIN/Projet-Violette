@@ -1,41 +1,37 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:violette_front/app/app.bottomsheets.dart';
-import 'package:violette_front/app/app.dialogs.dart';
-import 'package:violette_front/app/app.locator.dart';
-import 'package:violette_front/app/app.router.dart';
 import 'package:stacked_services/stacked_services.dart';
+import 'package:violette_front/app/app.dart';
+import 'package:violette_front/app/router.dart';
 import 'package:violette_front/ui/common/app_theme.dart';
 
-import 'firebase_options.dart';
+void main() {
+  // 1. Initialise le Service Locator pour l'injection de dépendances
+  setupLocator();
 
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await setupLocator();
-  setupDialogUi();
-  setupBottomSheetUi();
-
-  // Issue de la doc Firebase, Il faudra peut-être le modifer avec l'ajout de
-  // stacked_firebase_auth package
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-
-  runApp(const MainApp());
+  // 2. Lance l'application Flutter
+  runApp(const VioletteApp());
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class VioletteApp extends StatelessWidget {
+  const VioletteApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Viollette',
-      theme: VioletteTheme.theme,
-      initialRoute: Routes.startupView,
-      onGenerateRoute: StackedRouter().onGenerateRoute,
+      title: 'Violette',
+      // Utilise le thème centralisé depuis la classe AppTheme.
+      theme: AppTheme.themeData,
+      debugShowCheckedModeBanner: false,
+
+      // --- Configuration de la Navigation Stacked ---
+      // Utilise la clé du NavigationService pour que Stacked puisse contrôler la navigation
       navigatorKey: StackedService.navigatorKey,
-      navigatorObservers: [StackedService.routeObserver],
+
+      // La route initiale de l'application
+      initialRoute: startupViewRoute,
+
+      // La fonction qui génère les routes pour l'application
+      onGenerateRoute: AppRouter.generateRoute,
     );
   }
 }

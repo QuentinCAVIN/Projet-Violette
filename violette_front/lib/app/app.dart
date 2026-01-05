@@ -1,45 +1,31 @@
-import 'package:stacked_firebase_auth/stacked_firebase_auth.dart';
-import 'package:violette_front/ui/bottom_sheets/notice/notice_sheet.dart';
-import 'package:violette_front/ui/dialogs/info_alert/info_alert_dialog.dart';
-import 'package:violette_front/ui/views/home/home_view.dart';
-import 'package:violette_front/ui/views/startup/startup_view.dart';
-import 'package:stacked/stacked_annotations.dart';
+import 'package:get_it/get_it.dart';
 import 'package:stacked_services/stacked_services.dart';
-import 'package:violette_front/ui/views/login/login_view.dart';
-import 'package:violette_front/ui/views/register/register_view.dart';
-import 'package:violette_front/services/violette_user_service.dart';
-import 'package:violette_front/ui/views/availability_choice/availability_choice_view.dart';
-import 'package:violette_front/services/show_date_service.dart';
-import 'package:violette_front/ui/views/create_show_date/create_show_date_view.dart';
-// @stacked-import
 
-@StackedApp(
-  routes: [
-    MaterialRoute(page: HomeView),
-    MaterialRoute(page: StartupView),
-    MaterialRoute(page: LoginView),
-    MaterialRoute(page: RegisterView),
-    MaterialRoute(page: AvailabilityChoiceView),
-    MaterialRoute(page: CreateShowDateView),
-// @stacked-route
-  ],
-  dependencies: [
-    LazySingleton(classType: BottomSheetService),
-    LazySingleton(classType: DialogService),
-    LazySingleton(classType: NavigationService),
-    LazySingleton(classType: FirebaseAuthenticationService),
-    LazySingleton(classType: VioletteUserService),
-    LazySingleton(classType: ShowDateService),
-    LazySingleton(classType: SnackbarService),
-// @stacked-service
-  ],
-  bottomsheets: [
-    StackedBottomsheet(classType: NoticeSheet),
-    // @stacked-bottom-sheet
-  ],
-  dialogs: [
-    StackedDialog(classType: InfoAlertDialog),
-    // @stacked-dialog
-  ],
-)
-class App {}
+// --- 1. Service Locator ---
+// Instance globale de GetIt pour l'injection de dépendances.
+final locator = GetIt.instance;
+
+/// Enregistre manuellement les services en tant que singletons.
+/// C'est l'équivalent manuel de la section `dependencies` de `@StackedApp`.
+void setupLocator() {
+  // Services de base de Stacked
+  locator.registerLazySingleton(() => NavigationService());
+  locator.registerLazySingleton(() => DialogService());
+  locator.registerLazySingleton(() => SnackbarService());
+  locator.registerLazySingleton(() => BottomSheetService());
+
+  // Services spécifiques à l'application (à ajouter plus tard)
+  // locator.registerLazySingleton(() => VioletteUserService());
+  // locator.registerLazySingleton(() => ShowDateService());
+}
+
+
+// --- 2. Constantes des Routes ---
+// Noms des routes utilisés pour la navigation.
+// C'est l'équivalent manuel de ce que `@StackedApp` génère pour le routeur.
+
+const String startupViewRoute = '/';
+const String mainViewRoute = '/main';
+const String loginViewRoute = '/login';
+const String dateDetailViewRoute = '/date-detail';
+// ... ajouter d'autres constantes de routes ici au besoin.
