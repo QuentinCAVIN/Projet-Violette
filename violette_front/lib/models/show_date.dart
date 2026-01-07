@@ -12,13 +12,13 @@ class ShowDate {
   final int artistsCount;
   final double fee;
   final String? description;
-  AvailabilityStatus availabilityStatus;
+  final Map<String, AvailabilityStatus> artistsAvailability;
 
   ShowDate({
     this.uid,
     required this.title,
     required this.date,
-    required this.availabilityStatus,
+    required this.artistsAvailability,
     required this.startMinutes,
     required this.endMinutes,
     required this.address,
@@ -33,17 +33,24 @@ class ShowDate {
         options, // Option trouvé dans la doc que je ne comprends pas, voir pour la supprimer
   ) {
     final data = snapshot.data();
+    Map<String, AvailabilityStatus> availabilityMap = {};
+    if (data!.containsKey('artistsAvailability')) {
+      final mapData = data['artistsAvailability'] as Map<String, dynamic>;
+      mapData.forEach((key, value) {
+        availabilityMap[key] = availabilityStatusFromString(value);
+      });
+    }
+
     return ShowDate(
         uid: snapshot.id,
-        title: data!['title'],
+        title: data['title'],
         date: data['date'].toDate(),
-        availabilityStatus:
-            availabilityStatusFromString(data['availabilityStatus']),
+        artistsAvailability: availabilityMap,
         startMinutes: data['startTime'],
         endMinutes: data['endTime'],
         address: data['address'],
         artistsCount: data['artistsCount'],
-        fee: (data['fee']).toDouble(), // as num? cast?
+        fee: (data['fee']).toDouble(),
         description: data['description']);
   }
 
@@ -51,7 +58,8 @@ class ShowDate {
     return {
       "title": title,
       "date": date,
-      "availabilityStatus": availabilityStatus.name,
+      "artistsAvailability":
+          artistsAvailability.map((key, value) => MapEntry(key, value.name)),
       "startTime": startMinutes,
       "endTime": endMinutes,
       "address": address,
@@ -59,6 +67,14 @@ class ShowDate {
       "fee": fee,
       if (description != null) "description": description,
     };
+  }
+
+  AvailabilityStatus getAvailabilityFor(String userId) {
+    return artistsAvailability[userId] ?? AvailabilityStatus.pending;
+  }
+
+  void setAvailabilityFor(String userId, AvailabilityStatus status) {
+    artistsAvailability[userId] = status;
   }
 }
 
@@ -68,9 +84,11 @@ extension ShowDateX on ShowDate {
   String get formattedStartTime => _minutesToHHmm(startMinutes);
   String get formattedEndTime => _minutesToHHmm(endMinutes);
 
-  void nextStatus() => availabilityStatus = availabilityStatus.next;
+  void nextStatus(String userId) {
+    final currentStatus = getAvailabilityFor(userId);
+    setAvailabilityFor(userId, currentStatus.next);
   }
-
+}
 
 //TODO Reflechir si on laisse ici ou si on met dans un Helper a coté
 String _minutesToHHmm(int minutes) {
@@ -78,6 +96,7 @@ String _minutesToHHmm(int minutes) {
   final m = minutes % 60;
   return "${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}";
 }
+
 //TODO Le parser n'est pas utilisé, corriger ça au moment de la récupération et de l'affichage d'une date
 int hourStringToMinutes(String value) {
   final parts = value.trim().split(':');

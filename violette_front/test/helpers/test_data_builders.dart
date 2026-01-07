@@ -30,7 +30,7 @@ class TestDataBuilders {
     DateTime? date,
     int startMinutes = 540, // 9:00
     int endMinutes = 720, // 12:00
-    AvailabilityStatus status = AvailabilityStatus.pending,
+    Map<String, AvailabilityStatus>? artistsAvailability,
     String address = '123 Rue de Test, Paris',
     int artistsCount = 3,
     double fee = 250.0,
@@ -42,7 +42,7 @@ class TestDataBuilders {
       date: date ?? DateTime(2025, 6, 15),
       startMinutes: startMinutes,
       endMinutes: endMinutes,
-      availabilityStatus: status,
+      artistsAvailability: artistsAvailability ?? {},
       address: address,
       artistsCount: artistsCount,
       fee: fee,
@@ -61,8 +61,10 @@ class TestDataBuilders {
         uid: 'show-$index',
         title: 'Spectacle ${index + 1}',
         date: DateTime(year, month, (index + 1) * 5), // Tous les 5 jours
-        status:
-            AvailabilityStatus.values[index % AvailabilityStatus.values.length],
+        artistsAvailability: {
+          'artist1-id': AvailabilityStatus
+              .values[index % AvailabilityStatus.values.length]
+        },
       );
     });
   }

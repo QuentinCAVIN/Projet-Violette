@@ -73,44 +73,48 @@ void main() {
   });
 
   group('ShowDate - Extension nextStatus', () {
+    const userId = 'user1';
+
     test('nextStatus devrait faire passer pending → available', () {
       final showDate = _createTestShowDate(
-        status: AvailabilityStatus.pending,
+        artistsAvailability: {userId: AvailabilityStatus.pending},
       );
 
-      showDate.nextStatus();
+      showDate.nextStatus(userId);
 
-      expect(showDate.availabilityStatus, AvailabilityStatus.available);
+      expect(showDate.getAvailabilityFor(userId), AvailabilityStatus.available);
     });
 
     test('nextStatus devrait faire passer available → conditional', () {
       final showDate = _createTestShowDate(
-        status: AvailabilityStatus.available,
+        artistsAvailability: {userId: AvailabilityStatus.available},
       );
 
-      showDate.nextStatus();
+      showDate.nextStatus(userId);
 
-      expect(showDate.availabilityStatus, AvailabilityStatus.conditional);
+      expect(
+          showDate.getAvailabilityFor(userId), AvailabilityStatus.conditional);
     });
 
     test('nextStatus devrait faire passer conditional → unavailable', () {
       final showDate = _createTestShowDate(
-        status: AvailabilityStatus.conditional,
+        artistsAvailability: {userId: AvailabilityStatus.conditional},
       );
 
-      showDate.nextStatus();
+      showDate.nextStatus(userId);
 
-      expect(showDate.availabilityStatus, AvailabilityStatus.unavailable);
+      expect(
+          showDate.getAvailabilityFor(userId), AvailabilityStatus.unavailable);
     });
 
     test('nextStatus devrait faire passer unavailable → available (cycle)', () {
       final showDate = _createTestShowDate(
-        status: AvailabilityStatus.unavailable,
+        artistsAvailability: {userId: AvailabilityStatus.unavailable},
       );
 
-      showDate.nextStatus();
+      showDate.nextStatus(userId);
 
-      expect(showDate.availabilityStatus, AvailabilityStatus.available);
+      expect(showDate.getAvailabilityFor(userId), AvailabilityStatus.available);
     });
   });
 
@@ -167,7 +171,7 @@ ShowDate _createTestShowDate({
   DateTime? date,
   int startMinutes = 540,
   int endMinutes = 720,
-  AvailabilityStatus status = AvailabilityStatus.pending,
+  Map<String, AvailabilityStatus>? artistsAvailability,
   String address = 'Test Address',
   int artistsCount = 1,
   double fee = 100.0,
@@ -177,7 +181,7 @@ ShowDate _createTestShowDate({
     date: date ?? DateTime(2025, 1, 1),
     startMinutes: startMinutes,
     endMinutes: endMinutes,
-    availabilityStatus: status,
+    artistsAvailability: artistsAvailability ?? {},
     address: address,
     artistsCount: artistsCount,
     fee: fee,

@@ -4,8 +4,13 @@ import '../../../../models/show_date.dart';
 
 class ShowDateDetail extends StatelessWidget {
   final ShowDate showDate;
+  final AvailabilityStatus status;
 
-  const ShowDateDetail({super.key, required this.showDate});
+  const ShowDateDetail({
+    super.key,
+    required this.showDate,
+    required this.status,
+  });
 
   @override
   Widget build(
@@ -19,7 +24,7 @@ class ShowDateDetail extends StatelessWidget {
         ),
         Card(
           child: ListTile(
-            title: Text("Disponibilité : ${showDate.availabilityStatus.label}"),
+            title: Text("Disponibilité : ${status.label}"),
           ),
         ),
         Card(
@@ -35,29 +40,27 @@ class ShowDateDetail extends StatelessWidget {
         ),
         Card(
           child: ListTile(
-            title: Text("Adresse : ${showDate.description}",),
+            title: Text(
+              "Adresse : ${showDate.description}",
+            ),
           ),
         ),
         Card(
           child: ListTile(
             title:
-            Text("Nombre d'artiste nécessaire : ${showDate.artistsCount}"),
+                Text("Nombre d'artiste nécessaire : ${showDate.artistsCount}"),
           ),
         ),
-
         Card(
           child: ListTile(
             title: Text("Montant du cachet : ${showDate.fee} €"),
           ),
         ),
-
         Card(
           child: ListTile(
             title: Text("Description : ${showDate.description}"),
           ),
         ),
-
-
       ],
     );
   }

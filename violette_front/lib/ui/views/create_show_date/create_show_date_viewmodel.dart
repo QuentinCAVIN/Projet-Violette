@@ -3,7 +3,7 @@ import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:violette_front/app/app.locator.dart';
 import 'package:violette_front/app/app.router.dart';
-import '../../../models/enums/availability_status.dart';
+
 import '../../../models/show_date.dart';
 import '../../../services/show_date_service.dart';
 import 'create_show_date_view.form.dart';
@@ -60,11 +60,13 @@ class CreateShowDateViewModel extends FormViewModel {
       final end = _timeOfDayToMinutes(selectedEndTime!);
 
       //Todo: Temporaire: Fixe la date au lendemain quand on fait le tour du cadran (en int minutes)
-      final endAdjusted = (end <= start) ? end + 24 * 60 : end;// cas date de 23h à 1h00
+      final endAdjusted =
+          (end <= start) ? end + 24 * 60 : end; // cas date de 23h à 1h00
       final duration = endAdjusted - start;
       //TODO Voir avec Agathe si on bloque une date supérieur à 12h (auto-entrepreneur)
-      if ( duration.abs() > 12*60 ) {
-        globalErrorMessage= "Un cachet d'intermittent ne peut pas dépasser 12h";
+      if (duration.abs() > 12 * 60) {
+        globalErrorMessage =
+            "Un cachet d'intermittent ne peut pas dépasser 12h";
       }
     }
 
@@ -123,7 +125,7 @@ class CreateShowDateViewModel extends FormViewModel {
     setFormStatus();
     rebuildUi();
 
-    if (!isFormValid || globalErrorMessage!=null) {
+    if (!isFormValid || globalErrorMessage != null) {
       return;
     }
 
@@ -134,7 +136,7 @@ class CreateShowDateViewModel extends FormViewModel {
         selectedDate!.month,
         selectedDate!.day,
       ),
-      availabilityStatus: AvailabilityStatus.pending,
+      artistsAvailability: {},
       startMinutes: _timeOfDayToMinutes(selectedStartTime!),
       endMinutes: _timeOfDayToMinutes(selectedEndTime!),
       address: addressValue!,

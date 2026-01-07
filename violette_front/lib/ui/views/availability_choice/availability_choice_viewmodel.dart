@@ -1,4 +1,5 @@
 import 'package:stacked/stacked.dart';
+import 'package:stacked_firebase_auth/stacked_firebase_auth.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:violette_front/app/app.router.dart';
@@ -17,6 +18,8 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
   final _navigationService = locator<NavigationService>();
   final ShowDateService _showDateService = locator<ShowDateService>();
   final SnackbarService _snackbarService = locator<SnackbarService>();
+  final FirebaseAuthenticationService _authenticationService =
+      locator<FirebaseAuthenticationService>();
 
   final CalendarFormat calendarFormat = CalendarFormat.month;
   // Le mois/la page actuellement affichée dans le calendrier
@@ -30,7 +33,6 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
 
   // Sert à détecter un 2e tap sur le même jour
   DateTime? _lastTappedDay;
-
 
   List<ShowDate> showDates = [];
 
@@ -68,13 +70,14 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
     }
 
     // 2e tap sur le même jour : on change le statut
-    picked.nextStatus();
-    rebuildUi();
+    if (_authenticationService.currentUser != null) {
+      picked.nextStatus(_authenticationService.currentUser!.uid);
+      rebuildUi();
+    }
   }
 
   bool _isSameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
-
 
   //Methode proposé dans la doc table_calendar appelé quand on swipe vers un autre mois
   void onPageChange(DateTime newFocusedDay) {
@@ -102,8 +105,12 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
 //HELPERS                                                                     //
 //****************************************************************************//
   // Récupérer le statut pour un jour
-  AvailabilityStatus? getStatusForDay(DateTime day) {
-    return _findShowDate(day)?.availabilityStatus;
+  AvailabilityStatus getStatusForDay(DateTime day) {
+    final showDate = _findShowDate(day);
+    if (showDate == null || _authenticationService.currentUser == null) {
+      return AvailabilityStatus.pending;
+    }
+    return showDate.getAvailabilityFor(_authenticationService.currentUser!.uid);
   }
 
   // Récupérer la ShowDate pour un jour
@@ -116,5 +123,4 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
     }
     return null;
   }
-
 }

@@ -25,7 +25,10 @@ class AvailabilityChoiceView extends StackedView<AvailabilityChoiceViewModel> {
             children: [
               const AvailabilityCalendar(),
               if (viewModel.showDatePicked != null)
-                ShowDateDetail(showDate: viewModel.showDatePicked!),
+                ShowDateDetail(
+                  showDate: viewModel.showDatePicked!,
+                  status: viewModel.getStatusForDay(viewModel.selectedDay!)
+                ),
               const SizedBox(height: 30),
               SizedBox(
                 width: double.infinity,
