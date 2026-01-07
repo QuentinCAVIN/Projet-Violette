@@ -23,6 +23,7 @@ class LoginHeader extends StackedView<LoginHeaderModel> {
           child: Center(
             child: Image.asset(
               'assets/images/logo.png',
+              semanticLabel: 'Violette Logo',
               width: 60,
               height: 60,
               fit: BoxFit.contain,
