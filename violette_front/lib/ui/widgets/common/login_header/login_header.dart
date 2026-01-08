@@ -26,6 +26,7 @@ class LoginHeader extends StackedView<LoginHeaderModel> {
               width: 60,
               height: 60,
               fit: BoxFit.contain,
+              semanticLabel: 'Violette Logo',
             ),
           ),
         ),
