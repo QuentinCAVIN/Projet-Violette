@@ -12,7 +12,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: violette-front
+        working-directory: violette_front
 
     steps:
       - name: Checkout repository
