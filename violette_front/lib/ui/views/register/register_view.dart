@@ -19,7 +19,7 @@ import 'register_view.form.dart';
   ],
 )
 class RegisterView extends StackedView<RegisterViewModel> with $RegisterView {
-  const RegisterView({Key? key}) : super(key: key);
+  const RegisterView({super.key});
 
   @override
   Widget builder(

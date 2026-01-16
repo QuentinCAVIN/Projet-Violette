@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:violette_front/models/show_date.dart';
-import 'package:violette_front/models/enums/availability_status.dart';
 
 class ShowDateService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -18,10 +17,10 @@ class ShowDateService {
     final snapshot = await collection.get();
 
     showDates.clear();
-    snapshot.docs.forEach((doc) {
+    for (var doc in snapshot.docs) {
       showDates.add(ShowDate.fromFirestore(doc,
           null)); // TODO question ELies -> c'est quoi le null (firebaseOption)
-    });
+    }
     /*showDates
       ..clear()
       ..addAll(snapshot.docs.map(_fromDoc));*/ // autre écriture possible de la ligne du dessus

@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_firebase_auth/stacked_firebase_auth.dart';
 import 'package:stacked_services/stacked_services.dart';
@@ -61,7 +60,6 @@ class LoginViewModel extends FormViewModel {
       //TODO Faire un mapper pour les erreurs de Firebase
       globalErrorMessage =
           "Combinaison adresse mail / mot de passe incorrecte.";
-      print(authResult.errorMessage);
       rebuildUi();
       return;
     }

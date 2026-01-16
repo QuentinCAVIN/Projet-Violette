@@ -91,11 +91,11 @@ class _SparkleWidgetState extends State<SparkleWidget>
         width: widget.size,
         height: widget.size,
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(widget.opacity),
+          color: Colors.white.withValues(alpha: widget.opacity),
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.white.withOpacity(widget.opacity * 0.5),
+              color: Colors.white.withValues(alpha: widget.opacity * 0.5),
               blurRadius: widget.size * 2,
               spreadRadius: widget.size * 0.5,
             ),

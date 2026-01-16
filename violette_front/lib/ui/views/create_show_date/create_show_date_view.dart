@@ -20,7 +20,7 @@ import 'create_show_date_viewmodel.dart';
 )
 class CreateShowDateView extends StackedView<CreateShowDateViewModel>
     with $CreateShowDateView {
-  const CreateShowDateView({Key? key}) : super(key: key);
+  const CreateShowDateView({super.key});
 
   @override
   Widget builder(

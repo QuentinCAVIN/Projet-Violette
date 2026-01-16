@@ -10,11 +10,11 @@ class DayCell extends ViewModelWidget<AvailabilityChoiceViewModel> {
   final bool isSelected;
 
   const DayCell({
-    Key? key,
+    super.key,
     required this.day,
     required this.status,
     this.isSelected = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context, AvailabilityChoiceViewModel viewModel) {
@@ -36,7 +36,7 @@ class DayCell extends ViewModelWidget<AvailabilityChoiceViewModel> {
         color: status!.color,
         shape: BoxShape.circle,
         border: isSelected
-            ? Border.all(width: 2, color: Colors.black.withOpacity(0.4))
+            ? Border.all(width: 2, color: Colors.black.withValues(alpha: 0.4))
             : null,
       ),
       child: Center(

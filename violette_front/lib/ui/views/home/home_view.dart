@@ -6,7 +6,7 @@ import '../../../models/enums/role.dart';
 import 'home_viewmodel.dart';
 
 class HomeView extends StackedView<HomeViewModel> {
-  const HomeView({Key? key}) : super(key: key);
+  const HomeView({super.key});
 
   @override
   Widget builder(BuildContext context, HomeViewModel viewModel, Widget? child) {

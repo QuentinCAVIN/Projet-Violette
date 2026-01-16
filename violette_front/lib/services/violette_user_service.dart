@@ -8,8 +8,6 @@ class VioletteUserService {
 
   Future<void> addUser(VioletteUser user) async {
     _db.collection(collectionName).doc(user.uid).set(user.toFirestore());
-    print(
-        "${user.firstName} ${user.lastName} adresse mail:${user.email} avec l'uid: ${user.uid} et le role ${user.roles[0]} a bien été ajouté au Firestore");
   }
 
   Future<VioletteUser?> getUser(String uid) async {

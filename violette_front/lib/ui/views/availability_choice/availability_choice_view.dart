@@ -17,7 +17,7 @@ class AvailabilityChoiceView extends StackedView<AvailabilityChoiceViewModel> {
       appBar: AppBar(
         title: const Text('Sélection des dates'),
       ),
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 20.0),
