@@ -17,7 +17,7 @@ class HomeViewModel extends BaseViewModel {
   final _userServices = locator<VioletteUserService>();
   final _navigationService = locator<NavigationService>();
 
-  VioletteUser? currentUser; // Pareil com ci dessous
+  VioletteUser? currentUser;
 
   void logOut() {
     _authenticationService.logout();
@@ -25,6 +25,10 @@ class HomeViewModel extends BaseViewModel {
 
   void navigateToAvailabilityChoiceView() {
     _navigationService.navigateToAvailabilityChoiceView();
+  }
+
+  void navigateToManagerPlanningView() {
+    _navigationService.navigateToManagerPlanningView();
   }
 
   void navigateToShowDateFormView() {
@@ -63,7 +67,8 @@ class HomeViewModel extends BaseViewModel {
     _dialogService.showCustomDialog(
       variant: DialogType.infoAlert,
       title: 'Violllleeeeeettttttteeee',
-      description: 'Salut ${currentUser!.firstName} tu es notre ${currentUser!.roles[0]} préféré!',
+      description:
+          'Salut ${currentUser!.firstName} tu es notre ${currentUser!.roles[0]} préféré!',
     );
   }
 

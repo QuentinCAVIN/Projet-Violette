@@ -47,7 +47,6 @@ extension AvailabilityStatusX on AvailabilityStatus {
         return AvailabilityStatus.available;
     }
   }
-
 }
 
 //Pour les conversions Firestore
