@@ -131,10 +131,11 @@ class CreateShowDateViewModel extends FormViewModel {
 
     final showDate = ShowDate(
       title: titleValue!,
-      date: DateTime(
+      date: DateTime.utc(
         selectedDate!.year,
         selectedDate!.month,
         selectedDate!.day,
+        12, // Force à midi UTC pour éviter les décalages de fuseaux horaires
       ),
       artistsAvailability: {},
       startMinutes: _timeOfDayToMinutes(selectedStartTime!),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../models/show_date.dart';
 import 'package:intl/intl.dart';
-import '../../../../theme/violette_theme.dart';
 
 class ManagerDateDetailCard extends StatelessWidget {
   final ShowDate showDate;

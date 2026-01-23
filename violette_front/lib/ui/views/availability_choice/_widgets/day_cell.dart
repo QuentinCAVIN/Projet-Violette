@@ -24,7 +24,7 @@ class DayCell extends ViewModelWidget<AvailabilityChoiceViewModel> {
           '${day.day}',
           style: Theme.of(context)
               .textTheme
-              .bodyMedium, // TODO Faire un theme personalisé (je garde la ligne pour l'exemple)
+              .bodyMedium, 
         ),
       );
     }

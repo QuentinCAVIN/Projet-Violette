@@ -47,7 +47,7 @@ class ShowDate {
     return ShowDate(
       uid: snapshot.id,
       title: data['title'],
-      date: data['date'].toDate(),
+      date: data['date'].toDate().toLocal(),
       artistsAvailability: availabilityMap,
       startMinutes: data['startTime'],
       endMinutes: data['endTime'],
@@ -55,7 +55,7 @@ class ShowDate {
       artistsCount: data['artistsCount'],
       fee: (data['fee']).toDouble(),
       description: data['description'],
-      status: data['status'],
+      status: showDateStatusFromString(data['status'] ?? ''),
     );
   }
 
