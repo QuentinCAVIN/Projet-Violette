@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:violette_front/models/enums/availability_status.dart';
+import 'package:violette_front/models/enums/show_date_status.dart';
 
 //TODO Définir avec Agathe les champs qui doivent être obligatoire
 class ShowDate {
@@ -13,6 +14,7 @@ class ShowDate {
   final double fee;
   final String? description;
   final Map<String, AvailabilityStatus> artistsAvailability;
+  final ShowDateStatus status;
 
   ShowDate({
     this.uid,
@@ -25,6 +27,7 @@ class ShowDate {
     required this.artistsCount,
     required this.fee,
     this.description,
+    this.status = ShowDateStatus.optional, //TODO Voir avec Elodie quel statu à une date nouvellement créé
   });
 
   factory ShowDate.fromFirestore(
@@ -42,16 +45,18 @@ class ShowDate {
     }
 
     return ShowDate(
-        uid: snapshot.id,
-        title: data['title'],
-        date: data['date'].toDate(),
-        artistsAvailability: availabilityMap,
-        startMinutes: data['startTime'],
-        endMinutes: data['endTime'],
-        address: data['address'],
-        artistsCount: data['artistsCount'],
-        fee: (data['fee']).toDouble(),
-        description: data['description']);
+      uid: snapshot.id,
+      title: data['title'],
+      date: data['date'].toDate().toLocal(),
+      artistsAvailability: availabilityMap,
+      startMinutes: data['startTime'],
+      endMinutes: data['endTime'],
+      address: data['address'],
+      artistsCount: data['artistsCount'],
+      fee: (data['fee']).toDouble(),
+      description: data['description'],
+      status: showDateStatusFromString(data['status'] ?? ''),
+    );
   }
 
   Map<String, dynamic> toFirestore() {
@@ -65,6 +70,7 @@ class ShowDate {
       "address": address,
       "artistsCount": artistsCount,
       "fee": fee,
+      "status": status.name,
       if (description != null) "description": description,
     };
   }

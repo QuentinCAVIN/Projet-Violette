@@ -13,7 +13,6 @@ class AvailabilityCalendar
     BuildContext context,
     AvailabilityChoiceViewModel viewModel,
   ) {
-
     //TODO Bouton "2 weeks" sur le calendrier mort, voir pour le faire disparaitre
     return TableCalendar(
       firstDay: DateTime.utc(2010, 10, 16),

@@ -18,12 +18,14 @@ dependencies:
   stacked_firebase_auth: ^2.21.0
   cloud_firestore: ^5.6.12
   table_calendar: ^3.2.0
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
   mocktail: ^1.0.0
+  build_runner: ^2.4.6
   stacked_generator: ^1.5.3
   golden_toolkit: ^0.15.0
 

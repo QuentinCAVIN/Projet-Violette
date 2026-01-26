@@ -105,9 +105,12 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
 //HELPERS                                                                     //
 //****************************************************************************//
   // Récupérer le statut pour un jour
-  AvailabilityStatus getStatusForDay(DateTime day) {
+  AvailabilityStatus? getStatusForDay(DateTime day) {
     final showDate = _findShowDate(day);
-    if (showDate == null || _authenticationService.currentUser == null) {
+    if (showDate == null) {
+      return null;
+    }
+    if (_authenticationService.currentUser == null) {
       return AvailabilityStatus.pending;
     }
     return showDate.getAvailabilityFor(_authenticationService.currentUser!.uid);

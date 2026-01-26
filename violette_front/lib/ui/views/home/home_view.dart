@@ -29,8 +29,6 @@ class HomeView extends StackedView<HomeViewModel> {
         ),
       );
     }
-
-    // 3. Render Main Content only when user is available
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -57,27 +55,36 @@ class HomeView extends StackedView<HomeViewModel> {
                     const SizedBox(height: 16),
                     Card(
                       child: ListTile(
-                        title:Text(
+                        title: Text(
                           // TODO rajouter de quoi afficher une liste de role et non pas le premier de la liste
                           "Profil : ${currentUser.roles[0].label} ",
-                          style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                            letterSpacing: 1.2,
-                          ),
-
+                          style: Theme.of(context)
+                              .textTheme
+                              .displayLarge
+                              ?.copyWith(
+                                letterSpacing: 1.2,
+                              ),
                         ),
                       ),
                     ),
 
                     verticalSpaceMedium,
 
-                    // Bouton navigation creation date visible par les gérants uniquement
-                    if (currentUser.roles.contains(Role.manager))
+                    if (currentUser.roles.contains(Role.manager)) ...[
                       ElevatedButton(
                         onPressed: viewModel.navigateToShowDateFormView,
                         child: const Text(
                           'Créer une nouvelle date',
                         ),
                       ),
+                      verticalSpaceMedium,
+                      ElevatedButton(
+                        onPressed: viewModel.navigateToManagerPlanningView,
+                        child: const Text(
+                          'Consulter le Planning',
+                        ),
+                      ),
+                    ],
                     // Bouton navigation sélection des dispos visible par les artistes uniquement
                     if (currentUser.roles.contains(Role.artist))
                       ElevatedButton(
@@ -92,7 +99,6 @@ class HomeView extends StackedView<HomeViewModel> {
                       onPressed: viewModel.logOut,
                       child: const Text('Déconnexion'),
                     ),
-
                   ],
                 ),
                 Row(
