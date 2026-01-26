@@ -1,13 +1,15 @@
 # Projet-Violette
 Plateforme web de gestion des plannings et des cachets pour gérants de compagnie artistiques et intermittents du spectacle . L'outil centralisera les disponibilités, les réservations, les vidéos de répétition et la communication entre gérants et artistes
 
-## État actuel (v0.1.0)
+## État actuel (v0.2.0)
 
 - Application Flutter avec architecture Stacked.
-- Authentification Firebase (inscription, connexion, déconnexion).
-- Messages d’erreur gérés sur les écrans Login / Register.
-- Profil utilisateur stocké dans Firestore et affichage du nom dans la Home.
-- Backend Quarkus initialisé (pas encore utilisé par le front).
+- Authentification Firebase avec gestion des rôles (gérant / artiste).
+- Création et gestion des dates de spectacle (ShowDate).
+- Vue Planning gérant avec calendrier et gestion des disponibilités par artiste.
+- Profils utilisateurs stockés dans Firestore.
+- Infrastructure de tests unitaires et intégration continue (GitHub Actions).
+- Backend Quarkus initialisé (pas encore connecté au front).
 
 ## Stack technique
 
