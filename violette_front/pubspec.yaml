@@ -18,6 +18,7 @@ dependencies:
   stacked_firebase_auth: ^2.21.0
   cloud_firestore: ^5.6.12
   table_calendar: ^3.2.0
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:

@@ -1,4 +1,3 @@
-// using mocktail
 import 'package:violette_front/app/app.locator.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked_services/stacked_services.dart';
@@ -6,16 +5,23 @@ import 'package:violette_front/services/show_date_service.dart';
 import 'package:violette_front/services/violette_user_service.dart';
 import 'package:stacked_firebase_auth/stacked_firebase_auth.dart';
 
-// Import generated mocks (if using build_runner with mockito) or define manually with Mocktail
-// Using Mocktail as it's in pubspec
+// Import des mocks générés (si utilisation de build_runner avec mockito) ou définition manuelle avec Mocktail
+
 import 'package:mocktail/mocktail.dart';
 
 class MockNavigationService extends Mock implements NavigationService {}
+
 class MockBottomSheetService extends Mock implements BottomSheetService {}
+
 class MockDialogService extends Mock implements DialogService {}
+
 class MockShowDateService extends Mock implements ShowDateService {}
+
 class MockVioletteUserService extends Mock implements VioletteUserService {}
-class MockFirebaseAuthenticationService extends Mock implements FirebaseAuthenticationService {}
+
+class MockFirebaseAuthenticationService extends Mock
+    implements FirebaseAuthenticationService {}
+
 class MockSnackbarService extends Mock implements SnackbarService {}
 
 MockNavigationService getAndRegisterNavigationService() {
@@ -31,30 +37,30 @@ MockBottomSheetService getAndRegisterBottomSheetService({
   _removeRegistrationIfExists<BottomSheetService>();
   final service = MockBottomSheetService();
 
-  registerFallbackValue(const Color(0));
+  registerFallbackValue(const Color(0xFF000000));
   registerFallbackValue(SheetResponse());
 
   when(() => service.showCustomSheet(
-    variant: any(named: 'variant'),
-    title: any(named: 'title'),
-    description: any(named: 'description'),
-    hasImage: any(named: 'hasImage'),
-    imageUrl: any(named: 'imageUrl'),
-    showIconInMainButton: any(named: 'showIconInMainButton'),
-    mainButtonTitle: any(named: 'mainButtonTitle'),
-    showIconInSecondaryButton: any(named: 'showIconInSecondaryButton'),
-    secondaryButtonTitle: any(named: 'secondaryButtonTitle'),
-    additionalButtonTitle: any(named: 'additionalButtonTitle'),
-    takesInput: any(named: 'takesInput'),
-    barrierColor: any(named: 'barrierColor'),
-    barrierDismissible: any(named: 'barrierDismissible'),
-    isScrollControlled: any(named: 'isScrollControlled'),
-    barrierLabel: any(named: 'barrierLabel'),
-    customData: any(named: 'customData'),
-    data: any(named: 'data'),
-    enableDrag: any(named: 'enableDrag'),
-  )).thenAnswer((realInvocation) =>
-      Future.value(showCustomSheetResponse ?? SheetResponse(confirmed: true)));
+            variant: any(named: 'variant'),
+            title: any(named: 'title'),
+            description: any(named: 'description'),
+            hasImage: any(named: 'hasImage'),
+            imageUrl: any(named: 'imageUrl'),
+            showIconInMainButton: any(named: 'showIconInMainButton'),
+            mainButtonTitle: any(named: 'mainButtonTitle'),
+            showIconInSecondaryButton: any(named: 'showIconInSecondaryButton'),
+            secondaryButtonTitle: any(named: 'secondaryButtonTitle'),
+            additionalButtonTitle: any(named: 'additionalButtonTitle'),
+            takesInput: any(named: 'takesInput'),
+            barrierColor: any(named: 'barrierColor'),
+            barrierDismissible: any(named: 'barrierDismissible'),
+            isScrollControlled: any(named: 'isScrollControlled'),
+            barrierLabel: any(named: 'barrierLabel'),
+            data: any(named: 'data'),
+            enableDrag: any(named: 'enableDrag'),
+          ))
+      .thenAnswer((realInvocation) => Future.value(
+          showCustomSheetResponse ?? SheetResponse(confirmed: true)));
 
   locator.registerSingleton<BottomSheetService>(service);
   return service;
@@ -81,7 +87,8 @@ MockVioletteUserService getAndRegisterVioletteUserService() {
   return service;
 }
 
-MockFirebaseAuthenticationService getAndRegisterFirebaseAuthenticationService() {
+MockFirebaseAuthenticationService
+    getAndRegisterFirebaseAuthenticationService() {
   _removeRegistrationIfExists<FirebaseAuthenticationService>();
   final service = MockFirebaseAuthenticationService();
   locator.registerSingleton<FirebaseAuthenticationService>(service);

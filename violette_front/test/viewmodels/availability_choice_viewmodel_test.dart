@@ -17,14 +17,14 @@ void main() {
       test(
           'When no show date exists for the given day, should return null (no color)',
           () {
-        // Mocking service returns empty list
+        // Le service mocké renvoie une liste vide
         final showDateService = getAndRegisterShowDateService();
         when(() => showDateService.getAllShowDates())
             .thenAnswer((_) => Future.value([]));
-            
+
         final viewModel = AvailabilityChoiceViewModel();
 
-        // Load empty dates (in a real scenario dates are loaded first)
+        // Charge des dates vides
         viewModel.loadShowDates();
 
         final status = viewModel.getStatusForDay(DateTime(2025, 12, 12));
@@ -42,7 +42,7 @@ void main() {
         final dummyShowDate = ShowDate(
           title: 'Test',
           date: cleanDate,
-          artistsAvailability: {'uid-123': AvailabilityStatus.available}, // available = green
+          artistsAvailability: {'uid-123': AvailabilityStatus.available},
           startMinutes: 0,
           endMinutes: 0,
           address: 'Paris',
@@ -52,23 +52,21 @@ void main() {
 
         when(() => showDateService.getAllShowDates())
             .thenAnswer((_) => Future.value([dummyShowDate]));
-        when(() => authService.currentUser)
-             .thenReturn(MockUser(uid: 'uid-123')); // need a mock user or similar
-             
+        when(() => authService.currentUser).thenReturn(MockUser(
+            uid: 'uid-123')); // besoin d'un utilisateur fictif ou similaire
+
         final viewModel = AvailabilityChoiceViewModel();
 
         await viewModel.loadShowDates();
 
         final status = viewModel.getStatusForDay(cleanDate);
-        // Note: Assuming AvailabilityStatus.confirmed is returned correctly
-        // Wait, AvailabilityStatus enum in the codebase has 'available', 'pending', etc.
-        // Let's use 'available' which maps to Green.
+        expect(status, AvailabilityStatus.available);
       });
     });
   });
 }
 
-// Minimal mock for the test requirement
+// Mock minimal pour les besoins du test
 class MockUser extends Mock implements User {
   @override
   final String uid;
