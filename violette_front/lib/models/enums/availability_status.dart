@@ -13,7 +13,7 @@ extension AvailabilityStatusX on AvailabilityStatus {
       case AvailabilityStatus.available:
         return 'Disponible';
       case AvailabilityStatus.conditional:
-        return 'Conditionnel';
+        return 'Incertain';
       case AvailabilityStatus.unavailable:
         return 'Indisponible';
       case AvailabilityStatus.pending:
@@ -34,7 +34,7 @@ extension AvailabilityStatusX on AvailabilityStatus {
     }
   }
 
-  // Pour le tapped sur le TableCalendar
+  // Utilisé pour le changement de satut onTapped sur le TableCalendar
   AvailabilityStatus get next {
     switch (this) {
       case AvailabilityStatus.pending:
@@ -49,7 +49,7 @@ extension AvailabilityStatusX on AvailabilityStatus {
   }
 }
 
-//Pour les conversions Firestore
+//Pour faciliter les conversions vers Firestore
 AvailabilityStatus availabilityStatusFromString(String value) {
   switch (value) {
     case 'available':
