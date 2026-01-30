@@ -40,7 +40,7 @@ void main() {
     });
 
     test('conditional devrait avoir le label "Conditionnel"', () {
-      expect(AvailabilityStatus.conditional.label, 'Conditionnel');
+      expect(AvailabilityStatus.conditional.label, 'Incertain');
     });
 
     test('unavailable devrait avoir le label "Indisponible"', () {

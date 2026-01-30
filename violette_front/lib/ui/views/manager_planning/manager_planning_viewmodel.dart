@@ -4,22 +4,36 @@ import 'package:stacked/stacked.dart';
 import 'package:violette_front/app/app.locator.dart';
 import 'package:violette_front/models/show_date.dart';
 import 'package:violette_front/services/show_date_service.dart';
+import 'package:violette_front/services/violette_user_service.dart';
+import 'package:violette_front/models/violette_user.dart';
+import 'package:violette_front/models/enums/availability_status.dart';
 
 class ManagerPlanningViewModel extends BaseViewModel {
   final _showDateService = locator<ShowDateService>();
+  final _userService = locator<VioletteUserService>();
 
   DateTime focusedDay = DateTime.now();
   DateTime? selectedDay;
   ShowDate? showDatePicked;
   List<ShowDate> showDates = [];
+  List<VioletteUser> artists = [];
+
   Future<void> loadShowDates() async {
     setBusy(true);
     showDates = await _showDateService.getAllShowDates();
     setBusy(false);
   }
 
-  void onDaySelected(DateTime tappedDay, DateTime newFocusedDay) {
+  bool showArtists = false;
+
+  void toggleShowArtists() {
+    showArtists = !showArtists;
+    rebuildUi();
+  }
+
+  Future<void> onDaySelected(DateTime tappedDay, DateTime newFocusedDay) async {
     focusedDay = newFocusedDay;
+    showArtists = false; // Pour réinitialiser sur une nouvelle sélection
 
     final picked = _findShowDate(tappedDay);
     if (picked == null) {
@@ -28,8 +42,26 @@ class ManagerPlanningViewModel extends BaseViewModel {
     } else {
       selectedDay = tappedDay;
       showDatePicked = picked;
+      await _loadArtistsForDate(picked);
     }
     rebuildUi();
+  }
+
+  Future<void> _loadArtistsForDate(ShowDate date) async {
+    setBusy(true);
+    artists.clear();
+    final artistIds = date.artistsAvailability.entries
+        .where((entry) => entry.value != AvailabilityStatus.pending)
+        .map((entry) => entry.key)
+        .toList();
+
+    for (final uid in artistIds) {
+      final user = await _userService.getUser(uid);
+      if (user != null) {
+        artists.add(user);
+      }
+    }
+    setBusy(false);
   }
 
   void onPageChange(DateTime newFocusedDay) {
