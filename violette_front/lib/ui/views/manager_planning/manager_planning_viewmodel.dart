@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 
 import 'package:violette_front/app/app.locator.dart';
-import 'package:violette_front/app/app.router.dart';
-import 'package:stacked_services/stacked_services.dart';
 import 'package:violette_front/models/show_date.dart';
 import 'package:violette_front/services/show_date_service.dart';
 import 'package:violette_front/services/violette_user_service.dart';
@@ -20,27 +18,22 @@ class ManagerPlanningViewModel extends BaseViewModel {
   List<ShowDate> showDates = [];
   List<VioletteUser> artists = [];
 
-    Future<void> loadShowDates() async {
-    await runBusyFuture(
-      () async {
-         //TODO: Ok pour le MVP mais à optimiser plus tard avec un stream
-        showDates = await _showDateService.getAllShowDates();
-      }(),
-    );
-    rebuildUi();
+  Future<void> loadShowDates() async {
+    setBusy(true);
+    showDates = await _showDateService.getAllShowDates();
+    setBusy(false);
   }
 
-  final _navigationService = locator<NavigationService>();
+  bool showArtists = false;
 
-  void navigateToDetail(ShowDate showDate) {
-    _navigationService.navigateTo(
-      Routes.managerDateDetailView,
-      arguments: ManagerDateDetailViewArguments(showDate: showDate),
-    );
+  void toggleShowArtists() {
+    showArtists = !showArtists;
+    rebuildUi();
   }
 
   Future<void> onDaySelected(DateTime tappedDay, DateTime newFocusedDay) async {
     focusedDay = newFocusedDay;
+    showArtists = false; // Pour réinitialiser sur une nouvelle sélection
 
     final picked = _findShowDate(tappedDay);
     if (picked == null) {
@@ -55,23 +48,20 @@ class ManagerPlanningViewModel extends BaseViewModel {
   }
 
   Future<void> _loadArtistsForDate(ShowDate date) async {
-    await runBusyFuture(
-      () async {
-        artists.clear();
+    setBusy(true);
+    artists.clear();
+    final artistIds = date.artistsAvailability.entries
+        .where((entry) => entry.value != AvailabilityStatus.pending)
+        .map((entry) => entry.key)
+        .toList();
 
-        final artistIds = date.artistsAvailability.entries
-            .where((entry) => entry.value != AvailabilityStatus.pending)
-            .map((entry) => entry.key)
-            .toList();
-
-        for (final uid in artistIds) {
-          final user = await _userService.getUser(uid);
-          if (user != null) {
-            artists.add(user);
-          }
-        }
-      }(),
-    );
+    for (final uid in artistIds) {
+      final user = await _userService.getUser(uid);
+      if (user != null) {
+        artists.add(user);
+      }
+    }
+    setBusy(false);
   }
 
   void onPageChange(DateTime newFocusedDay) {

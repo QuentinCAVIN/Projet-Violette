@@ -3,7 +3,7 @@ import 'package:violette_front/models/show_date.dart';
 
 class ShowDateService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
-  final String collectionName = "showDates";
+  final String collectionName = "show_date";
 
   // Stockage en mémoir pour optimisation
   final List<ShowDate> showDates = [];
@@ -77,12 +77,5 @@ class ShowDateService {
   Future<void> deleteShowDate(String uid) async {
     await collection.doc(uid).delete();
     showDates.removeWhere((d) => d.uid == uid);
-  }
-
-  Stream<ShowDate> getShowDateStream(String uid) {
-    return collection
-        .doc(uid)
-        .snapshots()
-        .map((doc) => ShowDate.fromFirestore(doc, null));
   }
 }

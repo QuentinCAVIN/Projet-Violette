@@ -12,8 +12,6 @@ import 'package:violette_front/ui/views/availability_choice/availability_choice_
 import 'package:violette_front/services/show_date_service.dart';
 import 'package:violette_front/ui/views/create_show_date/create_show_date_view.dart';
 import 'package:violette_front/ui/views/manager_planning/manager_planning_view.dart';
-import 'package:violette_front/services/booking_service.dart';
-import 'package:violette_front/ui/views/manager_date_detail/manager_date_detail_view.dart';
 // @stacked-import
 
 @StackedApp(
@@ -25,7 +23,6 @@ import 'package:violette_front/ui/views/manager_date_detail/manager_date_detail_
     MaterialRoute(page: AvailabilityChoiceView),
     MaterialRoute(page: CreateShowDateView),
     MaterialRoute(page: ManagerPlanningView),
-    MaterialRoute(page: ManagerDateDetailView),
 // @stacked-route
   ],
   dependencies: [
@@ -36,7 +33,6 @@ import 'package:violette_front/ui/views/manager_date_detail/manager_date_detail_
     LazySingleton(classType: VioletteUserService),
     LazySingleton(classType: ShowDateService),
     LazySingleton(classType: SnackbarService),
-    LazySingleton(classType: BookingService),
 // @stacked-service
   ],
   bottomsheets: [

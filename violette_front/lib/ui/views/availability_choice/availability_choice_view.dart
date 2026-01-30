@@ -34,8 +34,7 @@ class AvailabilityChoiceView extends StackedView<AvailabilityChoiceViewModel> {
               if (viewModel.showDatePicked != null)
                 ShowDateDetail(
                     showDate: viewModel.showDatePicked!,
-                    status: viewModel.getStatusForDay(viewModel.selectedDay!) ??
-                        AvailabilityStatus.pending),
+                    status: viewModel.getStatusForDay(viewModel.selectedDay!) ?? AvailabilityStatus.pending),
               const SizedBox(height: 30),
               SizedBox(
                 width: double.infinity,

@@ -11,6 +11,7 @@ class AvailabilityStatusPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     Color color = status.color;
     String label = status.label;
 

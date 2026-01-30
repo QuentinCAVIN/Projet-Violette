@@ -5,19 +5,16 @@
 // **************************************************************************
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'package:flutter/material.dart' as _i10;
+import 'package:flutter/material.dart' as _i9;
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart' as _i1;
-import 'package:stacked_services/stacked_services.dart' as _i12;
-import 'package:violette_front/models/show_date.dart' as _i11;
+import 'package:stacked_services/stacked_services.dart' as _i10;
 import 'package:violette_front/ui/views/availability_choice/availability_choice_view.dart'
     as _i6;
 import 'package:violette_front/ui/views/create_show_date/create_show_date_view.dart'
     as _i7;
 import 'package:violette_front/ui/views/home/home_view.dart' as _i2;
 import 'package:violette_front/ui/views/login/login_view.dart' as _i4;
-import 'package:violette_front/ui/views/manager_date_detail/manager_date_detail_view.dart'
-    as _i9;
 import 'package:violette_front/ui/views/manager_planning/manager_planning_view.dart'
     as _i8;
 import 'package:violette_front/ui/views/register/register_view.dart' as _i5;
@@ -38,8 +35,6 @@ class Routes {
 
   static const managerPlanningView = '/manager-planning-view';
 
-  static const managerDateDetailView = '/manager-date-detail-view';
-
   static const all = <String>{
     homeView,
     startupView,
@@ -48,7 +43,6 @@ class Routes {
     availabilityChoiceView,
     createShowDateView,
     managerPlanningView,
-    managerDateDetailView,
   };
 }
 
@@ -82,60 +76,48 @@ class StackedRouter extends _i1.RouterBase {
       Routes.managerPlanningView,
       page: _i8.ManagerPlanningView,
     ),
-    _i1.RouteDef(
-      Routes.managerDateDetailView,
-      page: _i9.ManagerDateDetailView,
-    ),
   ];
 
   final _pagesMap = <Type, _i1.StackedRouteFactory>{
     _i2.HomeView: (data) {
-      return _i10.MaterialPageRoute<dynamic>(
+      return _i9.MaterialPageRoute<dynamic>(
         builder: (context) => const _i2.HomeView(),
         settings: data,
       );
     },
     _i3.StartupView: (data) {
-      return _i10.MaterialPageRoute<dynamic>(
+      return _i9.MaterialPageRoute<dynamic>(
         builder: (context) => const _i3.StartupView(),
         settings: data,
       );
     },
     _i4.LoginView: (data) {
-      return _i10.MaterialPageRoute<dynamic>(
+      return _i9.MaterialPageRoute<dynamic>(
         builder: (context) => const _i4.LoginView(),
         settings: data,
       );
     },
     _i5.RegisterView: (data) {
-      return _i10.MaterialPageRoute<dynamic>(
+      return _i9.MaterialPageRoute<dynamic>(
         builder: (context) => const _i5.RegisterView(),
         settings: data,
       );
     },
     _i6.AvailabilityChoiceView: (data) {
-      return _i10.MaterialPageRoute<dynamic>(
+      return _i9.MaterialPageRoute<dynamic>(
         builder: (context) => const _i6.AvailabilityChoiceView(),
         settings: data,
       );
     },
     _i7.CreateShowDateView: (data) {
-      return _i10.MaterialPageRoute<dynamic>(
+      return _i9.MaterialPageRoute<dynamic>(
         builder: (context) => const _i7.CreateShowDateView(),
         settings: data,
       );
     },
     _i8.ManagerPlanningView: (data) {
-      return _i10.MaterialPageRoute<dynamic>(
+      return _i9.MaterialPageRoute<dynamic>(
         builder: (context) => const _i8.ManagerPlanningView(),
-        settings: data,
-      );
-    },
-    _i9.ManagerDateDetailView: (data) {
-      final args = data.getArgs<ManagerDateDetailViewArguments>(nullOk: false);
-      return _i10.MaterialPageRoute<dynamic>(
-        builder: (context) =>
-            _i9.ManagerDateDetailView(key: args.key, showDate: args.showDate),
         settings: data,
       );
     },
@@ -148,34 +130,7 @@ class StackedRouter extends _i1.RouterBase {
   Map<Type, _i1.StackedRouteFactory> get pagesMap => _pagesMap;
 }
 
-class ManagerDateDetailViewArguments {
-  const ManagerDateDetailViewArguments({
-    this.key,
-    required this.showDate,
-  });
-
-  final _i10.Key? key;
-
-  final _i11.ShowDate showDate;
-
-  @override
-  String toString() {
-    return '{"key": "$key", "showDate": "$showDate"}';
-  }
-
-  @override
-  bool operator ==(covariant ManagerDateDetailViewArguments other) {
-    if (identical(this, other)) return true;
-    return other.key == key && other.showDate == showDate;
-  }
-
-  @override
-  int get hashCode {
-    return key.hashCode ^ showDate.hashCode;
-  }
-}
-
-extension NavigatorStateExtension on _i12.NavigationService {
+extension NavigatorStateExtension on _i10.NavigationService {
   Future<dynamic> navigateToHomeView([
     int? routerId,
     bool preventDuplicates = true,
@@ -274,23 +229,6 @@ extension NavigatorStateExtension on _i12.NavigationService {
         transition: transition);
   }
 
-  Future<dynamic> navigateToManagerDateDetailView({
-    _i10.Key? key,
-    required _i11.ShowDate showDate,
-    int? routerId,
-    bool preventDuplicates = true,
-    Map<String, String>? parameters,
-    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
-        transition,
-  }) async {
-    return navigateTo<dynamic>(Routes.managerDateDetailView,
-        arguments: ManagerDateDetailViewArguments(key: key, showDate: showDate),
-        id: routerId,
-        preventDuplicates: preventDuplicates,
-        parameters: parameters,
-        transition: transition);
-  }
-
   Future<dynamic> replaceWithHomeView([
     int? routerId,
     bool preventDuplicates = true,
@@ -383,23 +321,6 @@ extension NavigatorStateExtension on _i12.NavigationService {
         transition,
   ]) async {
     return replaceWith<dynamic>(Routes.managerPlanningView,
-        id: routerId,
-        preventDuplicates: preventDuplicates,
-        parameters: parameters,
-        transition: transition);
-  }
-
-  Future<dynamic> replaceWithManagerDateDetailView({
-    _i10.Key? key,
-    required _i11.ShowDate showDate,
-    int? routerId,
-    bool preventDuplicates = true,
-    Map<String, String>? parameters,
-    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
-        transition,
-  }) async {
-    return replaceWith<dynamic>(Routes.managerDateDetailView,
-        arguments: ManagerDateDetailViewArguments(key: key, showDate: showDate),
         id: routerId,
         preventDuplicates: preventDuplicates,
         parameters: parameters,

@@ -15,7 +15,6 @@ class ShowDate {
   final String? description;
   final Map<String, AvailabilityStatus> artistsAvailability;
   final ShowDateStatus status;
-  final int selectedCount;
 
   ShowDate({
     this.uid,
@@ -28,9 +27,7 @@ class ShowDate {
     required this.artistsCount,
     required this.fee,
     this.description,
-    this.status = ShowDateStatus
-        .optional, //TODO Voir avec Elodie quel statu à une date nouvellement créé
-    this.selectedCount = 0,
+    this.status = ShowDateStatus.optional, //TODO Voir avec Elodie quel statu à une date nouvellement créé
   });
 
   factory ShowDate.fromFirestore(
@@ -59,7 +56,6 @@ class ShowDate {
       fee: (data['fee']).toDouble(),
       description: data['description'],
       status: showDateStatusFromString(data['status'] ?? ''),
-      selectedCount: data['selectedCount'] ?? 0,
     );
   }
 
@@ -75,7 +71,6 @@ class ShowDate {
       "artistsCount": artistsCount,
       "fee": fee,
       "status": status.name,
-      "selectedCount": selectedCount,
       if (description != null) "description": description,
     };
   }
