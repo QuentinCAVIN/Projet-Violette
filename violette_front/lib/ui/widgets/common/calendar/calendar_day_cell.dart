@@ -24,7 +24,7 @@ class CalendarDayCell extends StatelessWidget {
         ),
       );
     }
- 
+
     BoxDecoration decoration;
     TextStyle textStyle;
 

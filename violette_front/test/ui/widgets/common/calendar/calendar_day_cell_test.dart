@@ -19,8 +19,10 @@ void main() {
       );
 
       final containerFinder = find.byType(Container);
-      expect(containerFinder, findsNothing, reason: "Ne doit pas y avoir de Container (donc pas de décoration/couleur) si color est null");
-      
+      expect(containerFinder, findsNothing,
+          reason:
+              "Ne doit pas y avoir de Container (donc pas de décoration/couleur) si color est null");
+
       final textFinder = find.text('${DateTime(2025, 1, 1).day}');
       expect(textFinder, findsOneWidget);
     });

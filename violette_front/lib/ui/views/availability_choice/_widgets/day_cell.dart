@@ -22,9 +22,7 @@ class DayCell extends ViewModelWidget<AvailabilityChoiceViewModel> {
       return Center(
         child: Text(
           '${day.day}',
-          style: Theme.of(context)
-              .textTheme
-              .bodyMedium, 
+          style: Theme.of(context).textTheme.bodyMedium,
         ),
       );
     }
