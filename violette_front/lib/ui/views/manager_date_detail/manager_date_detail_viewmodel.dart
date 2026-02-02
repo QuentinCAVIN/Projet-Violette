@@ -51,19 +51,10 @@ class ManagerDateDetailViewModel extends BaseViewModel {
   /// Méthode d’initialisation appelée à l’ouverture de la vue.
   Future<void> initialize() async {
     setBusy(true);
-
-    currentShowDate = showDate;
-
     _bookingRepository
         .watchBookingsForDate(showDate.uid!)
         .listen((bookingsData) {
       bookings = bookingsData;
-      rebuildUi();
-    });
-
-    _showDateSubscription =
-        _showDateRepository.watchShowDate(showDate.uid!).listen((updatedDate) {
-      currentShowDate = updatedDate;
       rebuildUi();
     });
 
@@ -107,7 +98,7 @@ class ManagerDateDetailViewModel extends BaseViewModel {
   /// 2. Si aucun booking n’existe :
   ///    - l’artiste doit être "available"
   ///    - le plafond artistsCount ne doit pas être atteint
-  bool isSelectionEnabled(String artistId) {
+  bool isSelectionEnabled(ShowDate currentShowDate, String artistId) {
     final booking = getBookingForArtist(artistId);
 
     // Cas 1 : un booking existe déjà
@@ -117,7 +108,7 @@ class ManagerDateDetailViewModel extends BaseViewModel {
     }
 
     // Cas 2 : tentative de nouvelle sélection
-    final availability = showDate.artistsAvailability[artistId];
+    final availability = currentShowDate.artistsAvailability[artistId];
 
     // Sélection autorisée uniquement pour les artistes disponibles
     if (availability != AvailabilityStatus.available) {
@@ -125,7 +116,7 @@ class ManagerDateDetailViewModel extends BaseViewModel {
     }
 
     // Vérification du plafond
-    if (selectedCount >= artistsCount) {
+    if (currentShowDate.selectedCount >= currentShowDate.artistsCount) {
       return false;
     }
 
