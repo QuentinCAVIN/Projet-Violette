@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:violette_front/ui/views/manager_planning/_widgets/manager_date_detail_card.dart';
+import 'package:violette_front/ui/views/manager_date_detail/manager_date_detail_inline.dart';
 import 'package:violette_front/ui/widgets/common/calendar/violette_calendar.dart';
 
 import 'manager_planning_viewmodel.dart';
@@ -38,10 +39,22 @@ class ManagerPlanningView extends StackedView<ManagerPlanningViewModel> {
                   child: CircularProgressIndicator(),
                 ),
               if (viewModel.showDatePicked != null)
-                GestureDetector(
-                  onTap: () => viewModel.navigateToDetail(viewModel.showDatePicked!),
-                  child: ManagerDateDetailCard(
-                      showDate: viewModel.showDatePicked!),
+                Column(
+                  children: [
+                    ManagerDateDetailCard(
+                      showDate: viewModel.showDatePicked!,
+                      onTap: () =>
+                          viewModel.toggleExpanded(viewModel.showDatePicked!),
+                    ),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      child: viewModel.isExpanded(viewModel.showDatePicked!)
+                          ? ManagerDateDetailInline(
+                              showDate: viewModel.showDatePicked!,
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+                  ],
                 ),
               if (viewModel.selectedDay != null &&
                   viewModel.showDatePicked == null)

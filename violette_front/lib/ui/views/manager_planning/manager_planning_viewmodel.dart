@@ -19,6 +19,7 @@ class ManagerPlanningViewModel extends BaseViewModel {
   ShowDate? showDatePicked;
   List<ShowDate> showDates = [];
   List<VioletteUser> artists = [];
+  String? expandedShowDateId;
 
   Future<void> loadShowDates() async {
     await runBusyFuture(
@@ -41,6 +42,7 @@ class ManagerPlanningViewModel extends BaseViewModel {
 
   Future<void> onDaySelected(DateTime tappedDay, DateTime newFocusedDay) async {
     focusedDay = newFocusedDay;
+    expandedShowDateId = null;
 
     final picked = _findShowDate(tappedDay);
     if (picked == null) {
@@ -101,5 +103,23 @@ class ManagerPlanningViewModel extends BaseViewModel {
   // Helper pour retourner la couleur directement (utilisé par le calendrier)
   Color? getColorForDay(DateTime day) {
     return _findShowDate(day)?.status.color;
+  }
+
+  bool isExpanded(ShowDate date) {
+    if (date.uid == null) return false;
+    return expandedShowDateId == date.uid;
+  }
+
+  void toggleExpanded(ShowDate date) {
+    final id = date.uid;
+    if (id == null) return;
+
+    if (expandedShowDateId == id) {
+      expandedShowDateId = null;
+    } else {
+      expandedShowDateId = id;
+    }
+
+    rebuildUi();
   }
 }

@@ -4,11 +4,10 @@ import 'package:violette_front/models/show_date.dart';
 import 'package:violette_front/ui/views/manager_date_detail/_widgets/manager_date_detail_content.dart';
 import 'package:violette_front/ui/views/manager_date_detail/manager_date_detail_viewmodel.dart';
 
-/// Vue "Détail d’une date" côté gérant.
-class ManagerDateDetailView extends StackedView<ManagerDateDetailViewModel> {
+class ManagerDateDetailInline extends StackedView<ManagerDateDetailViewModel> {
   final ShowDate showDate;
 
-  const ManagerDateDetailView({
+  const ManagerDateDetailInline({
     super.key,
     required this.showDate,
   });
@@ -19,13 +18,15 @@ class ManagerDateDetailView extends StackedView<ManagerDateDetailViewModel> {
     ManagerDateDetailViewModel viewModel,
     Widget? child,
   ) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(showDate.title),
-      ),
-      body: ManagerDateDetailContent(
-        showDate: showDate,
-        viewModel: viewModel,
+    return Card(
+      margin: const EdgeInsets.only(top: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: ManagerDateDetailContent(
+          showDate: showDate,
+          viewModel: viewModel,
+          isInline: true,
+        ),
       ),
     );
   }
