@@ -8,14 +8,14 @@ import 'package:violette_front/services/booking_service.dart';
 
 void main() {
   late FakeFirebaseFirestore firestore;
-  late BookingService bookingService;
+  late FirestoreBookingRepository bookingRepo;
   late String dateId;
   late String artist1Id;
   late String artist2Id;
 
   setUp(() async {
     firestore = FakeFirebaseFirestore();
-    bookingService = BookingService(firestore: firestore);
+    bookingRepo = FirestoreBookingRepository(firestore: firestore);
     dateId = 'date_123';
     artist1Id = 'artist_1';
     artist2Id = 'artist_2';
@@ -38,8 +38,9 @@ void main() {
 
   group('BookingService', () {
     group('toggleSelection', () {
-      test('devrait sélectionner l\'artiste et incrémenter selectedCount', () async {
-        await bookingService.toggleSelection(dateId, artist1Id, true);
+      test('devrait sélectionner l\'artiste et incrémenter selectedCount',
+          () async {
+        await bookingRepo.toggleSelection(dateId, artist1Id, true);
 
         final bookingSnap = await firestore
             .collection('showDates')
@@ -57,21 +58,22 @@ void main() {
 
       test('devrait lever une exception si la limite est atteinte', () async {
         // Sélection de 2 artistes (la limite est de 2)
-        await bookingService.toggleSelection(dateId, artist1Id, true);
-        await bookingService.toggleSelection(dateId, artist2Id, true);
+        await bookingRepo.toggleSelection(dateId, artist1Id, true);
+        await bookingRepo.toggleSelection(dateId, artist2Id, true);
 
         expect(
-          () => bookingService.toggleSelection(dateId, 'artist_3', true),
+          () => bookingRepo.toggleSelection(dateId, 'artist_3', true),
           throwsException,
         );
       });
 
-      test('devrait désélectionner l\'artiste et décrémenter selectedCount', () async {
+      test('devrait désélectionner l\'artiste et décrémenter selectedCount',
+          () async {
         // Première sélection
-        await bookingService.toggleSelection(dateId, artist1Id, true);
+        await bookingRepo.toggleSelection(dateId, artist1Id, true);
 
         // Puis désélection
-        await bookingService.toggleSelection(dateId, artist1Id, false);
+        await bookingRepo.toggleSelection(dateId, artist1Id, false);
 
         final bookingSnap = await firestore
             .collection('showDates')
@@ -112,7 +114,7 @@ void main() {
           'status': BookingStatus.confirmed.name,
         });
 
-        await bookingService.sendConfirmationRequests(dateId);
+        await bookingRepo.sendConfirmationRequests(dateId);
 
         final booking1 = await firestore
             .collection('showDates')
@@ -147,7 +149,7 @@ void main() {
           'status': BookingStatus.pendingConfirmation.name,
         });
 
-        await bookingService.respondToRequest(dateId, artist1Id, true);
+        await bookingRepo.respondToRequest(dateId, artist1Id, true);
 
         final booking = await firestore
             .collection('showDates')
@@ -159,7 +161,8 @@ void main() {
         expect(booking.data()?['respondedAt'], isNotNull);
       });
 
-      test('devrait refuser la réservation et décrémenter selectedCount si refusée',
+      test(
+          'devrait refuser la réservation et décrémenter selectedCount si refusée',
           () async {
         // Configuration : la date a un compteur de sélection à 1, artiste en attente
         await firestore.collection('showDates').doc(dateId).update({
@@ -176,7 +179,7 @@ void main() {
           'status': BookingStatus.pendingConfirmation.name,
         });
 
-        await bookingService.respondToRequest(dateId, artist1Id, false);
+        await bookingRepo.respondToRequest(dateId, artist1Id, false);
 
         final booking = await firestore
             .collection('showDates')
@@ -191,7 +194,8 @@ void main() {
         expect(dateSnap.data()?['selectedCount'], 0);
       });
 
-      test('ne devrait rien faire si le statut n\'est pas pendingConfirmation (Idempotence)',
+      test(
+          'ne devrait rien faire si le statut n\'est pas pendingConfirmation (Idempotence)',
           () async {
         // Configuration : déjà confirmé
         await firestore
@@ -204,7 +208,7 @@ void main() {
           'status': BookingStatus.confirmed.name,
         });
 
-        await bookingService.respondToRequest(dateId, artist1Id, false);
+        await bookingRepo.respondToRequest(dateId, artist1Id, false);
 
         final booking = await firestore
             .collection('showDates')
@@ -218,4 +222,3 @@ void main() {
     });
   });
 }
-

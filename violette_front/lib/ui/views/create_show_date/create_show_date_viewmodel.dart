@@ -5,12 +5,12 @@ import 'package:violette_front/app/app.locator.dart';
 import 'package:violette_front/app/app.router.dart';
 
 import '../../../models/show_date.dart';
-import '../../../services/show_date_service.dart';
+import '../../../repositories/show_date_repository.dart';
 import 'create_show_date_view.form.dart';
 
 class CreateShowDateViewModel extends FormViewModel {
   final _navigationService = locator<NavigationService>();
-  final _showDateService = locator<ShowDateService>();
+  final _showDateRepository = locator<ShowDateRepository>();
 
   String? globalErrorMessage;
   bool formAlreadyValidatedOnce = false;
@@ -146,7 +146,7 @@ class CreateShowDateViewModel extends FormViewModel {
       description: descriptionValue,
     );
 
-    await runBusyFuture(_showDateService.addShowDate(showDate));
+    await runBusyFuture(_showDateRepository.addShowDate(showDate));
     _navigationService.replaceWithHomeView();
   }
 

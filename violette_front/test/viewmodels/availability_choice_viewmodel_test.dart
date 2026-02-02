@@ -18,8 +18,8 @@ void main() {
           'When no show date exists for the given day, should return null (no color)',
           () {
         // Le service mocké renvoie une liste vide
-        final showDateService = getAndRegisterShowDateService();
-        when(() => showDateService.getAllShowDates())
+        final showDateRepo = getAndRegisterShowDateRepository();
+        when(() => showDateRepo.getAllShowDates())
             .thenAnswer((_) => Future.value([]));
 
         final viewModel = AvailabilityChoiceViewModel();
@@ -35,7 +35,7 @@ void main() {
 
       test('When show date exists, should return correct status from ShowDate',
           () async {
-        final showDateService = getAndRegisterShowDateService();
+        final showDateRepo = getAndRegisterShowDateRepository();
         final authService = getAndRegisterFirebaseAuthenticationService();
 
         final cleanDate = DateTime(2025, 10, 10);
@@ -50,7 +50,7 @@ void main() {
           fee: 100,
         );
 
-        when(() => showDateService.getAllShowDates())
+        when(() => showDateRepo.getAllShowDates())
             .thenAnswer((_) => Future.value([dummyShowDate]));
         when(() => authService.currentUser).thenReturn(MockUser(
             uid: 'uid-123')); // besoin d'un utilisateur fictif ou similaire

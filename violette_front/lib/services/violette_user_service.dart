@@ -1,15 +1,18 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:violette_front/repositories/user_repository.dart';
 
 import '../models/violette_user.dart';
 
-class VioletteUserService {
+class FirestoreUserRepository implements UserRepository {
   final _db = FirebaseFirestore.instance;
   final String collectionName = "users";
 
+  @override
   Future<void> addUser(VioletteUser user) async {
     _db.collection(collectionName).doc(user.uid).set(user.toFirestore());
   }
 
+  @override
   Future<VioletteUser?> getUser(String uid) async {
     final doc = await _db.collection(collectionName).doc(uid).get();
 

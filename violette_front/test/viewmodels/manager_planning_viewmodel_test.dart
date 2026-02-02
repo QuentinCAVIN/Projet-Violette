@@ -12,13 +12,11 @@ void main() {
     setUp(() => registerServices());
     tearDown(() => locator.reset());
 
-
-
     group('onDaySelected -', () {
       test('devrait effacer la sélection quand aucune date n\'existe',
           () async {
-        final showDateService = getAndRegisterShowDateService();
-        when(() => showDateService.getAllShowDates())
+        final showDateRepo = getAndRegisterShowDateRepository();
+        when(() => showDateRepo.getAllShowDates())
             .thenAnswer((_) => Future.value([]));
 
         final viewModel = ManagerPlanningViewModel();
@@ -32,13 +30,11 @@ void main() {
         expect(viewModel.artists, isEmpty);
       });
 
-
-
       test(
           'devrait charger les artistes avec statut != pending pour une date sélectionnée',
           () async {
-        final showDateService = getAndRegisterShowDateService();
-        final userService = getAndRegisterVioletteUserService();
+        final showDateRepo = getAndRegisterShowDateRepository();
+        final userRepo = getAndRegisterUserRepository();
 
         final testDate = DateTime(2026, 2, 15);
         final artist1 = TestDataBuilders.createTestUser(
@@ -61,13 +57,13 @@ void main() {
           },
         );
 
-        when(() => showDateService.getAllShowDates())
+        when(() => showDateRepo.getAllShowDates())
             .thenAnswer((_) => Future.value([showDate]));
-        when(() => userService.getUser('artist1'))
+        when(() => userRepo.getUser('artist1'))
             .thenAnswer((_) => Future.value(artist1));
-        when(() => userService.getUser('artist2'))
+        when(() => userRepo.getUser('artist2'))
             .thenAnswer((_) => Future.value(artist2));
-        when(() => userService.getUser('artist3'))
+        when(() => userRepo.getUser('artist3'))
             .thenAnswer((_) => Future.value(null));
 
         final viewModel = ManagerPlanningViewModel();
@@ -81,15 +77,15 @@ void main() {
         expect(viewModel.artists, contains(artist2));
 
         // Vérifier que le service utilisateur a bien été appelé pour les bons artistes
-        verify(() => userService.getUser('artist1')).called(1);
-        verify(() => userService.getUser('artist2')).called(1);
-        verifyNever(() => userService
+        verify(() => userRepo.getUser('artist1')).called(1);
+        verify(() => userRepo.getUser('artist2')).called(1);
+        verifyNever(() => userRepo
             .getUser('artist3')); // le status pending ne doit pas être chargé
       });
 
       test('devrait gérer le cas où getUser retourne null', () async {
-        final showDateService = getAndRegisterShowDateService();
-        final userService = getAndRegisterVioletteUserService();
+        final showDateRepo = getAndRegisterShowDateRepository();
+        final userRepo = getAndRegisterUserRepository();
 
         final testDate = DateTime(2026, 2, 15);
         final showDate = TestDataBuilders.createTestShowDate(
@@ -99,9 +95,9 @@ void main() {
           },
         );
 
-        when(() => showDateService.getAllShowDates())
+        when(() => showDateRepo.getAllShowDates())
             .thenAnswer((_) => Future.value([showDate]));
-        when(() => userService.getUser('artist1'))
+        when(() => userRepo.getUser('artist1'))
             .thenAnswer((_) => Future.value(null));
 
         final viewModel = ManagerPlanningViewModel();

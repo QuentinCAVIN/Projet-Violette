@@ -26,7 +26,6 @@ class ManagerDateDetailView extends StackedView<ManagerDateDetailViewModel> {
 
     return Scaffold(
       appBar: AppBar(
-
         title: Text(showDate.title),
       ),
       body: StreamBuilder<ShowDate>(
@@ -45,7 +44,7 @@ class ManagerDateDetailView extends StackedView<ManagerDateDetailViewModel> {
               /// ============================
               Container(
                 padding: const EdgeInsets.all(16),
-                color: theme.colorScheme.surfaceVariant,
+                color: theme.colorScheme.surfaceContainerHighest,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -83,7 +82,6 @@ class ManagerDateDetailView extends StackedView<ManagerDateDetailViewModel> {
               /// ============================
               Expanded(
                 child: viewModel.isBusy
-                    /
                     ? const Center(child: CircularProgressIndicator())
                     : ListView.builder(
                         itemCount: viewModel.availableArtists.length,
