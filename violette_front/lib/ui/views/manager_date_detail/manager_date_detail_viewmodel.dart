@@ -7,16 +7,16 @@ import 'package:violette_front/models/enums/availability_status.dart';
 import 'package:violette_front/models/enums/booking_status.dart';
 import 'package:violette_front/models/show_date.dart';
 import 'package:violette_front/models/violette_user.dart';
-import 'package:violette_front/services/booking_service.dart';
-import 'package:violette_front/services/violette_user_service.dart';
-import 'package:violette_front/services/show_date_service.dart';
+import 'package:violette_front/repositories/booking_repository.dart';
+import 'package:violette_front/repositories/show_date_repository.dart';
+import 'package:violette_front/repositories/user_repository.dart';
 
 /// ViewModel de l’écran "Détail d’une date" côté gérant.
 class ManagerDateDetailViewModel extends BaseViewModel {
   // Services injectés via le locator Stacked
-  final _bookingService = locator<BookingService>();
-  final _userService = locator<VioletteUserService>();
-  final _showDateService = locator<ShowDateService>();
+  final _bookingRepository = locator<BookingRepository>();
+  final _userRepository = locator<UserRepository>();
+  final _showDateRepository = locator<ShowDateRepository>();
   final _dialogService = locator<DialogService>();
   final _snackbarService = locator<SnackbarService>();
 
@@ -54,13 +54,15 @@ class ManagerDateDetailViewModel extends BaseViewModel {
 
     currentShowDate = showDate;
 
-    _bookingService.getBookingsForDate(showDate.uid!).listen((bookingsData) {
+    _bookingRepository
+        .watchBookingsForDate(showDate.uid!)
+        .listen((bookingsData) {
       bookings = bookingsData;
       rebuildUi();
     });
 
     _showDateSubscription =
-        _showDateService.getShowDateStream(showDate.uid!).listen((updatedDate) {
+        _showDateRepository.watchShowDate(showDate.uid!).listen((updatedDate) {
       currentShowDate = updatedDate;
       rebuildUi();
     });
@@ -71,7 +73,7 @@ class ManagerDateDetailViewModel extends BaseViewModel {
   }
 
   Stream<ShowDate> get showDateStream =>
-      _showDateService.getShowDateStream(showDate.uid!);
+      _showDateRepository.watchShowDate(showDate.uid!);
 
   Future<void> _loadAllArtists() async {
     final artistIds = showDate.artistsAvailability.keys.toList();
@@ -79,7 +81,7 @@ class ManagerDateDetailViewModel extends BaseViewModel {
     availableArtists = [];
 
     for (final id in artistIds) {
-      final user = await _userService.getUser(id);
+      final user = await _userRepository.getUser(id);
       if (user != null) {
         availableArtists.add(user);
       }
@@ -135,7 +137,7 @@ class ManagerDateDetailViewModel extends BaseViewModel {
     if (value == null) return;
 
     try {
-      await _bookingService.toggleSelection(
+      await _bookingRepository.toggleSelection(
         showDate.uid!,
         artistId,
         value,
@@ -151,7 +153,7 @@ class ManagerDateDetailViewModel extends BaseViewModel {
   /// Envoie les demandes de confirmation aux artistes sélectionnés.
   Future<void> sendConfirmation() async {
     try {
-      await _bookingService.sendConfirmationRequests(showDate.uid!);
+      await _bookingRepository.sendConfirmationRequests(showDate.uid!);
 
       _snackbarService.showSnackbar(
         message: "Demandes envoyées !",

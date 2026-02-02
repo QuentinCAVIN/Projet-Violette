@@ -6,8 +6,7 @@ import 'package:violette_front/app/app.router.dart';
 
 import 'package:violette_front/models/show_date.dart';
 import 'package:violette_front/models/enums/availability_status.dart';
-import 'package:violette_front/services/show_date_service.dart';
-
+import 'package:violette_front/repositories/show_date_repository.dart';
 import '../../../app/app.locator.dart';
 
 // TODO: Refactoriser la classe quand des tests unitaires seront en place
@@ -16,7 +15,7 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
   // Attributs du widget DayCell a rajouter ici?
 
   final _navigationService = locator<NavigationService>();
-  final ShowDateService _showDateService = locator<ShowDateService>();
+  final ShowDateRepository _showDateRepository = locator<ShowDateRepository>();
   final SnackbarService _snackbarService = locator<SnackbarService>();
   final FirebaseAuthenticationService _authenticationService =
       locator<FirebaseAuthenticationService>();
@@ -38,7 +37,7 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
 
   Future<void> loadShowDates() async {
     //runBusyFuture sert a fair un setBusy true + await + setBusyFalse
-    showDates = await runBusyFuture(_showDateService.getAllShowDates());
+    showDates = await runBusyFuture(_showDateRepository.getAllShowDates());
   }
 
   // Appelé quand l'utilisateur tape un jour.
@@ -92,7 +91,7 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
   }
 
   Future<void> onValidatePressed() async {
-    await runBusyFuture(_showDateService.updateAllShowDates(showDates));
+    await runBusyFuture(_showDateRepository.updateAllShowDates(showDates));
     _navigationService.replaceWithHomeView();
     // Affiche le message une fois sur HomeView
     _snackbarService.showSnackbar(

@@ -2,44 +2,46 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:violette_front/models/artist_booking.dart';
 import 'package:violette_front/models/enums/booking_status.dart';
 import 'package:violette_front/models/show_date.dart';
+import 'package:violette_front/repositories/booking_repository.dart';
 
-
-/// Gestion des sélections et confirmations d’artistes pour une date donnée.
-class BookingService {
+/// Implémentation Firestore du BookingRepository.
+class FirestoreBookingRepository implements BookingRepository {
   final FirebaseFirestore _firestore;
 
-  BookingService({FirebaseFirestore? firestore})
+  FirestoreBookingRepository({FirebaseFirestore? firestore})
       : _firestore = firestore ?? FirebaseFirestore.instance;
 
   //TODO:ralentissement?
-  Stream<List<ArtistBooking>> getBookingsForDate(String dateId) {
+  @override
+  Stream<List<ArtistBooking>> watchBookingsForDate(String dateId) {
     return _firestore
         .collection('showDates')
         .doc(dateId)
         .collection('artistBookings')
         .snapshots()
         .map((snapshot) {
-          return snapshot.docs
-              .map((doc) => ArtistBooking.fromFirestore(doc, null))
-              .toList();
-        });
+      return snapshot.docs
+          .map((doc) => ArtistBooking.fromFirestore(doc, null))
+          .toList();
+    });
   }
 
-
-  Stream<List<ArtistBooking>> getPendingRequestsForArtist(String artistId) {
+  @override
+  Stream<List<ArtistBooking>> watchPendingRequestsForArtist(String artistId) {
     return _firestore
         .collectionGroup('artistBookings')
         .where('artistId', isEqualTo: artistId)
         .where('status', isEqualTo: BookingStatus.pendingConfirmation.name)
         .snapshots()
         .map((snapshot) {
-          return snapshot.docs
-              .map((doc) => ArtistBooking.fromFirestore(doc, null))
-              .toList();
-        });
+      return snapshot.docs
+          .map((doc) => ArtistBooking.fromFirestore(doc, null))
+          .toList();
+    });
   }
 
   /// Sélectionne ou désélectionne un artiste pour une date.
+  @override
   Future<void> toggleSelection(
     String dateId,
     String artistId,
@@ -94,6 +96,7 @@ class BookingService {
   }
 
   /// Envoie les demandes de confirmation aux artistes sélectionnés.
+  @override
   Future<void> sendConfirmationRequests(String dateId) async {
     final bookingsRef = _firestore
         .collection('showDates')
@@ -121,6 +124,7 @@ class BookingService {
   }
 
   /// Traite la réponse d’un artiste à une demande de confirmation.
+  @override
   Future<void> respondToRequest(
     String dateId,
     String artistId,
@@ -136,8 +140,7 @@ class BookingService {
         throw Exception("Demande de booking introuvable");
       }
 
-      final booking =
-          ArtistBooking.fromFirestore(bookingSnapshot, null);
+      final booking = ArtistBooking.fromFirestore(bookingSnapshot, null);
 
       // on ne traite que les demandes réellement en attente
       if (booking.status != BookingStatus.pendingConfirmation) {
