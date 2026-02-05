@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked/stacked_annotations.dart';
 import 'package:violette_front/ui/common/app_theme.dart';
-import 'package:violette_front/ui/views/register/_widgets/register_form.dart';
+import 'package:violette_front/ui/views/register/widgets/register_form.dart';
 import 'package:violette_front/ui/widgets/common/sparkle_background/sparkle_background.dart';
 
 import '../../widgets/common/login_header/login_header.dart';

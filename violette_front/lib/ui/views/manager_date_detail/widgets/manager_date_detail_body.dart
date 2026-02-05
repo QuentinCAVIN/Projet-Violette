@@ -1,43 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:stacked/stacked.dart';
 import 'package:violette_front/models/enums/booking_status.dart';
 import 'package:violette_front/models/show_date.dart';
-import 'package:violette_front/ui/views/manager_date_detail/_widgets/booking_status_pill.dart';
+import 'package:violette_front/ui/views/manager_date_detail/widgets/booking_status_pill.dart';
 import 'package:violette_front/ui/views/manager_date_detail/manager_date_detail_viewmodel.dart';
-import 'package:violette_front/ui/views/manager_planning/_widgets/availability_status_pill.dart';
+import 'package:violette_front/ui/widgets/common/availability_status_pill.dart';
 
-class ManagerDateDetailContent extends StatelessWidget {
-  final ShowDate showDate;
-  final ManagerDateDetailViewModel viewModel;
+class ManagerDateDetailBody extends ViewModelWidget<ManagerDateDetailViewModel> {
   final bool isInline;
 
-  const ManagerDateDetailContent({
+  const ManagerDateDetailBody({
     super.key,
-    required this.showDate,
-    required this.viewModel,
     this.isInline = false,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, ManagerDateDetailViewModel viewModel) {
     final theme = Theme.of(context);
 
     return StreamBuilder<ShowDate>(
       stream: viewModel.showDateStream,
       builder: (context, snapshot) {
-        final currentShowDate = snapshot.data ?? showDate;
+        final currentShowDate = snapshot.data ?? viewModel.showDate;
 
         final listView = ListView.builder(
           shrinkWrap: isInline,
-          physics:
-              isInline ? const NeverScrollableScrollPhysics() : null,
+          physics: isInline ? const NeverScrollableScrollPhysics() : null,
           itemCount: viewModel.availableArtists.length,
           itemBuilder: (context, index) {
             final artist = viewModel.availableArtists[index];
 
             final booking = viewModel.getBookingForArtist(artist.uid);
 
-            final isSelected =
-                booking?.status == BookingStatus.selected;
+            final isSelected = booking?.status == BookingStatus.selected;
 
             final isEnabled =
                 viewModel.isSelectionEnabled(currentShowDate, artist.uid);

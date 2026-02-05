@@ -12,7 +12,7 @@ class BookingStatusPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Color color = status.color;
-    String label = status.displayName; 
+    String label = status.displayName;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -23,7 +23,11 @@ class BookingStatusPill extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold),
+        style: TextStyle(
+          color: color,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
