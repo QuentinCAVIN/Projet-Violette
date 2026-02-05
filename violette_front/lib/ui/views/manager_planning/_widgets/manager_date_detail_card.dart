@@ -20,7 +20,7 @@ class ManagerDateDetailCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 20),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFE0F7FA), 
+        color: const Color(0xFFE0F7FA),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: const Color(0xFF00C853),
@@ -33,7 +33,7 @@ class ManagerDateDetailCard extends StatelessWidget {
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: const Color(0xFF673AB7), 
+              color: const Color(0xFF673AB7),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(

@@ -12,26 +12,7 @@ void main() {
     setUp(() => registerServices());
     tearDown(() => locator.reset());
 
-    group('toggleShowArtists -', () {
-      test('devrait basculer showArtists de false à true', () {
-        final viewModel = ManagerPlanningViewModel();
 
-        expect(viewModel.showArtists, false);
-
-        viewModel.toggleShowArtists();
-
-        expect(viewModel.showArtists, true);
-      });
-
-      test('devrait basculer showArtists de true à false', () {
-        final viewModel = ManagerPlanningViewModel();
-        viewModel.showArtists = true;
-
-        viewModel.toggleShowArtists();
-
-        expect(viewModel.showArtists, false);
-      });
-    });
 
     group('onDaySelected -', () {
       test('devrait effacer la sélection quand aucune date n\'existe',
@@ -51,32 +32,7 @@ void main() {
         expect(viewModel.artists, isEmpty);
       });
 
-      test(
-          'devrait réinitialiser showArtists à false lors d\'une nouvelle sélection',
-          () async {
-        final showDateService = getAndRegisterShowDateService();
-        final userService = getAndRegisterVioletteUserService();
 
-        final testDate = DateTime(2026, 2, 15);
-        final showDate = TestDataBuilders.createTestShowDate(
-          date: testDate,
-          artistsAvailability: {'artist1': AvailabilityStatus.available},
-        );
-
-        when(() => showDateService.getAllShowDates())
-            .thenAnswer((_) => Future.value([showDate]));
-        when(() => userService.getUser(any()))
-            .thenAnswer((_) => Future.value(TestDataBuilders.createTestUser()));
-
-        final viewModel = ManagerPlanningViewModel();
-        await viewModel.loadShowDates();
-
-        viewModel.showArtists = true; // Simuler qu'elle était ouverte
-
-        await viewModel.onDaySelected(testDate, testDate);
-
-        expect(viewModel.showArtists, false);
-      });
 
       test(
           'devrait charger les artistes avec statut != pending pour une date sélectionnée',

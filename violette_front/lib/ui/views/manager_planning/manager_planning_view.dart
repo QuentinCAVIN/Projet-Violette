@@ -4,7 +4,7 @@ import 'package:violette_front/ui/views/manager_planning/_widgets/manager_date_d
 import 'package:violette_front/ui/widgets/common/calendar/violette_calendar.dart';
 
 import 'manager_planning_viewmodel.dart';
-import 'package:violette_front/ui/views/manager_planning/_widgets/availability_status_pill.dart';
+
 
 class ManagerPlanningView extends StackedView<ManagerPlanningViewModel> {
   const ManagerPlanningView({super.key});
@@ -39,28 +39,9 @@ class ManagerPlanningView extends StackedView<ManagerPlanningViewModel> {
                 ),
               if (viewModel.showDatePicked != null)
                 GestureDetector(
-                  onTap: viewModel.toggleShowArtists,
+                  onTap: () => viewModel.navigateToDetail(viewModel.showDatePicked!),
                   child: ManagerDateDetailCard(
                       showDate: viewModel.showDatePicked!),
-                ),
-              if (viewModel.showArtists && viewModel.artists.isNotEmpty)
-                ...viewModel.artists.map(
-                  (artist) => Card(
-                    margin: const EdgeInsets.symmetric(vertical: 4),
-                    child: ListTile(
-                      title: Text("${artist.firstName} ${artist.lastName}"),
-                      // TODO: Ajouter ici un indicateur de statut si nécessaire, en accédant à la disponibilité via showDatePicking
-                      trailing: AvailabilityStatusPill(
-                        status: viewModel.showDatePicked!
-                            .getAvailabilityFor(artist.uid),
-                      ),
-                    ),
-                  ),
-                ),
-              if (viewModel.showArtists && viewModel.artists.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text("Aucun artiste trouvé (hors pending)."),
                 ),
               if (viewModel.selectedDay != null &&
                   viewModel.showDatePicked == null)

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:violette_front/models/enums/availability_status.dart';
+import 'package:violette_front/models/enums/booking_status.dart';
 
-class AvailabilityStatusPill extends StatelessWidget {
-  final AvailabilityStatus status;
+class BookingStatusPill extends StatelessWidget {
+  final BookingStatus status;
 
-  const AvailabilityStatusPill({
+  const BookingStatusPill({
     super.key,
     required this.status,
   });
@@ -12,17 +12,18 @@ class AvailabilityStatusPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Color color = status.color;
-    String label = status.label;
+    String label = status.displayName; 
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color,
+        color: color.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color),
       ),
       child: Text(
         label,
-        style: const TextStyle(color: Colors.white, fontSize: 12),
+        style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold),
       ),
     );
   }

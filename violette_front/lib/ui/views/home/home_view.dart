@@ -4,6 +4,7 @@ import 'package:violette_front/ui/common/ui_helpers.dart';
 
 import '../../../models/enums/role.dart';
 import 'home_viewmodel.dart';
+import 'package:violette_front/ui/widgets/booking_request_card.dart';
 
 class HomeView extends StackedView<HomeViewModel> {
   const HomeView({super.key});
@@ -34,13 +35,37 @@ class HomeView extends StackedView<HomeViewModel> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 25.0),
           child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                verticalSpaceLarge,
-                Column(
-                  children: [
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  verticalSpaceLarge,
+                  //**********************************************************
+                  // SECTION: DEMANDES EN ATTENTE
+                    if (viewModel.pendingRequests.isNotEmpty) ...[
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          "Demandes en attente",
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      ...viewModel.pendingRequests.map((booking) {
+                        final showDate = viewModel.requestsShowDates[booking.dateId];
+                        if (showDate == null) return const SizedBox.shrink();
+                        
+                        return BookingRequestCard(
+                          booking: booking,
+                          showDate: showDate,
+                          isBusy: viewModel.isBusy,
+                          onAccept: () => viewModel.respondToRequest(booking, true),
+                          onRefuse: () => viewModel.respondToRequest(booking, false),
+                        );
+                      }),
+                      verticalSpaceMedium,
+                    ],
+                    //**********************************************************
+
                     //**********************************************************
                     //Insertion des infos du User dans la view de base pour test
                     Column(
@@ -99,27 +124,8 @@ class HomeView extends StackedView<HomeViewModel> {
                       onPressed: viewModel.logOut,
                       child: const Text('Déconnexion'),
                     ),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: viewModel.showDialog,
-                        child: const Text('Show Dialog'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: viewModel.showBottomSheet,
-                        child: const Text('Show Bottom Sheet'),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
