@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked/stacked_annotations.dart';
 
-import '_widget/show_date_form.dart';
+import 'widget/show_date_form.dart';
 import 'create_show_date_view.form.dart';
 import 'create_show_date_viewmodel.dart';
 

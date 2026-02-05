@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
-import 'package:violette_front/ui/views/manager_planning/_widgets/manager_date_detail_card.dart';
-import 'package:violette_front/ui/views/manager_date_detail/manager_date_detail_inline.dart';
+import 'package:violette_front/ui/views/manager_planning/widgets/manager_show_date_inline_detail.dart';
+import 'package:violette_front/ui/views/manager_planning/widgets/manager_show_date_summary_card.dart';
 import 'package:violette_front/ui/widgets/common/calendar/violette_calendar.dart';
 
 import 'manager_planning_viewmodel.dart';
@@ -41,7 +41,7 @@ class ManagerPlanningView extends StackedView<ManagerPlanningViewModel> {
               if (viewModel.showDatePicked != null)
                 Column(
                   children: [
-                    ManagerDateDetailCard(
+                    ManagerShowDateSummaryCard(
                       showDate: viewModel.showDatePicked!,
                       onTap: () =>
                           viewModel.toggleExpanded(viewModel.showDatePicked!),
@@ -49,7 +49,7 @@ class ManagerPlanningView extends StackedView<ManagerPlanningViewModel> {
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 200),
                       child: viewModel.isExpanded(viewModel.showDatePicked!)
-                          ? ManagerDateDetailInline(
+                          ? ManagerShowDateInlineDetail(
                               showDate: viewModel.showDatePicked!,
                             )
                           : const SizedBox.shrink(),
