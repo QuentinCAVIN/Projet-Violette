@@ -83,7 +83,6 @@ class ManagerDateDetailView extends StackedView<ManagerDateDetailViewModel> {
               /// ============================
               Expanded(
                 child: viewModel.isBusy
-                    /
                     ? const Center(child: CircularProgressIndicator())
                     : ListView.builder(
                         itemCount: viewModel.availableArtists.length,
