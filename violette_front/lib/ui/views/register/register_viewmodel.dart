@@ -7,13 +7,13 @@ import 'package:violette_front/app/app.router.dart';
 import 'package:violette_front/ui/views/register/register_view.form.dart';
 
 import '../../../models/enums/role.dart';
-import '../../../services/violette_user_service.dart';
+import 'package:violette_front/repositories/user_repository.dart';
 import 'package:violette_front/models/violette_user.dart';
 
 class RegisterViewModel extends FormViewModel {
   final _navigationService = locator<NavigationService>();
   final _authenticationService = locator<FirebaseAuthenticationService>();
-  final _userServices = locator<VioletteUserService>();
+  final _userRepository = locator<UserRepository>();
 
   String? globalErrorMessage;
   bool formAlreadyValidatedOnce = false;
@@ -99,7 +99,7 @@ class RegisterViewModel extends FormViewModel {
         lastName: lastName,
         email: email,
         roles: [role]);
-    await _userServices.addUser(user);
+    await _userRepository.addUser(user);
   }
 
   void navigateToLogin() {

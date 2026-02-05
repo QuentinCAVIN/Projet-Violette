@@ -12,32 +12,11 @@ void main() {
     setUp(() => registerServices());
     tearDown(() => locator.reset());
 
-    group('toggleShowArtists -', () {
-      test('devrait basculer showArtists de false à true', () {
-        final viewModel = ManagerPlanningViewModel();
-
-        expect(viewModel.showArtists, false);
-
-        viewModel.toggleShowArtists();
-
-        expect(viewModel.showArtists, true);
-      });
-
-      test('devrait basculer showArtists de true à false', () {
-        final viewModel = ManagerPlanningViewModel();
-        viewModel.showArtists = true;
-
-        viewModel.toggleShowArtists();
-
-        expect(viewModel.showArtists, false);
-      });
-    });
-
     group('onDaySelected -', () {
       test('devrait effacer la sélection quand aucune date n\'existe',
           () async {
-        final showDateService = getAndRegisterShowDateService();
-        when(() => showDateService.getAllShowDates())
+        final showDateRepo = getAndRegisterShowDateRepository();
+        when(() => showDateRepo.getAllShowDates())
             .thenAnswer((_) => Future.value([]));
 
         final viewModel = ManagerPlanningViewModel();
@@ -52,37 +31,10 @@ void main() {
       });
 
       test(
-          'devrait réinitialiser showArtists à false lors d\'une nouvelle sélection',
-          () async {
-        final showDateService = getAndRegisterShowDateService();
-        final userService = getAndRegisterVioletteUserService();
-
-        final testDate = DateTime(2026, 2, 15);
-        final showDate = TestDataBuilders.createTestShowDate(
-          date: testDate,
-          artistsAvailability: {'artist1': AvailabilityStatus.available},
-        );
-
-        when(() => showDateService.getAllShowDates())
-            .thenAnswer((_) => Future.value([showDate]));
-        when(() => userService.getUser(any()))
-            .thenAnswer((_) => Future.value(TestDataBuilders.createTestUser()));
-
-        final viewModel = ManagerPlanningViewModel();
-        await viewModel.loadShowDates();
-
-        viewModel.showArtists = true; // Simuler qu'elle était ouverte
-
-        await viewModel.onDaySelected(testDate, testDate);
-
-        expect(viewModel.showArtists, false);
-      });
-
-      test(
           'devrait charger les artistes avec statut != pending pour une date sélectionnée',
           () async {
-        final showDateService = getAndRegisterShowDateService();
-        final userService = getAndRegisterVioletteUserService();
+        final showDateRepo = getAndRegisterShowDateRepository();
+        final userRepo = getAndRegisterUserRepository();
 
         final testDate = DateTime(2026, 2, 15);
         final artist1 = TestDataBuilders.createTestUser(
@@ -105,13 +57,13 @@ void main() {
           },
         );
 
-        when(() => showDateService.getAllShowDates())
+        when(() => showDateRepo.getAllShowDates())
             .thenAnswer((_) => Future.value([showDate]));
-        when(() => userService.getUser('artist1'))
+        when(() => userRepo.getUser('artist1'))
             .thenAnswer((_) => Future.value(artist1));
-        when(() => userService.getUser('artist2'))
+        when(() => userRepo.getUser('artist2'))
             .thenAnswer((_) => Future.value(artist2));
-        when(() => userService.getUser('artist3'))
+        when(() => userRepo.getUser('artist3'))
             .thenAnswer((_) => Future.value(null));
 
         final viewModel = ManagerPlanningViewModel();
@@ -125,15 +77,15 @@ void main() {
         expect(viewModel.artists, contains(artist2));
 
         // Vérifier que le service utilisateur a bien été appelé pour les bons artistes
-        verify(() => userService.getUser('artist1')).called(1);
-        verify(() => userService.getUser('artist2')).called(1);
-        verifyNever(() => userService
+        verify(() => userRepo.getUser('artist1')).called(1);
+        verify(() => userRepo.getUser('artist2')).called(1);
+        verifyNever(() => userRepo
             .getUser('artist3')); // le status pending ne doit pas être chargé
       });
 
       test('devrait gérer le cas où getUser retourne null', () async {
-        final showDateService = getAndRegisterShowDateService();
-        final userService = getAndRegisterVioletteUserService();
+        final showDateRepo = getAndRegisterShowDateRepository();
+        final userRepo = getAndRegisterUserRepository();
 
         final testDate = DateTime(2026, 2, 15);
         final showDate = TestDataBuilders.createTestShowDate(
@@ -143,9 +95,9 @@ void main() {
           },
         );
 
-        when(() => showDateService.getAllShowDates())
+        when(() => showDateRepo.getAllShowDates())
             .thenAnswer((_) => Future.value([showDate]));
-        when(() => userService.getUser('artist1'))
+        when(() => userRepo.getUser('artist1'))
             .thenAnswer((_) => Future.value(null));
 
         final viewModel = ManagerPlanningViewModel();
@@ -154,6 +106,91 @@ void main() {
         await viewModel.onDaySelected(testDate, testDate);
 
         expect(viewModel.artists, isEmpty);
+      });
+    });
+
+    group('expanded state -', () {
+      test('isExpanded devrait être false par défaut', () async {
+        final viewModel = ManagerPlanningViewModel();
+        final showDate = TestDataBuilders.createTestShowDate(
+          uid: 'date-1',
+        );
+
+        expect(viewModel.isExpanded(showDate), isFalse);
+        expect(viewModel.expandedShowDateId, isNull);
+      });
+
+      test('toggleExpanded devrait ouvrir puis refermer la même date',
+          () async {
+        final viewModel = ManagerPlanningViewModel();
+        final showDate = TestDataBuilders.createTestShowDate(
+          uid: 'date-1',
+        );
+
+        viewModel.toggleExpanded(showDate);
+        expect(viewModel.isExpanded(showDate), isTrue);
+        expect(viewModel.expandedShowDateId, equals('date-1'));
+
+        viewModel.toggleExpanded(showDate);
+        expect(viewModel.isExpanded(showDate), isFalse);
+        expect(viewModel.expandedShowDateId, isNull);
+      });
+
+      test(
+          'toggleExpanded devrait fermer la date précédente lorsqu’une nouvelle est ouverte',
+          () async {
+        final viewModel = ManagerPlanningViewModel();
+        final firstDate = TestDataBuilders.createTestShowDate(
+          uid: 'date-1',
+        );
+        final secondDate = TestDataBuilders.createTestShowDate(
+          uid: 'date-2',
+        );
+
+        viewModel.toggleExpanded(firstDate);
+        expect(viewModel.isExpanded(firstDate), isTrue);
+
+        viewModel.toggleExpanded(secondDate);
+        expect(viewModel.isExpanded(firstDate), isFalse);
+        expect(viewModel.isExpanded(secondDate), isTrue);
+        expect(viewModel.expandedShowDateId, equals('date-2'));
+      });
+
+      test(
+          'onDaySelected devrait réinitialiser expandedShowDateId lors d’un changement de jour',
+          () async {
+        final showDateRepo = getAndRegisterShowDateRepository();
+        final userRepo = getAndRegisterUserRepository();
+
+        final testDate = DateTime(2026, 2, 15);
+        final showDate = TestDataBuilders.createTestShowDate(
+          uid: 'date-1',
+          date: testDate,
+          artistsAvailability: {
+            'artist1': AvailabilityStatus.available,
+          },
+        );
+
+        when(() => showDateRepo.getAllShowDates())
+            .thenAnswer((_) => Future.value([showDate]));
+        when(() => userRepo.getUser('artist1')).thenAnswer(
+          (_) => Future.value(
+            TestDataBuilders.createTestUser(uid: 'artist1'),
+          ),
+        );
+
+        final viewModel = ManagerPlanningViewModel();
+        await viewModel.loadShowDates();
+
+        // Ouvre le détail pour la date sélectionnée
+        viewModel.toggleExpanded(showDate);
+        expect(viewModel.isExpanded(showDate), isTrue);
+
+        // Sélection d’un jour (même date ou autre) doit fermer le détail inline
+        await viewModel.onDaySelected(testDate, testDate);
+
+        expect(viewModel.expandedShowDateId, isNull);
+        expect(viewModel.isExpanded(showDate), isFalse);
       });
     });
   });

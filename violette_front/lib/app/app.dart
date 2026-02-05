@@ -7,11 +7,16 @@ import 'package:stacked/stacked_annotations.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:violette_front/ui/views/login/login_view.dart';
 import 'package:violette_front/ui/views/register/register_view.dart';
-import 'package:violette_front/services/violette_user_service.dart';
 import 'package:violette_front/ui/views/availability_choice/availability_choice_view.dart';
-import 'package:violette_front/services/show_date_service.dart';
 import 'package:violette_front/ui/views/create_show_date/create_show_date_view.dart';
 import 'package:violette_front/ui/views/manager_planning/manager_planning_view.dart';
+import 'package:violette_front/ui/views/manager_date_detail/manager_date_detail_view.dart';
+import 'package:violette_front/repositories/booking_repository.dart';
+import 'package:violette_front/repositories/show_date_repository.dart';
+import 'package:violette_front/repositories/user_repository.dart';
+import 'package:violette_front/services/booking_service.dart';
+import 'package:violette_front/services/show_date_service.dart';
+import 'package:violette_front/services/violette_user_service.dart';
 // @stacked-import
 
 @StackedApp(
@@ -23,6 +28,7 @@ import 'package:violette_front/ui/views/manager_planning/manager_planning_view.d
     MaterialRoute(page: AvailabilityChoiceView),
     MaterialRoute(page: CreateShowDateView),
     MaterialRoute(page: ManagerPlanningView),
+    MaterialRoute(page: ManagerDateDetailView),
 // @stacked-route
   ],
   dependencies: [
@@ -30,9 +36,12 @@ import 'package:violette_front/ui/views/manager_planning/manager_planning_view.d
     LazySingleton(classType: DialogService),
     LazySingleton(classType: NavigationService),
     LazySingleton(classType: FirebaseAuthenticationService),
-    LazySingleton(classType: VioletteUserService),
-    LazySingleton(classType: ShowDateService),
+    LazySingleton(classType: FirestoreUserRepository, asType: UserRepository),
+    LazySingleton(
+        classType: FirestoreShowDateRepository, asType: ShowDateRepository),
     LazySingleton(classType: SnackbarService),
+    LazySingleton(
+        classType: FirestoreBookingRepository, asType: BookingRepository),
 // @stacked-service
   ],
   bottomsheets: [

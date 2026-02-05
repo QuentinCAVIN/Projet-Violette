@@ -1,8 +1,9 @@
 import 'package:violette_front/app/app.locator.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked_services/stacked_services.dart';
-import 'package:violette_front/services/show_date_service.dart';
-import 'package:violette_front/services/violette_user_service.dart';
+import 'package:violette_front/repositories/booking_repository.dart';
+import 'package:violette_front/repositories/show_date_repository.dart';
+import 'package:violette_front/repositories/user_repository.dart';
 import 'package:stacked_firebase_auth/stacked_firebase_auth.dart';
 
 // Import des mocks générés (si utilisation de build_runner avec mockito) ou définition manuelle avec Mocktail
@@ -15,9 +16,11 @@ class MockBottomSheetService extends Mock implements BottomSheetService {}
 
 class MockDialogService extends Mock implements DialogService {}
 
-class MockShowDateService extends Mock implements ShowDateService {}
+class MockShowDateRepository extends Mock implements ShowDateRepository {}
 
-class MockVioletteUserService extends Mock implements VioletteUserService {}
+class MockUserRepository extends Mock implements UserRepository {}
+
+class MockBookingRepository extends Mock implements BookingRepository {}
 
 class MockFirebaseAuthenticationService extends Mock
     implements FirebaseAuthenticationService {}
@@ -73,17 +76,24 @@ MockDialogService getAndRegisterDialogService() {
   return service;
 }
 
-MockShowDateService getAndRegisterShowDateService() {
-  _removeRegistrationIfExists<ShowDateService>();
-  final service = MockShowDateService();
-  locator.registerSingleton<ShowDateService>(service);
+MockShowDateRepository getAndRegisterShowDateRepository() {
+  _removeRegistrationIfExists<ShowDateRepository>();
+  final service = MockShowDateRepository();
+  locator.registerSingleton<ShowDateRepository>(service);
   return service;
 }
 
-MockVioletteUserService getAndRegisterVioletteUserService() {
-  _removeRegistrationIfExists<VioletteUserService>();
-  final service = MockVioletteUserService();
-  locator.registerSingleton<VioletteUserService>(service);
+MockUserRepository getAndRegisterUserRepository() {
+  _removeRegistrationIfExists<UserRepository>();
+  final service = MockUserRepository();
+  locator.registerSingleton<UserRepository>(service);
+  return service;
+}
+
+MockBookingRepository getAndRegisterBookingRepository() {
+  _removeRegistrationIfExists<BookingRepository>();
+  final service = MockBookingRepository();
+  locator.registerSingleton<BookingRepository>(service);
   return service;
 }
 
@@ -106,8 +116,9 @@ void registerServices() {
   getAndRegisterNavigationService();
   getAndRegisterBottomSheetService();
   getAndRegisterDialogService();
-  getAndRegisterShowDateService();
-  getAndRegisterVioletteUserService();
+  getAndRegisterShowDateRepository();
+  getAndRegisterUserRepository();
+  getAndRegisterBookingRepository();
   getAndRegisterFirebaseAuthenticationService();
   getAndRegisterSnackbarService();
 }
@@ -116,8 +127,9 @@ void unregisterServices() {
   locator.unregister<NavigationService>();
   locator.unregister<BottomSheetService>();
   locator.unregister<DialogService>();
-  locator.unregister<ShowDateService>();
-  locator.unregister<VioletteUserService>();
+  locator.unregister<ShowDateRepository>();
+  locator.unregister<UserRepository>();
+  locator.unregister<BookingRepository>();
   locator.unregister<FirebaseAuthenticationService>();
   locator.unregister<SnackbarService>();
 }

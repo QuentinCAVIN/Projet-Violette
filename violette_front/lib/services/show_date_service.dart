@@ -1,9 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:violette_front/models/show_date.dart';
+import 'package:violette_front/repositories/show_date_repository.dart';
 
-class ShowDateService {
+class FirestoreShowDateRepository implements ShowDateRepository {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
-  final String collectionName = "show_date";
+  final String collectionName = "showDates";
 
   // Stockage en mémoir pour optimisation
   final List<ShowDate> showDates = [];
@@ -13,6 +14,7 @@ class ShowDateService {
     return _db.collection(collectionName);
   }
 
+  @override
   Future<List<ShowDate>> getAllShowDates() async {
     final snapshot = await collection.get();
 
@@ -28,6 +30,7 @@ class ShowDateService {
         showDates); // On ne peut pas add ou remove mais on peux modifier le contenu
   }
 
+  @override
   Future<void> updateAllShowDates(List<ShowDate> updatedList) async {
     final batch = _db.batch(); // Write Batch = panier d'opération Firestore
 
@@ -42,6 +45,7 @@ class ShowDateService {
       ..addAll(updatedList);
   }
 
+  @override
   Future<void> addShowDate(ShowDate showDate) async {
     _db.collection(collectionName).add(showDate.toFirestore());
   }
@@ -65,6 +69,7 @@ class ShowDateService {
   }
 
   //Met à jour une ShowDate existante (même uid)
+  @override
   Future<void> updateShowDate(ShowDate updated) async {
     await collection.doc(updated.uid).update(updated.toFirestore());
 
@@ -74,8 +79,17 @@ class ShowDateService {
     }
   }
 
+  @override
   Future<void> deleteShowDate(String uid) async {
     await collection.doc(uid).delete();
     showDates.removeWhere((d) => d.uid == uid);
+  }
+
+  @override
+  Stream<ShowDate> watchShowDate(String uid) {
+    return collection
+        .doc(uid)
+        .snapshots()
+        .map((doc) => ShowDate.fromFirestore(doc, null));
   }
 }

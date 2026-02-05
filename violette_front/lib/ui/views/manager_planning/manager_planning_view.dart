@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:violette_front/ui/views/manager_planning/_widgets/manager_date_detail_card.dart';
+import 'package:violette_front/ui/views/manager_date_detail/manager_date_detail_inline.dart';
 import 'package:violette_front/ui/widgets/common/calendar/violette_calendar.dart';
 
 import 'manager_planning_viewmodel.dart';
-import 'package:violette_front/ui/views/manager_planning/_widgets/availability_status_pill.dart';
+
 
 class ManagerPlanningView extends StackedView<ManagerPlanningViewModel> {
   const ManagerPlanningView({super.key});
@@ -38,29 +39,22 @@ class ManagerPlanningView extends StackedView<ManagerPlanningViewModel> {
                   child: CircularProgressIndicator(),
                 ),
               if (viewModel.showDatePicked != null)
-                GestureDetector(
-                  onTap: viewModel.toggleShowArtists,
-                  child: ManagerDateDetailCard(
-                      showDate: viewModel.showDatePicked!),
-                ),
-              if (viewModel.showArtists && viewModel.artists.isNotEmpty)
-                ...viewModel.artists.map(
-                  (artist) => Card(
-                    margin: const EdgeInsets.symmetric(vertical: 4),
-                    child: ListTile(
-                      title: Text("${artist.firstName} ${artist.lastName}"),
-                      // TODO: Ajouter ici un indicateur de statut si nécessaire, en accédant à la disponibilité via showDatePicking
-                      trailing: AvailabilityStatusPill(
-                        status: viewModel.showDatePicked!
-                            .getAvailabilityFor(artist.uid),
-                      ),
+                Column(
+                  children: [
+                    ManagerDateDetailCard(
+                      showDate: viewModel.showDatePicked!,
+                      onTap: () =>
+                          viewModel.toggleExpanded(viewModel.showDatePicked!),
                     ),
-                  ),
-                ),
-              if (viewModel.showArtists && viewModel.artists.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text("Aucun artiste trouvé (hors pending)."),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      child: viewModel.isExpanded(viewModel.showDatePicked!)
+                          ? ManagerDateDetailInline(
+                              showDate: viewModel.showDatePicked!,
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+                  ],
                 ),
               if (viewModel.selectedDay != null &&
                   viewModel.showDatePicked == null)
