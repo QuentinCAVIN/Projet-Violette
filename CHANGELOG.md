@@ -55,6 +55,19 @@ Date : 26-01-2026
 - Correction des erreurs bloquant l’analyse Flutter dans la CI.
 - Correction du nom du dossier de travail utilisé par la pipeline CI.
 
+### Back-end (Quarkus) – v0.1.0
+#### Added
+- Refonte complète de l'architecture backend avec structure modulaire par domaine (violetteuser, cabaretcompany, showdate, artistbooking).
+- Configuration Quarkus 3.29 avec Hibernate ORM Panache, Flyway, Bean Validation, OpenAPI/Swagger.
+- Migration Flyway V1 avec schéma relationnel complet (utilisateurs, compagnies, revues, dates de spectacle, disponibilités, réservations).
+- Endpoint de santé `/api/ping` avec injection de version depuis la configuration.
+- Configuration multi-environnement : H2 pour dev/test, MySQL pour production.
+- Documentation technique dans `violette-back/README.md`.
+
+#### Changed
+- Migration du package racine de `com.willow.violette` vers `io.violette`.
+- Renommage de `cabaret_show` en `revue` pour respecter le langage ubiquitaire DDD.
+
 ### Repository
 #### Changed
 - Nettoyage du dépôt avec suppression du dossier `.idea` du suivi Git.

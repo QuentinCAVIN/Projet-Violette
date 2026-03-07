@@ -241,7 +241,7 @@ Vérification :
 
 ```bash
 curl http://localhost:8080/api/ping
-# {"status":"pong","version":"1.0.0"}
+# {"status":"pong","version":"0.1.0"}
 ```
 
 ### Variables d'environnement (optionnel en dev)

@@ -16,6 +16,6 @@ class PingResourceTest {
             .then()
                 .statusCode(200)
                 .body("status", is("pong"))
-                .body("version", is("1.0.0"));
+                .body("version", is("0.1.0"));
     }
 }

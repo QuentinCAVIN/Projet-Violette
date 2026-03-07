@@ -1,0 +1,5 @@
+# Cursor rules locales — non versionnées
+.cursor/rules/
+
+# IntelliJ IDEA
+.idea/
