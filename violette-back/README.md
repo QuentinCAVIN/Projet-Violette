@@ -324,6 +324,21 @@ Une fois l'application démarrée :
 | `http://localhost:8080/swagger-ui` | Interface Swagger UI interactive |
 | `http://localhost:8080/q/openapi` | Spécification OpenAPI 3.0 (JSON/YAML) |
 
+### Appel à GET /api/users/me (protégé par JWT)
+
+L'endpoint retourne le contexte utilisateur authentifié (firebaseUid, email, name) extrait du JWT.  
+Pour activer la validation Firebase : profil `firebase` et variable `FIREBASE_PROJECT_ID` (voir `application-firebase.properties` et [docs/testing-and-security.md](docs/testing-and-security.md)).
+
+```bash
+export FIREBASE_PROJECT_ID=your-firebase-project-id
+./mvnw quarkus:dev -Dquarkus.profile=firebase
+# Puis, avec un token Firebase :
+curl -s -H "Authorization: Bearer YOUR_FIREBASE_JWT" http://localhost:8080/api/users/me
+```
+
+Exemple de réponse (200) : `{"firebaseUid":"abc123","email":"user@example.com","name":"Jean Dupont"}`.  
+Sans token ou token invalide : 401 ou 403.
+
 ---
 
 ## 10. Exécuter les tests
