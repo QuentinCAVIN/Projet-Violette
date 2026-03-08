@@ -143,7 +143,6 @@
                 <version>${compiler-plugin.version}</version>
                 <configuration>
                     <parameters>true</parameters>
-                    <!-- Processeur MapStruct pour la génération des mappers -->
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.mapstruct</groupId>

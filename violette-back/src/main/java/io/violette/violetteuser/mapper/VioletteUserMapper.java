@@ -5,11 +5,8 @@ import io.violette.violetteuser.model.VioletteUserEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-/**
- * Mapper MapStruct Entity ↔ DTO pour le domaine violetteuser.
- * Mapping direct : roles (Set) et skills (Set), alignés avec le schéma SQL.
- */
-@Mapper(componentModel = "jakarta")
+/** Convertit VioletteUserEntity ↔ VioletteUserDto. */
+@Mapper(componentModel = "default")
 public interface VioletteUserMapper {
 
     VioletteUserDto toDto(VioletteUserEntity entity);
