@@ -3,9 +3,14 @@ package io.violette.violetteuser.controller;
 import io.quarkus.security.Authenticated;
 import io.violette.security.CurrentUserContextProvider;
 import io.violette.violetteuser.dto.AuthenticatedUserDto;
+import io.violette.violetteuser.dto.CreateUserRequestDto;
+import io.violette.violetteuser.dto.VioletteUserDto;
 import io.violette.violetteuser.service.VioletteUserService;
 import jakarta.inject.Inject;
+import jakarta.validation.Valid;
+import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
@@ -40,6 +45,22 @@ public class VioletteUserController {
         return currentUserContextProvider.getCurrentPrincipal()
                 .map(violetteUserService::getCurrentUser)
                 .map(dto -> Response.ok(dto).build())
+                .orElse(Response.status(Response.Status.UNAUTHORIZED).build());
+    }
+
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Create user profile", description = "Creates backend user profile from JWT (firebaseUid, email) and request body (firstName, lastName, roles).")
+    @APIResponse(responseCode = "201", description = "User created", content = @Content(schema = @Schema(implementation = VioletteUserDto.class)))
+    @APIResponse(responseCode = "401", description = "Not authenticated")
+    @APIResponse(responseCode = "409", description = "User already exists (same firebaseUid or email)")
+    public Response createUser(@Valid CreateUserRequestDto request) {
+        return currentUserContextProvider.getCurrentPrincipal()
+                .map(principal -> {
+                    VioletteUserDto dto = violetteUserService.createUser(principal, request);
+                    return Response.status(Response.Status.CREATED).entity(dto).build();
+                })
                 .orElse(Response.status(Response.Status.UNAUTHORIZED).build());
     }
 }

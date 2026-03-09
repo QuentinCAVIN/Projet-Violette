@@ -258,6 +258,87 @@ export DB_PASSWORD=violette
 ./mvnw quarkus:dev
 ```
 
+### Profil Firebase et authentification JWT
+
+Par défaut, OIDC est **désactivé** (`quarkus.oidc.enabled=false`). Les endpoints protégés (`/api/users/me`, `POST /api/users`) répondent alors **403**. Pour valider les JWT Firebase en local, activez le profil **firebase** et définissez le Project ID Firebase.
+
+#### Variables d'environnement
+
+| Variable | Obligatoire (profil firebase) | Rôle |
+|----------|------------------------------|------|
+| `FIREBASE_PROJECT_ID` | Oui | ID du projet Firebase (ex. `violette-1f64e`). Utilisé pour l'URL du serveur OIDC, l'issuer et l'audience du token. Ce n'est pas un secret mais il doit rester externalisé. |
+
+#### Rôle du profil `firebase`
+
+Le fichier `application-firebase.properties` est chargé lorsque le profil `firebase` est actif. Il active OIDC et configure la validation des tokens Firebase (issuer, audience, auth-server-url). Il force aussi une **datasource H2 en mémoire** : aucun MySQL n'est requis pour lancer le backend en local avec Firebase. Sans ce profil, le backend utilise la config par défaut (OIDC désactivé, MySQL).
+
+#### Différence entre `-Dquarkus.profile=firebase` et `QUARKUS_PROFILE=firebase`
+
+- **`-Dquarkus.profile=firebase`** : option Maven/JVM passée au lancement (ex. `mvn quarkus:dev -Dquarkus.profile=firebase`). Le profil est actif pour cette exécution.
+- **`QUARKUS_PROFILE=firebase`** : variable d'environnement reconnue par Quarkus au démarrage. Même effet que `-Dquarkus.profile=firebase` si vous définissez la variable avant de lancer.
+
+Les deux peuvent être utilisés. Sous Windows PowerShell, l'option `-D` doit être entre guillemets si elle contient un `=` pour éviter que le shell ne découpe l'argument.
+
+#### Lancement local avec Firebase
+
+**Windows (PowerShell)** :
+
+```powershell
+# Définir le Project ID (obligatoire pour le profil firebase)
+$env:FIREBASE_PROJECT_ID="violette-1f64e"
+
+# Option 1 : profil via variable d'environnement
+$env:QUARKUS_PROFILE="firebase"
+mvn quarkus:dev
+
+# Option 2 : profil via option Maven (depuis le répertoire violette-back)
+mvn quarkus:dev "-Dquarkus.profile=firebase"
+```
+
+**Linux / macOS** :
+
+```bash
+export FIREBASE_PROJECT_ID="violette-1f64e"
+export QUARKUS_PROFILE="firebase"
+./mvnw quarkus:dev
+```
+
+Alternative avec option Maven :
+
+```bash
+export FIREBASE_PROJECT_ID="violette-1f64e"
+./mvnw quarkus:dev -Dquarkus.profile=firebase
+```
+
+Avec le profil `firebase`, la base est déjà H2 en mémoire : **MySQL n'est pas nécessaire** pour tester l'authentification et les endpoints utilisateur en local.
+
+#### Tester l'API sécurisée
+
+Une fois le backend lancé avec le profil firebase (`FIREBASE_PROJECT_ID` défini), utilisez un JWT Firebase valide (obtenu côté client Flutter ou via la console Firebase).
+
+**GET /api/users/me** (contexte utilisateur depuis le JWT) :
+
+```bash
+curl -H "Authorization: Bearer VOTRE_JWT_FIREBASE" http://localhost:8080/api/users/me
+```
+
+- Avec token valide : **200** et JSON `{"firebaseUid":"...","email":"...","name":"..."}`.
+- Sans header `Authorization` ou token invalide : **401** ou **403**.
+
+**POST /api/users** (création du profil backend) :
+
+```bash
+curl -X POST -H "Authorization: Bearer VOTRE_JWT_FIREBASE" \
+  -H "Content-Type: application/json" \
+  http://localhost:8080/api/users \
+  -d '{"firstName":"Jean","lastName":"Dupont"}'
+```
+
+- Création réussie : **201** et JSON utilisateur (id, firebaseUid, email, firstName, lastName, roles, etc.).
+- Utilisateur déjà existant (même firebaseUid ou email) : **409 Conflict**.
+- Body invalide (ex. firstName manquant) : **400 Bad Request**.
+- Sans token : **401** ou **403**.
+
 ---
 
 ## 7. Configuration de la base de données
@@ -350,6 +431,8 @@ Sans token ou token invalide : 401 ou 403.
 # Tests d'intégration natifs (après build)
 ./mvnw verify
 ```
+
+Si `mvn clean test` échoue (résolution du bean MapStruct `VioletteUserMapper`), exécuter d'abord `mvn compile` puis `mvn test`, ou lancer `mvn clean install -DskipTests` puis `mvn test`.
 
 Les tests utilisent le profil `test` défini dans `src/test/resources/application.properties` :
 - Base de données H2 in-memory

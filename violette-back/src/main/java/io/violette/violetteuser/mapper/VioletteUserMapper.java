@@ -6,7 +6,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 /** Convertit VioletteUserEntity ↔ VioletteUserDto. */
-@Mapper(componentModel = "default")
+@Mapper(componentModel = "cdi")
 public interface VioletteUserMapper {
 
     VioletteUserDto toDto(VioletteUserEntity entity);
