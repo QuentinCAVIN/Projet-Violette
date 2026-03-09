@@ -4,7 +4,7 @@ on:
   push:
     branches: ["architecture-logicielle"]
   pull_request:
-    branches: ["main"]
+    branches: ["main", "architecture-logicielle"]
 
 jobs:
   backend-ci:
