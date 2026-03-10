@@ -161,6 +161,7 @@ class VioletteUserServiceTest {
     @Transactional
     @DisplayName("getUsers - returns paginated list sorted by createdAt DESC")
     void getUsers_returnsPaginatedListSortedByCreatedAtDesc() {
+        violetteUserRepository.deleteAll();
         persistUser("uid-pag-1", "pag1@example.com", "A", "One", Set.of(UserRole.ARTIST));
         persistUser("uid-pag-2", "pag2@example.com", "B", "Two", Set.of(UserRole.ARTIST));
         persistUser("uid-pag-3", "pag3@example.com", "C", "Three", Set.of(UserRole.ARTIST));
