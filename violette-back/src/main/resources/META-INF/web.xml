@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_5_0.xsd"
+         version="5.0">
+
+    <description>Console H2 pour ajustements manuels en base (profils dev / firebase).</description>
+
+    <servlet>
+        <servlet-name>h2-console</servlet-name>
+        <servlet-class>org.h2.server.web.JakartaWebServlet</servlet-class>
+        <init-param>
+            <param-name>webAllowOthers</param-name>
+            <param-value>false</param-value>
+        </init-param>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>h2-console</servlet-name>
+        <url-pattern>/h2/*</url-pattern>
+    </servlet-mapping>
+</web-app>
