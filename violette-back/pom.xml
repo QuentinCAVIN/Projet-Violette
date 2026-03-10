@@ -116,6 +116,12 @@
             <artifactId>quarkus-jdbc-h2</artifactId>
         </dependency>
 
+        <!-- Undertow : servlets pour la console H2 (dev / firebase, ajustements manuels en base) -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-undertow</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>
