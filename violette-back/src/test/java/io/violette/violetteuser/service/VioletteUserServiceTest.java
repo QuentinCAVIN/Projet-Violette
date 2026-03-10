@@ -5,6 +5,7 @@ import io.violette.security.JwtPrincipalInfo;
 import io.violette.violetteuser.dto.CreateUserRequestDto;
 import io.violette.violetteuser.dto.VioletteUserDto;
 import io.violette.violetteuser.exception.UserAlreadyExistsException;
+import io.violette.violetteuser.exception.UserNotFoundException;
 import io.violette.violetteuser.model.UserRole;
 import io.violette.violetteuser.model.VioletteUserEntity;
 import io.violette.violetteuser.repository.VioletteUserRepository;
@@ -13,6 +14,7 @@ import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -108,7 +110,77 @@ class VioletteUserServiceTest {
                 () -> violetteUserService.createUser(principal, request));
     }
 
-    private void persistUser(String firebaseUid, String email, String firstName, String lastName, Set<UserRole> roles) {
+    @Test
+    @Transactional
+    @DisplayName("getUserById - when user exists then returns DTO")
+    void whenUserExists_getUserById_returnsDto() {
+        VioletteUserEntity entity = persistUser("uid-get-by-id", "getbyid@example.com", "Marie", "Martin", Set.of(UserRole.MANAGER));
+        Long id = entity.getId();
+
+        VioletteUserDto dto = violetteUserService.getUserById(id);
+
+        assertNotNull(dto);
+        assertEquals(id, dto.id());
+        assertEquals("uid-get-by-id", dto.firebaseUid());
+        assertEquals("Marie", dto.firstName());
+        assertEquals("Martin", dto.lastName());
+        assertEquals(Set.of(UserRole.MANAGER), dto.roles());
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("getUserById - when user does not exist then throws UserNotFoundException")
+    void whenUserDoesNotExist_getUserById_throwsUserNotFoundException() {
+        assertThrows(UserNotFoundException.class,
+                () -> violetteUserService.getUserById(99999L));
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("getUserByFirebaseUid - when user exists then returns DTO")
+    void whenUserExists_getUserByFirebaseUid_returnsDto() {
+        persistUser("uid-get-by-uid", "getbyuid@example.com", "Paul", "Dupuis", Set.of(UserRole.ARTIST));
+
+        VioletteUserDto dto = violetteUserService.getUserByFirebaseUid("uid-get-by-uid");
+
+        assertNotNull(dto);
+        assertEquals("uid-get-by-uid", dto.firebaseUid());
+        assertEquals("Paul", dto.firstName());
+        assertEquals("Dupuis", dto.lastName());
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("getUserByFirebaseUid - when user does not exist then throws UserNotFoundException")
+    void whenUserDoesNotExist_getUserByFirebaseUid_throwsUserNotFoundException() {
+        assertThrows(UserNotFoundException.class,
+                () -> violetteUserService.getUserByFirebaseUid("uid-inexistant-xyz"));
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("getUsers - returns paginated list sorted by createdAt DESC")
+    void getUsers_returnsPaginatedListSortedByCreatedAtDesc() {
+        violetteUserRepository.deleteAll();
+        persistUser("uid-pag-1", "pag1@example.com", "A", "One", Set.of(UserRole.ARTIST));
+        persistUser("uid-pag-2", "pag2@example.com", "B", "Two", Set.of(UserRole.ARTIST));
+        persistUser("uid-pag-3", "pag3@example.com", "C", "Three", Set.of(UserRole.ARTIST));
+
+        List<VioletteUserDto> page0 = violetteUserService.getUsers(0, 2);
+        List<VioletteUserDto> page1 = violetteUserService.getUsers(1, 2);
+
+        assertEquals(2, page0.size());
+        assertEquals(1, page1.size());
+        Set<String> allUids = java.util.stream.Stream.concat(
+                page0.stream().map(VioletteUserDto::firebaseUid),
+                page1.stream().map(VioletteUserDto::firebaseUid)
+        ).collect(java.util.stream.Collectors.toSet());
+        assertTrue(allUids.contains("uid-pag-1"));
+        assertTrue(allUids.contains("uid-pag-2"));
+        assertTrue(allUids.contains("uid-pag-3"));
+    }
+
+    private VioletteUserEntity persistUser(String firebaseUid, String email, String firstName, String lastName, Set<UserRole> roles) {
         VioletteUserEntity entity = new VioletteUserEntity();
         entity.setFirebaseUid(firebaseUid);
         entity.setEmail(email);
@@ -116,5 +188,6 @@ class VioletteUserServiceTest {
         entity.setLastName(lastName);
         entity.setRoles(roles);
         violetteUserRepository.persistAndFlush(entity);
+        return entity;
     }
 }
