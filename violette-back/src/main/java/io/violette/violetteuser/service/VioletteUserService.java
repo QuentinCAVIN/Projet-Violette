@@ -1,10 +1,12 @@
 package io.violette.violetteuser.service;
 
+import io.quarkus.panache.common.Page;
 import io.violette.security.JwtPrincipalInfo;
 import io.violette.violetteuser.dto.AuthenticatedUserDto;
 import io.violette.violetteuser.dto.CreateUserRequestDto;
 import io.violette.violetteuser.dto.VioletteUserDto;
 import io.violette.violetteuser.exception.UserAlreadyExistsException;
+import io.violette.violetteuser.exception.UserNotFoundException;
 import io.violette.violetteuser.mapper.VioletteUserMapper;
 import io.violette.violetteuser.model.UserRole;
 import io.violette.violetteuser.model.VioletteUserEntity;
@@ -13,10 +15,11 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
+import java.util.List;
 import java.util.Set;
 
 /**
- * Service utilisateur : contexte /me et création de profil à partir du JWT.
+ * Service utilisateur : contexte /me, création de profil et lecture (administration).
  */
 @ApplicationScoped
 public class VioletteUserService {
@@ -74,5 +77,37 @@ public class VioletteUserService {
 
         violetteUserRepository.persist(entity);
         return violetteUserMapper.toDto(entity);
+    }
+
+    /**
+     * Récupère un utilisateur par son id.
+     *
+     * @throws UserNotFoundException si l'utilisateur n'existe pas
+     */
+    public VioletteUserDto getUserById(Long id) {
+        return violetteUserRepository.findByIdOptional(id)
+                .map(violetteUserMapper::toDto)
+                .orElseThrow(UserNotFoundException::new);
+    }
+
+    /**
+     * Récupère un utilisateur par son Firebase UID.
+     *
+     * @throws UserNotFoundException si l'utilisateur n'existe pas
+     */
+    public VioletteUserDto getUserByFirebaseUid(String firebaseUid) {
+        return violetteUserRepository.findByFirebaseUid(firebaseUid)
+                .map(violetteUserMapper::toDto)
+                .orElseThrow(UserNotFoundException::new);
+    }
+
+    /**
+     * Liste paginée des utilisateurs, triée par createdAt DESC.
+     */
+    public List<VioletteUserDto> getUsers(int page, int size) {
+        Page p = Page.of(page, size);
+        return violetteUserRepository.findAllOrderByCreatedAtDesc(p).stream()
+                .map(violetteUserMapper::toDto)
+                .toList();
     }
 }
