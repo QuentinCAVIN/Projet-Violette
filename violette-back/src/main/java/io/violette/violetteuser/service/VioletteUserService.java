@@ -14,6 +14,8 @@ import io.violette.violetteuser.repository.VioletteUserRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Set;
@@ -23,6 +25,8 @@ import java.util.Set;
  */
 @ApplicationScoped
 public class VioletteUserService {
+
+    private static final Logger LOG = LoggerFactory.getLogger(VioletteUserService.class);
 
     @Inject
     VioletteUserRepository violetteUserRepository;
@@ -58,9 +62,12 @@ public class VioletteUserService {
             throw new IllegalArgumentException("Principal JWT requis pour créer un utilisateur.");
         }
 
+        LOG.info("Creating backend user for firebaseUid={}", principal.firebaseUid());
+
         violetteUserRepository.findByFirebaseUid(principal.firebaseUid())
                 .or(() -> violetteUserRepository.findByEmail(principal.email()))
                 .ifPresent(existing -> {
+                    LOG.info("User already exists for firebaseUid={}", principal.firebaseUid());
                     throw new UserAlreadyExistsException();
                 });
 
