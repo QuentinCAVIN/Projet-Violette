@@ -1,6 +1,9 @@
 package io.violette.violetteuser.service;
 
 import io.quarkus.test.junit.QuarkusTest;
+import io.violette.cabaretcompany.repository.CabaretCompanyRepository;
+import io.violette.cabaretcompany.repository.CabaretShowRepository;
+import io.violette.cabaretcompany.repository.CompanyMemberRepository;
 import io.violette.security.JwtPrincipalInfo;
 import io.violette.violetteuser.dto.CreateUserRequestDto;
 import io.violette.violetteuser.dto.VioletteUserDto;
@@ -31,6 +34,13 @@ class VioletteUserServiceTest {
 
     @Inject
     VioletteUserRepository violetteUserRepository;
+
+    @Inject
+    CompanyMemberRepository companyMemberRepository;
+    @Inject
+    CabaretShowRepository cabaretShowRepository;
+    @Inject
+    CabaretCompanyRepository cabaretCompanyRepository;
 
     @Test
     @Transactional
@@ -161,6 +171,10 @@ class VioletteUserServiceTest {
     @Transactional
     @DisplayName("getUsers - returns paginated list sorted by createdAt DESC")
     void getUsers_returnsPaginatedListSortedByCreatedAtDesc() {
+        // Ordre de suppression requis : entités référençant violette_user (cabaretcompany)
+        companyMemberRepository.deleteAll();
+        cabaretShowRepository.deleteAll();
+        cabaretCompanyRepository.deleteAll();
         violetteUserRepository.deleteAll();
         persistUser("uid-pag-1", "pag1@example.com", "A", "One", Set.of(UserRole.ARTIST));
         persistUser("uid-pag-2", "pag2@example.com", "B", "Two", Set.of(UserRole.ARTIST));
