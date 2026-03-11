@@ -60,6 +60,8 @@ public class VioletteRolesAugmentor {
             return identity;
         }
 
+        LOG.info("Loading roles for firebaseUid={}", firebaseUid);
+
         QuarkusSecurityIdentity.Builder builder = QuarkusSecurityIdentity.builder(identity);
 
         var userOpt = violetteUserRepository.findByFirebaseUid(firebaseUid.trim());
@@ -72,7 +74,7 @@ public class VioletteRolesAugmentor {
         for (UserRole role : user.getRoles()) {
             builder.addRole(role.name());
         }
-        LOG.debug("Rôles backend ajoutés pour firebaseUid={}: {}", firebaseUid, user.getRoles());
+        LOG.info("Roles loaded for firebaseUid={}: {}", firebaseUid, user.getRoles());
         return builder.build();
     }
 }
