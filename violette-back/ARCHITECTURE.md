@@ -87,19 +87,43 @@ io.violette
  │    ├── CurrentUserContextProvider.java  (extraction du principal courant)
  │    ├── JwtPrincipalExtractor.java       (extraction des claims JWT)
  │    └── JwtPrincipalInfo.java            (record : firebaseUid, email, name)
- └── violetteuser/                ← Domaine métier : utilisateurs (modèle de référence)
-      ├── controller/              ← VioletteUserController.java
-      ├── service/                 ← VioletteUserService.java
-      ├── repository/              ← VioletteUserRepository.java
-      ├── model/                   ← VioletteUserEntity.java, UserRole.java, ArtistSkill.java
-      ├── dto/                     ← VioletteUserDto.java, CreateUserRequestDto.java, AuthenticatedUserDto.java
-      ├── mapper/                  ← VioletteUserMapper.java (MapStruct)
+ ├── violetteuser/                ← Domaine métier : utilisateurs (modèle de référence)
+ │    ├── controller/              ← VioletteUserController.java
+ │    ├── service/                 ← VioletteUserService.java
+ │    ├── repository/              ← VioletteUserRepository.java
+ │    ├── model/                   ← VioletteUserEntity.java, UserRole.java, ArtistSkill.java
+ │    ├── dto/                     ← VioletteUserDto.java, CreateUserRequestDto.java, AuthenticatedUserDto.java
+ │    ├── mapper/                  ← VioletteUserMapper.java (MapStruct)
+ │    └── exception/
+ │         ├── UserAlreadyExistsException.java
+ │         ├── UserNotFoundException.java
+ │         └── mapper/
+ │              ├── UserExceptionMapper.java         (409 Conflict)
+ │              └── UserNotFoundExceptionMapper.java (404 Not Found)
+ ├── cabaretcompany/              ← Domaine : compagnies, revues, membres
+ │    ├── controller/              ← CabaretCompanyController.java
+ │    ├── service/                 ← CabaretCompanyService.java
+ │    ├── repository/              ← CabaretCompanyRepository.java, CabaretShowRepository.java, CompanyMemberRepository.java
+ │    ├── model/                   ← CabaretCompanyEntity.java, CabaretShowEntity.java, CompanyMemberEntity.java
+ │    ├── dto/                     ← CabaretCompanyDto.java, CabaretShowDto.java, CompanyMemberDto.java
+ │    ├── mapper/                  ← CabaretCompanyMapper.java, CabaretShowMapper.java
+ │    └── exception/
+ │         ├── CabaretCompanyNotFoundException.java
+ │         └── mapper/CabaretCompanyNotFoundExceptionMapper.java  (404 Not Found)
+ └── showdate/                    ← Domaine : dates de spectacle, feuille de route, disponibilités
+      ├── controller/              ← ShowDateController.java
+      ├── service/                 ← ShowDateService.java
+      ├── repository/              ← ShowDateRepository.java, ShowDateSkillRequirementRepository.java, ArtistAvailabilityRepository.java
+      ├── model/                   ← ShowDateEntity.java, ShowDateSkillRequirementEntity.java
+      │                               ArtistAvailabilityEntity.java, ArtistAvailabilityId.java
+      │                               ShowDateStatus.java, AvailabilityStatus.java
+      ├── dto/                     ← ShowDateDto.java, CreateShowDateRequestDto.java
+      │                               ShowDateSkillRequirementDto.java, CreateSkillRequirementRequestDto.java
+      │                               ArtistAvailabilityDto.java
+      ├── mapper/                  ← ShowDateMapper.java, ShowDateSkillRequirementMapper.java, ArtistAvailabilityMapper.java
       └── exception/
-           ├── UserAlreadyExistsException.java
-           ├── UserNotFoundException.java
-           └── mapper/
-                ├── UserExceptionMapper.java         (409 Conflict)
-                └── UserNotFoundExceptionMapper.java (404 Not Found)
+           ├── ShowDateNotFoundException.java
+           └── mapper/ShowDateNotFoundExceptionMapper.java  (404 Not Found)
 ```
 
 **Règle de nommage pour les nouveaux domaines :**
@@ -163,10 +187,12 @@ Service
 
 ### Mappers d'exceptions actuels
 
-| Exception                   | Mapper                          | Code HTTP        |
-|-----------------------------|---------------------------------|------------------|
-| `UserAlreadyExistsException`| `UserExceptionMapper`           | `409 Conflict`   |
-| `UserNotFoundException`     | `UserNotFoundExceptionMapper`   | `404 Not Found`  |
+| Exception                        | Mapper                                  | Code HTTP        |
+|----------------------------------|-----------------------------------------|------------------|
+| `UserAlreadyExistsException`     | `UserExceptionMapper`                   | `409 Conflict`   |
+| `UserNotFoundException`          | `UserNotFoundExceptionMapper`           | `404 Not Found`  |
+| `CabaretCompanyNotFoundException`| `CabaretCompanyNotFoundExceptionMapper` | `404 Not Found`  |
+| `ShowDateNotFoundException`      | `ShowDateNotFoundExceptionMapper`       | `404 Not Found`  |
 
 ### Règle pour les nouveaux domaines
 
@@ -348,6 +374,38 @@ Requiert la variable d'environnement `FIREBASE_PROJECT_ID`.
 
 ```bash
 mvn package
+```
+
+---
+
+## Décisions de modélisation — domaine `showdate`
+
+### Rôle du domaine
+
+`ShowDate` modélise la **feuille de route logistique** d'une date de prestation : lieu, heure de rendez-vous, contacts client, revue jouée (optionnelle). Ce n'est pas un planning artistique — c'est un document organisationnel.
+
+### Décisions structurantes
+
+| Décision | Justification |
+|---|---|
+| Pas de `TimeSlot` (startTime/endTime) | `meetingTime` suffit comme information logistique. La validation durée ≤ 12h serait prématurée sans cas d'usage confirmé. |
+| `meetingTime` remplace start/end | Heure de rendez-vous : simple, non ambigu, pas de validation de durée requise à ce stade. |
+| `ShowDateSkillRequirement` séparé | Un show peut nécessiter plusieurs compétences avec des cachets nets différents. Relation `1-N` propre. |
+| `ArtistAvailabilityEntity` avec clé composite | Remplace la `Map<userId, status>` Firestore dénormalisée. Unicité garantie par la PK. |
+| `netFee` en `BigDecimal` | Précision monétaire correcte — pas de `double` pour les montants. |
+| `selectedCount` absent | Jamais stocké — calculé par `COUNT(*)` si besoin. |
+
+### Frontière avec `artistbooking`
+
+Le domaine `showdate` **ne gère pas** les artistes effectivement retenus ni les confirmations de réservation.
+Ces responsabilités appartiennent au domaine futur `artistbooking` :
+
+```
+showdate                         artistbooking (à venir)
+─────────────────────────────    ────────────────────────────────
+ShowDate (feuille de route)  →   ArtistBooking (artiste retenu)
+ArtistAvailability (déclaré)      BookingStatus (SELECTED, CONFIRMED…)
+ShowDateSkillRequirement          BookingTimeline (timestamps cycle de vie)
 ```
 
 ---

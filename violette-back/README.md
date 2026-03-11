@@ -127,9 +127,8 @@ Controller  →  Service  →  Repository  →  Base de données
 
 | Pattern                      | Type         | Localisation                                                    | Problème résolu                                                                                                                                                                                                                                               |
 | ---------------------------- | ------------ | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Builder**                  | Création     | `showdate.builder.ShowDateBuilder`                              | `ShowDate` a 9+ champs dont optionnels. Le Builder garantit la construction d'objets valides en centralisant la validation des invariants (durée ≤ 12H, artistsCount > 0).                                                                                    |
 | **Adapter / Enrichissement** | Structure    | `security.VioletteSecurityAugmentor` + `VioletteRolesAugmentor` | Firebase fournit l'identité (JWT validé par OIDC). Les rôles métier (ARTIST, MANAGER) viennent de la base Violette et sont injectés dans la `SecurityIdentity` via un `SecurityIdentityAugmentor`, afin que `@RolesAllowed("MANAGER")` fonctionne au runtime. |
-| **Observer (CDI Events)**    | Comportement | `artistbooking.event.BookingStatusChangedEvent`                 | Quand un artiste refuse une réservation, la date doit libérer une place. Le `ArtistBookingService` fire un CDI Event ; le `ShowDateService` l'observe. Les domaines restent découplés.                                                                        |
+| **Observer (CDI Events)**    | Comportement | `artistbooking.event.BookingStatusChangedEvent`                 | Quand un artiste refuse une réservation, la date doit libérer une place. Le `ArtistBookingService` fire un CDI Event ; le `ShowDateService` l'observe. Les domaines restent découplés. (À implémenter avec le domaine `artistbooking`.)                       |
 
 
 ### Modélisation DDD
@@ -145,10 +144,10 @@ cabaretcompany
 
 showdate
   Aggregate Root : ShowDate
-  Value Objects  : TimeSlot (validation durée ≤ 12H), Fee
-  Entities       : ArtistAvailability
+  Entities       : ShowDateSkillRequirement, ArtistAvailability
+  Value Objects  : ArtistAvailabilityId (clé composite)
 
-artistbooking
+artistbooking (à venir)
   Aggregate Root : ArtistBooking
   Value Objects  : BookingTimeline (timestamps du cycle de vie)
 ```
@@ -199,24 +198,31 @@ io.violette
 │
 ├── showdate/
 │   ├── controller/ShowDateController.java
-│   ├── service/
-│   │   ├── ShowDateService.java
-│   │   └── ShowDateDomainService.java      ← Domain Service : transitions de statut
+│   ├── service/ShowDateService.java
 │   ├── repository/
 │   │   ├── ShowDateRepository.java
+│   │   ├── ShowDateSkillRequirementRepository.java
 │   │   └── ArtistAvailabilityRepository.java
-│   ├── builder/ShowDateBuilder.java        ← Builder pattern
 │   ├── model/
-│   │   ├── ShowDate.java                   ← @Entity, Aggregate Root
-│   │   ├── ArtistAvailability.java         ← @Entity (remplace la Map Firestore)
-│   │   ├── TimeSlot.java                   ← @Embeddable, Value Object
-│   │   ├── ShowDateStatus.java             ← Enum : PENDING, OPTIONAL, CONFIRMED, CANCELLED, LOCKED
+│   │   ├── ShowDateEntity.java             ← @Entity, Aggregate Root
+│   │   ├── ShowDateSkillRequirementEntity.java  ← @Entity (besoin par compétence)
+│   │   ├── ArtistAvailabilityEntity.java   ← @Entity (disponibilité artiste)
+│   │   ├── ArtistAvailabilityId.java       ← @Embeddable, clé composite
+│   │   ├── ShowDateStatus.java             ← Enum : PENDING, OPTIONAL, CONFIRMED, LOCKED, CANCELLED
 │   │   └── AvailabilityStatus.java         ← Enum : PENDING, AVAILABLE, CONDITIONAL, UNAVAILABLE
-│   └── dto/
-│       ├── CreateShowDateDto.java
-│       ├── ShowDateResponseDto.java
-│       ├── ShowDateSummaryDto.java
-│       └── UpdateAvailabilityDto.java
+│   ├── mapper/
+│   │   ├── ShowDateMapper.java
+│   │   ├── ShowDateSkillRequirementMapper.java
+│   │   └── ArtistAvailabilityMapper.java
+│   ├── dto/
+│   │   ├── ShowDateDto.java
+│   │   ├── CreateShowDateRequestDto.java
+│   │   ├── ShowDateSkillRequirementDto.java
+│   │   ├── CreateSkillRequirementRequestDto.java
+│   │   └── ArtistAvailabilityDto.java
+│   └── exception/
+│       ├── ShowDateNotFoundException.java
+│       └── mapper/ShowDateNotFoundExceptionMapper.java
 │
 └── artistbooking/
     ├── controller/ArtistBookingController.java
@@ -413,8 +419,10 @@ Flyway s'exécute **automatiquement au démarrage** de l'application (`quarkus.f
 
 ```
 src/main/resources/db/migration/
-  V1__init.sql       ← Schéma initial complet (V1)
-  V2__xxx.sql        ← Prochaines migrations (à venir)
+  V1__init.sql       ← Schéma initial complet
+  V2__add_company_member.sql  ← Table company_member (domaine cabaretcompany)
+  V3__add_cabaret_show.sql    ← Table revue (domaine cabaretcompany)
+  V4__create_showdate_tables.sql  ← Tables show_date, show_date_skill_requirement, artist_availability (domaine showdate)
 ```
 
 ### Convention de nommage
@@ -520,13 +528,14 @@ Génération complète du domaine :
 - Gestion des membres de la compagnie
 - Controller REST CRUD
 
-### Phase 5 — Domaine `showdate`
+### Phase 5 — Domaine `showdate` ✓ (implémenté)
 
-- Entités `ShowDate`, `ArtistAvailability`
-- Value Objects `TimeSlot`, `Fee` (avec validation métier)
-- Builder pattern `ShowDateBuilder`
-- Domain Service : transitions de statut, règle 12H
-- Controller REST + endpoints de gestion des disponibilités
+- Entités `ShowDateEntity` (aggregate root), `ShowDateSkillRequirementEntity`, `ArtistAvailabilityEntity`
+- Feuille de route logistique : `eventDate`, `meetingTime`, `venueName`, `address`, contacts client
+- Besoins artistiques par compétence : `skill`, `requiredCount`, `netFee` (montant net en `BigDecimal`)
+- Disponibilités artistes avec clé composite `(show_date_id, artist_id)`
+- Controller REST : 6 endpoints, sécurisés `@RolesAllowed("MANAGER")`
+- Migration Flyway V4 : refonte `show_date`, création `show_date_skill_requirement`, restructuration `artist_availability`
 
 ### Phase 6 — Domaine `artistbooking`
 
@@ -563,13 +572,13 @@ Violette permet à des compagnies de cabaret de gérer leurs spectacles de bout 
 ### Règles métier importantes
 
 
-| Règle                     | Détail                                                                      |
-| ------------------------- | --------------------------------------------------------------------------- |
-| Durée max d'une date      | 12 heures (norme cachet d'intermittence)                                    |
-| Unicité de la réservation | Un artiste ne peut être réservé qu'une fois par date de spectacle           |
-| Capacité                  | Le nombre d'artistes réservés ne peut pas dépasser `required_artists_count` |
-| Statuts d'une date        | `PENDING` → `OPTIONAL` → `CONFIRMED` → `LOCKED` ou `CANCELLED`              |
-| Statuts d'une réservation | `SELECTED` → `PENDING_CONFIRMATION` → `CONFIRMED` ou `REFUSED`              |
-| Compagnie                 | Doit avoir au moins un gérant et au moins une revue                         |
+| Règle                      | Détail                                                                                         |
+| -------------------------- | ---------------------------------------------------------------------------------------------- |
+| Unicité de disponibilité   | Un artiste ne peut déclarer qu'une seule disponibilité par date (clé composite show_date/artist) |
+| Unicité de la réservation  | Un artiste ne peut être réservé qu'une fois par date de spectacle (domaine `artistbooking`)    |
+| Statuts d'une date         | `PENDING` → `OPTIONAL` → `CONFIRMED` → `LOCKED` ou `CANCELLED`                                |
+| Statuts d'une disponibilité| `PENDING` → `AVAILABLE` ou `CONDITIONAL` ou `UNAVAILABLE`                                     |
+| Statuts d'une réservation  | `SELECTED` → `PENDING_CONFIRMATION` → `CONFIRMED` ou `REFUSED` (domaine `artistbooking`)      |
+| Compagnie                  | Doit avoir au moins un gérant                                                                  |
 
 

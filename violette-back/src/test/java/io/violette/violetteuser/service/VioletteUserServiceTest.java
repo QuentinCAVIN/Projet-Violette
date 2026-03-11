@@ -5,6 +5,9 @@ import io.violette.cabaretcompany.repository.CabaretCompanyRepository;
 import io.violette.cabaretcompany.repository.CabaretShowRepository;
 import io.violette.cabaretcompany.repository.CompanyMemberRepository;
 import io.violette.security.JwtPrincipalInfo;
+import io.violette.showdate.repository.ArtistAvailabilityRepository;
+import io.violette.showdate.repository.ShowDateRepository;
+import io.violette.showdate.repository.ShowDateSkillRequirementRepository;
 import io.violette.violetteuser.dto.CreateUserRequestDto;
 import io.violette.violetteuser.dto.VioletteUserDto;
 import io.violette.violetteuser.exception.UserAlreadyExistsException;
@@ -41,6 +44,12 @@ class VioletteUserServiceTest {
     CabaretShowRepository cabaretShowRepository;
     @Inject
     CabaretCompanyRepository cabaretCompanyRepository;
+    @Inject
+    ArtistAvailabilityRepository artistAvailabilityRepository;
+    @Inject
+    ShowDateSkillRequirementRepository showDateSkillRequirementRepository;
+    @Inject
+    ShowDateRepository showDateRepository;
 
     @Test
     @Transactional
@@ -171,7 +180,10 @@ class VioletteUserServiceTest {
     @Transactional
     @DisplayName("getUsers - returns paginated list sorted by createdAt DESC")
     void getUsers_returnsPaginatedListSortedByCreatedAtDesc() {
-        // Ordre de suppression requis : entités référençant violette_user (cabaretcompany)
+        // Ordre de suppression : les entités du domaine showdate référencent show_date, revue et violette_user
+        artistAvailabilityRepository.deleteAll();
+        showDateSkillRequirementRepository.deleteAll();
+        showDateRepository.deleteAll();
         companyMemberRepository.deleteAll();
         cabaretShowRepository.deleteAll();
         cabaretCompanyRepository.deleteAll();
