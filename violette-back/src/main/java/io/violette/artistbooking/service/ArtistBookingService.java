@@ -122,6 +122,14 @@ public class ArtistBookingService {
             skillRequirement = skillRequirementRepository
                     .findByIdOptional(request.skillRequirementId())
                     .orElseThrow(SkillRequirementNotFoundException::new);
+
+            if (!skillRequirement.getShowDate().getId().equals(showDate.getId())) {
+                throw new SkillRequirementNotFoundException(
+                        "Le besoin artistique id=" + request.skillRequirementId()
+                                + " n'appartient pas à la date showDateId=" + showDate.getId() + "."
+                );
+            }
+
             validerCapacite(skillRequirement);
         }
 
@@ -324,7 +332,8 @@ public class ArtistBookingService {
     }
 
     /**
-     * Vérifie qu'aucun booking actif n'existe pour cet artiste sur cette date.
+     * Vérifie qu'aucun booking existant (quel que soit son statut) n'existe pour cet artiste sur cette date.
+     * Un booking REFUSED bloque également la re-sélection — suppression préalable requise.
      */
     private void validerAbsenceDeBookingExistant(Long showDateId, Long artistId) {
         artistBookingRepository

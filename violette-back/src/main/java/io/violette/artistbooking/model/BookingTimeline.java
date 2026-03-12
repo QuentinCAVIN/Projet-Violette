@@ -31,7 +31,12 @@ public class BookingTimeline {
     @Column(name = "requested_at")
     private Instant requestedAt;
 
-    /** Renseigné lors du passage à {@link BookingStatus#CONFIRMED} ou {@link BookingStatus#REFUSED}. */
+    /**
+     * Renseigné lors du passage à {@link BookingStatus#CONFIRMED} ou {@link BookingStatus#REFUSED}.
+     * N'est PAS renseigné lors d'un passage à {@link BookingStatus#CANCELLED} —
+     * l'annulation est une décision externe (date annulée), pas une réponse de l'artiste.
+     * Dans ce cas, {@code updatedAt} trace l'horodatage de l'annulation.
+     */
     @Column(name = "responded_at")
     private Instant respondedAt;
 

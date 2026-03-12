@@ -74,9 +74,9 @@ public class ArtistBookingRepository implements PanacheRepository<ArtistBookingE
 
     /**
      * Retourne tous les bookings actifs d'une date (hors REFUSED et CANCELLED).
-     * Utilisé pour la propagation d'annulation de date.
+     * Utilisé pour la propagation d'annulation de date (future fonctionnalité V1).
      */
-    public List<ArtistBookingEntity> findActivByShowDateId(Long showDateId) {
+    public List<ArtistBookingEntity> findActiveByShowDateId(Long showDateId) {
         return find(
                 "showDate.id = ?1 and status in ?2",
                 showDateId,

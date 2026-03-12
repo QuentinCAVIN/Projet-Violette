@@ -163,7 +163,7 @@ public class ArtistBookingController {
     @APIResponse(responseCode = "200", description = "Réponse enregistrée", content = @Content(schema = @Schema(implementation = ArtistBookingDto.class)))
     @APIResponse(responseCode = "400", description = "Corps de la requête invalide")
     @APIResponse(responseCode = "401", description = "Non authentifié")
-    @APIResponse(responseCode = "403", description = "Accès refusé (rôle insuffisant ou booking d'un autre artiste)")
+    @APIResponse(responseCode = "403", description = "Accès refusé (rôle insuffisant)")
     @APIResponse(responseCode = "404", description = "Booking introuvable")
     @APIResponse(responseCode = "409", description = "Le booking n'est pas en statut PENDING_CONFIRMATION")
     public Response respondToRequest(
