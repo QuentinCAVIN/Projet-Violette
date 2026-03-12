@@ -2,6 +2,7 @@ package io.violette.artistbooking.service;
 
 import io.violette.artistbooking.dto.ArtistBookingDto;
 import io.violette.artistbooking.dto.CreateBookingRequestDto;
+import io.violette.artistbooking.event.BookingStatusChangedEvent;
 import io.violette.artistbooking.exception.ArtistBookingNotFoundException;
 import io.violette.artistbooking.exception.ArtistNotAvailableException;
 import io.violette.artistbooking.exception.BookingAlreadyExistsException;
@@ -27,6 +28,7 @@ import io.violette.violetteuser.exception.UserNotFoundException;
 import io.violette.violetteuser.model.VioletteUserEntity;
 import io.violette.violetteuser.repository.VioletteUserRepository;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
@@ -78,6 +80,10 @@ public class ArtistBookingService {
 
     @Inject
     ArtistBookingMapper artistBookingMapper;
+
+    /** Événement CDI publié à chaque transition de statut — pattern Observer. */
+    @Inject
+    Event<BookingStatusChangedEvent> bookingStatusChangedEvent;
 
     // ------------------------------------------------------------------
     // Sélection d'un artiste (MANAGER)
@@ -217,8 +223,16 @@ public class ArtistBookingService {
 
         Instant now = Instant.now();
         for (ArtistBookingEntity booking : selectedBookings) {
+            BookingStatus oldStatus = booking.getStatus();
             booking.setStatus(BookingStatus.PENDING_CONFIRMATION);
             booking.getTimeline().setRequestedAt(now);
+            bookingStatusChangedEvent.fire(new BookingStatusChangedEvent(
+                    booking.getId(),
+                    showDateId,
+                    booking.getArtist().getId(),
+                    oldStatus,
+                    BookingStatus.PENDING_CONFIRMATION
+            ));
         }
 
         LOG.info("{} demande(s) de confirmation envoyée(s) pour showDateId={}", selectedBookings.size(), showDateId);
@@ -282,9 +296,18 @@ public class ArtistBookingService {
             );
         }
 
+        BookingStatus oldStatus = booking.getStatus();
         BookingStatus newStatus = accept ? BookingStatus.CONFIRMED : BookingStatus.REFUSED;
         booking.setStatus(newStatus);
         booking.getTimeline().setRespondedAt(Instant.now());
+
+        bookingStatusChangedEvent.fire(new BookingStatusChangedEvent(
+                bookingId,
+                booking.getShowDate().getId(),
+                currentArtist.getId(),
+                oldStatus,
+                newStatus
+        ));
 
         LOG.info("Booking id={} → {} (artiste id={})", bookingId, newStatus, currentArtist.getId());
         return artistBookingMapper.toDto(booking);

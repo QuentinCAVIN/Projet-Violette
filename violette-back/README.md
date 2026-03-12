@@ -124,10 +124,77 @@ Controller  →  Service  →  Repository  →  Base de données
 
 ### Design Patterns
 
+Le projet implémente trois design patterns GoF, un par catégorie.
 
-| Pattern                      | Type      | Localisation                                                     | Problème résolu                                                                                                                                                                                                                                               |
-| ---------------------------- | --------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Adapter / Enrichissement** | Structure | `security.VioletteSecurityAugmentor` + `VioletteRolesAugmentor` | Firebase fournit l'identité (JWT validé par OIDC). Les rôles métier (ARTIST, MANAGER) viennent de la base Violette et sont injectés dans la `SecurityIdentity` via un `SecurityIdentityAugmentor`, afin que `@RolesAllowed("MANAGER")` fonctionne au runtime. |
+---
+
+#### Création — Singleton
+
+Les composants annotés `@ApplicationScoped` sont instanciés **une seule fois** par le conteneur CDI Quarkus et partagés pour toute la durée de vie de l'application. Ce comportement correspond exactement au pattern **Singleton** : une instance unique, accessible globalement via injection.
+
+**Composants concernés :**
+
+| Classe | Package |
+| --- | --- |
+| `VioletteUserService` | `io.violette.violetteuser.service` |
+| `ArtistBookingService` | `io.violette.artistbooking.service` |
+| `ShowDateService` | `io.violette.showdate.service` |
+| `CabaretCompanyService` | `io.violette.cabaretcompany.service` |
+| `VioletteUserRepository` | `io.violette.violetteuser.repository` |
+| `ArtistBookingRepository` | `io.violette.artistbooking.repository` |
+| `VioletteSecurityAugmentor` | `io.violette.security` |
+| `VioletteRolesAugmentor` | `io.violette.security` |
+| *(et tous les autres `@ApplicationScoped`)* | |
+
+---
+
+#### Structurel — Adapter
+
+Le mécanisme de sécurité **adapte** une identité OIDC/JWT Firebase vers l'interface `SecurityIdentity` de Quarkus, en y injectant les rôles métier chargés depuis la base Violette.
+
+**Problème résolu :** Firebase fournit l'*identité* (qui est l'utilisateur, via le claim `sub`). Mais Quarkus attend une `SecurityIdentity` avec des *rôles* pour que `@RolesAllowed("MANAGER")` fonctionne. La base Violette est la source de vérité des rôles — pas Firebase. L'Adapter traduit l'interface Firebase/OIDC vers l'interface attendue par le framework.
+
+**Fichiers concernés :**
+
+```
+src/main/java/io/violette/security/VioletteSecurityAugmentor.java
+src/main/java/io/violette/security/VioletteRolesAugmentor.java
+```
+
+- `VioletteSecurityAugmentor` implémente `SecurityIdentityAugmentor` (interface Quarkus) et délègue à `VioletteRolesAugmentor` via `context.runBlocking()`.
+- `VioletteRolesAugmentor` charge l'utilisateur par `firebaseUid`, lit ses rôles (`ARTIST`, `MANAGER`) et les ajoute à la `SecurityIdentity` via `QuarkusSecurityIdentity.Builder`.
+
+---
+
+#### Comportemental — Observer
+
+Lorsqu'un booking change de statut, `ArtistBookingService` publie un événement CDI `BookingStatusChangedEvent`. Un ou plusieurs observateurs peuvent réagir à cet événement **sans aucun couplage direct** avec l'émetteur.
+
+**Problème résolu :** les transitions de statut d'un booking (SELECTED → PENDING_CONFIRMATION, PENDING_CONFIRMATION → CONFIRMED/REFUSED) sont des faits métier auxquels d'autres parties du système pourront réagir (notifications, synchronisation de domaines, audit trail, workflows configurables en V2) sans que `ArtistBookingService` ait à les connaître ou à les appeler.
+
+**Fichiers concernés :**
+
+```
+src/main/java/io/violette/artistbooking/event/BookingStatusChangedEvent.java
+src/main/java/io/violette/artistbooking/event/BookingStatusChangedObserver.java
+src/main/java/io/violette/artistbooking/service/ArtistBookingService.java
+```
+
+- `BookingStatusChangedEvent` — record Java portant `bookingId`, `showDateId`, `artistId`, `oldStatus`, `newStatus`.
+- `ArtistBookingService` — émet l'événement via `Event<BookingStatusChangedEvent>.fire(...)` dans `sendConfirmationRequests()` et `respondToRequest()`.
+- `BookingStatusChangedObserver` — bean `@ApplicationScoped` avec `@Observes BookingStatusChangedEvent` : journalise la transition et constitue le point d'extension pour les futures réactions.
+
+**Flux :**
+
+```
+ArtistBookingService
+  └── bookingStatusChangedEvent.fire(event)
+        │
+        ▼  [CDI routing — aucun couplage direct]
+BookingStatusChangedObserver
+  └── onBookingStatusChanged(@Observes event)
+        └── LOG.info("Booking statut changé : {} → {}", old, new)
+```
 
 
 ### Modélisation DDD

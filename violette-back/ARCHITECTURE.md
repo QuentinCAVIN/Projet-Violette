@@ -342,6 +342,84 @@ LOG.info("Roles loaded for firebaseUid={}: {}", firebaseUid, user.getRoles());
 
 ---
 
+## Design Patterns — actifs
+
+Le projet implémente trois design patterns GoF, un par catégorie.
+
+| Pattern | Catégorie | Emplacement principal |
+|---|---|---|
+| **Singleton** | Création | Tous les `@ApplicationScoped` (services, repositories, security) |
+| **Adapter** | Structurel | `security/VioletteSecurityAugmentor.java` + `VioletteRolesAugmentor.java` |
+| **Observer** | Comportemental | `artistbooking/event/BookingStatusChangedEvent.java` + `BookingStatusChangedObserver.java` |
+
+---
+
+### Singleton — Création
+
+**Principe :** une seule instance d'un composant est créée et partagée pour toute la durée de vie de l'application.
+
+**Dans Violette :** tous les beans annotés `@ApplicationScoped` sont instanciés une seule fois par le conteneur CDI Quarkus. C'est le comportement exact du pattern Singleton : instance unique, accessible globalement via injection de dépendances.
+
+**Exemples :** `ArtistBookingService`, `VioletteUserService`, `ArtistBookingRepository`, `VioletteSecurityAugmentor`, `VioletteRolesAugmentor`, `CurrentUserContextProvider`…
+
+---
+
+### Adapter — Structurel
+
+**Principe :** convertir l'interface d'un composant en une autre interface attendue par le client.
+
+**Dans Violette :** Firebase fournit l'identité (JWT, claim `sub`) mais Quarkus attend une `SecurityIdentity` avec des rôles pour que `@RolesAllowed("MANAGER")` fonctionne. L'Adapter traduit ces deux interfaces incompatibles.
+
+```
+[Firebase JWT / OIDC]           [Quarkus Security]
+   → firebaseUid (claim sub)    ← @RolesAllowed("MANAGER")
+   → pas de rôles métier        ← SecurityIdentity avec rôles
+
+        VioletteSecurityAugmentor  (implements SecurityIdentityAugmentor)
+        └── VioletteRolesAugmentor
+              ├── charge VioletteUserEntity par firebaseUid
+              └── ajoute ARTIST / MANAGER à SecurityIdentity
+```
+
+**Fichiers :**
+```
+src/main/java/io/violette/security/VioletteSecurityAugmentor.java
+src/main/java/io/violette/security/VioletteRolesAugmentor.java
+```
+
+---
+
+### Observer — Comportemental
+
+**Principe :** un objet (observateur) est notifié automatiquement quand un autre objet (sujet) change d'état, sans couplage direct entre eux.
+
+**Dans Violette :** `ArtistBookingService` publie un événement CDI `BookingStatusChangedEvent` à chaque transition de statut de booking. Les observateurs réagissent sans que le service les connaisse.
+
+```
+ArtistBookingService
+  └── bookingStatusChangedEvent.fire(new BookingStatusChangedEvent(...))
+              │
+              ▼  [routage CDI — aucun couplage direct]
+BookingStatusChangedObserver
+  └── onBookingStatusChanged(@Observes event)
+        └── journalisation de la transition
+```
+
+**Transitions couvertes :**
+- `sendConfirmationRequests()` → SELECTED → PENDING_CONFIRMATION
+- `respondToRequest()` → PENDING_CONFIRMATION → CONFIRMED ou REFUSED
+
+**Point d'extension :** l'observateur est le seul point à modifier pour ajouter notifications, synchronisation entre domaines, audit trail, workflows V2.
+
+**Fichiers :**
+```
+src/main/java/io/violette/artistbooking/event/BookingStatusChangedEvent.java
+src/main/java/io/violette/artistbooking/event/BookingStatusChangedObserver.java
+src/main/java/io/violette/artistbooking/service/ArtistBookingService.java
+```
+
+---
+
 ## Règles d'architecture à respecter
 
 ### 1. Séparation des couches
