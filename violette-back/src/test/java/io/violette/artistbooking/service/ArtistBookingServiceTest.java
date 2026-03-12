@@ -219,6 +219,37 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
+    @DisplayName("createBooking - fails when ShowDate is PENDING (workflow V1: booking requires CONFIRMED)")
+    void createBooking_whenShowDatePending_throwsShowDateNotModifiableException() {
+        Context ctx = buildContext("svc-sdpend-1");
+        // Repasse en PENDING pour simuler une date non encore confirmée par le client
+        ctx.showDate.setStatus(ShowDateStatus.PENDING);
+        showDateRepository.flush();
+
+        assertThrows(ShowDateNotModifiableException.class, () ->
+                artistBookingService.createBooking(
+                        new CreateBookingRequestDto(ctx.showDate.getId(), ctx.artist.getId(), null)
+                )
+        );
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("createBooking - fails when ShowDate is OPTIONAL (workflow V1: booking requires CONFIRMED)")
+    void createBooking_whenShowDateOptional_throwsShowDateNotModifiableException() {
+        Context ctx = buildContext("svc-sdopt-1");
+        ctx.showDate.setStatus(ShowDateStatus.OPTIONAL);
+        showDateRepository.flush();
+
+        assertThrows(ShowDateNotModifiableException.class, () ->
+                artistBookingService.createBooking(
+                        new CreateBookingRequestDto(ctx.showDate.getId(), ctx.artist.getId(), null)
+                )
+        );
+    }
+
+    @Test
+    @Transactional
     @DisplayName("createBooking - fails when booking already exists for this artist on this date")
     void createBooking_whenBookingAlreadyExists_throwsBookingAlreadyExistsException() {
         Context ctx = buildContext("svc-dup-1");
@@ -292,6 +323,19 @@ class ArtistBookingServiceTest {
         ArtistBookingEntity booking = persistBookingDirectly(ctx, BookingStatus.CONFIRMED);
 
         assertThrows(InvalidBookingTransitionException.class,
+                () -> artistBookingService.deleteBooking(booking.getId()));
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("deleteBooking - fails when ShowDate is LOCKED")
+    void deleteBooking_whenShowDateLocked_throwsShowDateNotModifiableException() {
+        Context ctx = buildContext("svc-del-4");
+        ArtistBookingEntity booking = persistBookingDirectly(ctx, BookingStatus.SELECTED);
+        ctx.showDate.setStatus(ShowDateStatus.LOCKED);
+        showDateRepository.flush();
+
+        assertThrows(ShowDateNotModifiableException.class,
                 () -> artistBookingService.deleteBooking(booking.getId()));
     }
 
@@ -437,6 +481,34 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
+    @DisplayName("respondToRequest - fails when ShowDate is CANCELLED")
+    void respondToRequest_whenShowDateCancelled_throwsShowDateNotModifiableException() {
+        Context ctx = buildContext("svc-resp-sdcanc");
+        ArtistBookingEntity booking = persistBookingDirectly(ctx, BookingStatus.PENDING_CONFIRMATION);
+        ctx.showDate.setStatus(ShowDateStatus.CANCELLED);
+        showDateRepository.flush();
+        JwtPrincipalInfo principal = new JwtPrincipalInfo(ctx.artist.getFirebaseUid(), ctx.artist.getEmail(), "");
+
+        assertThrows(ShowDateNotModifiableException.class,
+                () -> artistBookingService.respondToRequest(booking.getId(), true, principal));
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("respondToRequest - fails when ShowDate is LOCKED")
+    void respondToRequest_whenShowDateLocked_throwsShowDateNotModifiableException() {
+        Context ctx = buildContext("svc-resp-sdlock");
+        ArtistBookingEntity booking = persistBookingDirectly(ctx, BookingStatus.PENDING_CONFIRMATION);
+        ctx.showDate.setStatus(ShowDateStatus.LOCKED);
+        showDateRepository.flush();
+        JwtPrincipalInfo principal = new JwtPrincipalInfo(ctx.artist.getFirebaseUid(), ctx.artist.getEmail(), "");
+
+        assertThrows(ShowDateNotModifiableException.class,
+                () -> artistBookingService.respondToRequest(booking.getId(), true, principal));
+    }
+
+    @Test
+    @Transactional
     @DisplayName("respondToRequest - fails when caller is not the booking owner")
     void respondToRequest_whenCallerIsNotOwner_throwsInvalidBookingTransitionException() {
         Context ctx = buildContext("svc-resp-5");
@@ -534,15 +606,21 @@ class ArtistBookingServiceTest {
     // ==================================================================
 
     /**
-     * Contexte de test minimal : manager + artiste + compagnie + showDate (PENDING) +
+     * Contexte de test minimal : manager + artiste + compagnie + showDate (CONFIRMED) +
      * skillRequirement (DANCE, requiredCount=1) + availability (AVAILABLE).
-     * Utilisé par la majorité des tests de service.
+     *
+     * <p>La date est créée en statut {@code CONFIRMED} — statut requis par le workflow V1
+     * pour la sélection et l'envoi de confirmations. Les tests qui vérifient les blocages
+     * sur d'autres statuts (PENDING, OPTIONAL, LOCKED, CANCELLED) modifient ce statut
+     * explicitement après construction du contexte.
      */
     private Context buildContext(String seed) {
         VioletteUserEntity manager = buildAndPersistUser("mgr-" + seed, "mgr-" + seed + "@test.com", Set.of(UserRole.MANAGER));
         VioletteUserEntity artist = buildAndPersistUser("art-" + seed, "art-" + seed + "@test.com", Set.of(UserRole.ARTIST));
         CabaretCompanyEntity company = buildAndPersistCompany("Cie-" + seed, manager);
         ShowDateEntity showDate = buildAndPersistShowDate(company, LocalDate.of(2026, 6, 1).plusDays(seed.hashCode() % 300));
+        showDate.setStatus(ShowDateStatus.CONFIRMED);
+        showDateRepository.flush();
         ShowDateSkillRequirementEntity skillReq = buildAndPersistSkillRequirement(showDate, ArtistSkill.DANCE, 1, "120.00");
         ArtistAvailabilityEntity availability = persistAvailability(showDate, artist, AvailabilityStatus.AVAILABLE);
         return new Context(manager, artist, company, showDate, skillReq, availability);

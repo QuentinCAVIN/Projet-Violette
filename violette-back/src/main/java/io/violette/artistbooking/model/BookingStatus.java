@@ -33,9 +33,9 @@ public enum BookingStatus {
      * Artiste sélectionné par le manager pour cette date.
      *
      * <p><b>Déclencheur :</b> le manager appelle {@code createBooking()} depuis l'interface de détail de date.
-     * <p><b>Conditions :</b> la disponibilité artiste doit être {@code AVAILABLE},
-     * la capacité de la compétence associée ne doit pas être atteinte,
-     * et la date ne doit pas être {@code LOCKED} ou {@code CANCELLED}.
+     * <p><b>Conditions (workflow V1) :</b> la date doit être {@code CONFIRMED},
+     * la disponibilité artiste doit être {@code AVAILABLE},
+     * et la capacité de la compétence associée ne doit pas être atteinte.
      * <p><b>Transitions autorisées :</b>
      * <ul>
      *   <li>{@link #SELECTED} → suppression (manager désélectionne)</li>

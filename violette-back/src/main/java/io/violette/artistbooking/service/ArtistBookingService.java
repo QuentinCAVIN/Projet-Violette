@@ -41,14 +41,19 @@ import java.util.List;
  * <p>Orchestre le cycle de vie des réservations artistes :
  * sélection, envoi de confirmation, réponse artiste.
  *
+ * <p><b>Workflow V1 :</b> la sélection et l'envoi de confirmations ne sont autorisés
+ * que lorsque la date est en statut {@code CONFIRMED}. Le statut {@code OPTIONAL}
+ * est réservé à la collecte des disponibilités, pas à la réservation.
+ *
  * <p><b>Règles métier appliquées ici :</b>
  * <ol>
- *   <li>La date ne doit pas être {@code LOCKED} ou {@code CANCELLED}</li>
+ *   <li>Création / envoi de confirmations : la date doit être {@code CONFIRMED}</li>
+ *   <li>Toute mutation : interdite si la date est {@code LOCKED} ou {@code CANCELLED}</li>
  *   <li>L'artiste doit avoir la disponibilité {@code AVAILABLE} pour être sélectionné</li>
  *   <li>La capacité par compétence ne doit pas être dépassée</li>
  *   <li>Un artiste ne peut être réservé qu'une seule fois par date</li>
  *   <li>Seul un booking {@code SELECTED} peut être supprimé</li>
- *   <li>Seul un booking {@code PENDING_CONFIRMATION} peut recevoir une réponse</li>
+ *   <li>Réponse artiste : date non LOCKED/CANCELLED, booking en PENDING_CONFIRMATION, ownership vérifié</li>
  * </ol>
  */
 @ApplicationScoped
@@ -84,16 +89,17 @@ public class ArtistBookingService {
      * <p><b>Règles vérifiées :</b>
      * <ol>
      *   <li>La date existe</li>
-     *   <li>La date n'est pas {@code LOCKED} ou {@code CANCELLED}</li>
+     *   <li>La date est {@code CONFIRMED} (workflow V1 — PENDING et OPTIONAL sont des phases
+     *       préparatoires sans réservation ; LOCKED et CANCELLED bloquent toute mutation)</li>
      *   <li>L'artiste existe</li>
-     *   <li>L'artiste n'a pas déjà un booking actif sur cette date</li>
+     *   <li>L'artiste n'a pas déjà un booking sur cette date (quel que soit le statut)</li>
      *   <li>L'artiste a déclaré sa disponibilité {@code AVAILABLE} pour cette date</li>
      *   <li>Si un besoin artistique est spécifié : la capacité n'est pas atteinte
      *       et le cachet est figé au moment de la sélection</li>
      * </ol>
      *
      * @throws ShowDateNotFoundException         si la date est introuvable
-     * @throws ShowDateNotModifiableException    si la date est LOCKED ou CANCELLED
+     * @throws ShowDateNotModifiableException    si la date n'est pas {@code CONFIRMED}
      * @throws UserNotFoundException             si l'artiste est introuvable
      * @throws BookingAlreadyExistsException     si un booking existe déjà pour cet artiste sur cette date
      * @throws ArtistNotAvailableException       si l'artiste n'est pas AVAILABLE
@@ -107,7 +113,7 @@ public class ArtistBookingService {
                 .findByIdOptional(request.showDateId())
                 .orElseThrow(ShowDateNotFoundException::new);
 
-        validerDateModifiable(showDate);
+        validerDateConfirmee(showDate);
 
         VioletteUserEntity artist = violetteUserRepository
                 .findByIdOptional(request.artistId())
@@ -156,9 +162,11 @@ public class ArtistBookingService {
 
     /**
      * Désélectionne un artiste — supprime le booking.
-     * Uniquement autorisé si le booking est en statut {@code SELECTED}.
+     * Uniquement autorisé si le booking est en statut {@code SELECTED}
+     * et si la date n'est pas {@code LOCKED} ou {@code CANCELLED}.
      *
      * @throws ArtistBookingNotFoundException    si le booking est introuvable
+     * @throws ShowDateNotModifiableException    si la date est LOCKED ou CANCELLED
      * @throws InvalidBookingTransitionException si le statut n'est pas SELECTED
      */
     @Transactional
@@ -168,6 +176,8 @@ public class ArtistBookingService {
         ArtistBookingEntity booking = artistBookingRepository
                 .findByIdOptional(bookingId)
                 .orElseThrow(ArtistBookingNotFoundException::new);
+
+        validerDateModifiable(booking.getShowDate());
 
         if (booking.getStatus() != BookingStatus.SELECTED) {
             throw new InvalidBookingTransitionException(
@@ -189,7 +199,7 @@ public class ArtistBookingService {
      * et renseigne {@code requestedAt}.
      *
      * @throws ShowDateNotFoundException      si la date est introuvable
-     * @throws ShowDateNotModifiableException si la date est LOCKED ou CANCELLED
+     * @throws ShowDateNotModifiableException si la date n'est pas CONFIRMED (workflow V1)
      * @return liste des bookings mis à jour
      */
     @Transactional
@@ -200,7 +210,7 @@ public class ArtistBookingService {
                 .findByIdOptional(showDateId)
                 .orElseThrow(ShowDateNotFoundException::new);
 
-        validerDateModifiable(showDate);
+        validerDateConfirmee(showDate);
 
         List<ArtistBookingEntity> selectedBookings =
                 artistBookingRepository.findByShowDateIdAndStatus(showDateId, BookingStatus.SELECTED);
@@ -225,6 +235,10 @@ public class ArtistBookingService {
      * Enregistre la réponse d'un artiste à une demande de confirmation.
      * Vérifie que l'artiste qui répond est bien le destinataire du booking.
      *
+     * <p>La date ne doit pas être {@code LOCKED} ou {@code CANCELLED}. Dans le workflow V1,
+     * les réponses artistes interviennent pendant la phase {@code CONFIRMED}, avant le verrouillage.
+     * Si la date est déjà verrouillée ou annulée, aucune mutation n'est acceptée.
+     *
      * <p>Transitions :
      * <ul>
      *   <li>{@code accept=true}  : {@code PENDING_CONFIRMATION} → {@code CONFIRMED}</li>
@@ -235,6 +249,7 @@ public class ArtistBookingService {
      * @param accept    {@code true} pour accepter, {@code false} pour refuser
      * @param principal principal JWT de l'artiste qui répond
      * @throws ArtistBookingNotFoundException    si le booking est introuvable
+     * @throws ShowDateNotModifiableException    si la date est LOCKED ou CANCELLED
      * @throws UserNotFoundException             si le principal n'a pas de profil backend
      * @throws InvalidBookingTransitionException si le booking n'est pas en PENDING_CONFIRMATION
      *                                           ou si l'artiste ne correspond pas
@@ -247,6 +262,8 @@ public class ArtistBookingService {
         ArtistBookingEntity booking = artistBookingRepository
                 .findByIdOptional(bookingId)
                 .orElseThrow(ArtistBookingNotFoundException::new);
+
+        validerDateModifiable(booking.getShowDate());
 
         VioletteUserEntity currentArtist = violetteUserRepository
                 .findByFirebaseUid(principal.firebaseUid())
@@ -321,8 +338,26 @@ public class ArtistBookingService {
     // ------------------------------------------------------------------
 
     /**
-     * Vérifie que la date n'est pas LOCKED ou CANCELLED.
-     * Toute modification de booking est interdite dans ces états.
+     * Vérifie que la date est en statut {@code CONFIRMED}.
+     *
+     * <p>Workflow V1 : la sélection d'artistes et l'envoi de confirmations
+     * ne sont autorisés qu'une fois la date confirmée par le client.
+     * Les statuts {@code PENDING} et {@code OPTIONAL} sont des phases préparatoires
+     * sans réservation ; {@code LOCKED} et {@code CANCELLED} bloquent toute mutation.
+     */
+    private void validerDateConfirmee(ShowDateEntity showDate) {
+        if (showDate.getStatus() != ShowDateStatus.CONFIRMED) {
+            throw new ShowDateNotModifiableException(
+                    "La réservation n'est autorisée que sur une date CONFIRMED. Statut actuel : "
+                            + showDate.getStatus()
+            );
+        }
+    }
+
+    /**
+     * Vérifie que la date n'est pas {@code LOCKED} ou {@code CANCELLED}.
+     * Utilisé pour les opérations de modification qui restent acceptables
+     * pendant les phases préparatoires (ex. : désélection).
      */
     private void validerDateModifiable(ShowDateEntity showDate) {
         if (showDate.getStatus() == ShowDateStatus.LOCKED
