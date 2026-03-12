@@ -518,9 +518,14 @@ Sans token ou token invalide : 401 ou 403.
 # Tests unitaires et d'intégration (H2 in-memory, sans MySQL)
 ./mvnw test
 
-# Tests d'intégration natifs (après build)
+# Build, tests et couverture (rapport JaCoCo + seuil 30 % minimum)
 ./mvnw verify
 ```
+
+La couverture de code est mesurée avec **JaCoCo** (extension `quarkus-jacoco`). La commande `./mvnw verify` génère :
+- un rapport HTML dans `target/site/jacoco/index.html`
+- un rapport XML dans `target/site/jacoco/jacoco.xml`
+- un échec du build si la couverture des lignes est inférieure à 30 %.
 
 Si `mvn clean test` échoue (résolution du bean MapStruct `VioletteUserMapper`), exécuter d'abord `mvn compile` puis `mvn test`, ou lancer `mvn clean install -DskipTests` puis `mvn test`.
 

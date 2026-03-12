@@ -30,3 +30,11 @@ jobs:
 
       - name: Build and verify
         run: ./mvnw clean verify -B
+
+      - name: Upload JaCoCo report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jacoco-report
+          path: violette-back/target/site/jacoco/
+          retention-days: 7

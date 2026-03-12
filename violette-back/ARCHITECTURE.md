@@ -390,6 +390,14 @@ mvn test
 
 Les tests s'exécutent sur H2 in-memory. Flyway est désactivé en profil test ; le schéma est géré par `quarkus.hibernate-orm.schema-management.strategy=drop-and-create`.
 
+### Couverture (JaCoCo)
+
+```bash
+mvn verify
+```
+
+Génère le rapport JaCoCo (HTML + XML dans `target/site/jacoco/`) et applique le seuil minimal de 30 % de lignes couvertes ; le build échoue si le seuil n'est pas atteint.
+
 ### Mode développement (hot reload)
 
 ```bash
