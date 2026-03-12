@@ -102,28 +102,58 @@ io.violette
  │              └── UserNotFoundExceptionMapper.java (404 Not Found)
  ├── cabaretcompany/              ← Domaine : compagnies, revues, membres
  │    ├── controller/              ← CabaretCompanyController.java
- │    ├── service/                 ← CabaretCompanyService.java
+ │    ├── service/                 ← CabaretCompanyService.java, CabaretShowService.java
  │    ├── repository/              ← CabaretCompanyRepository.java, CabaretShowRepository.java, CompanyMemberRepository.java
- │    ├── model/                   ← CabaretCompanyEntity.java, CabaretShowEntity.java, CompanyMemberEntity.java
+ │    ├── model/                   ← CabaretCompanyEntity.java, CabaretShowEntity.java
+ │    │                               CompanyMemberEntity.java, CompanyMemberId.java (@Embeddable, clé composite)
  │    ├── dto/                     ← CabaretCompanyDto.java, CabaretShowDto.java, CompanyMemberDto.java
- │    ├── mapper/                  ← CabaretCompanyMapper.java, CabaretShowMapper.java
+ │    │                               CreateCabaretCompanyRequestDto.java, CreateCabaretShowRequestDto.java
+ │    ├── mapper/                  ← CabaretCompanyMapper.java, CabaretShowMapper.java, CompanyMemberMapper.java
  │    └── exception/
  │         ├── CabaretCompanyNotFoundException.java
- │         └── mapper/CabaretCompanyNotFoundExceptionMapper.java  (404 Not Found)
- └── showdate/                    ← Domaine : dates de spectacle, feuille de route, disponibilités
-      ├── controller/              ← ShowDateController.java
-      ├── service/                 ← ShowDateService.java
-      ├── repository/              ← ShowDateRepository.java, ShowDateSkillRequirementRepository.java, ArtistAvailabilityRepository.java
-      ├── model/                   ← ShowDateEntity.java, ShowDateSkillRequirementEntity.java
-      │                               ArtistAvailabilityEntity.java, ArtistAvailabilityId.java
-      │                               ShowDateStatus.java, AvailabilityStatus.java
-      ├── dto/                     ← ShowDateDto.java, CreateShowDateRequestDto.java
-      │                               ShowDateSkillRequirementDto.java, CreateSkillRequirementRequestDto.java
-      │                               ArtistAvailabilityDto.java
-      ├── mapper/                  ← ShowDateMapper.java, ShowDateSkillRequirementMapper.java, ArtistAvailabilityMapper.java
+ │         ├── CabaretShowNotFoundException.java
+ │         └── mapper/
+ │              ├── CabaretCompanyNotFoundExceptionMapper.java    (404 Not Found)
+ │              └── CabaretShowNotFoundExceptionMapper.java       (404 Not Found)
+ ├── showdate/                    ← Domaine : dates de spectacle, feuille de route, disponibilités
+ │    ├── controller/              ← ShowDateController.java
+ │    ├── service/                 ← ShowDateService.java
+ │    ├── repository/              ← ShowDateRepository.java, ShowDateSkillRequirementRepository.java, ArtistAvailabilityRepository.java
+ │    ├── model/                   ← ShowDateEntity.java, ShowDateSkillRequirementEntity.java
+ │    │                               ArtistAvailabilityEntity.java, ArtistAvailabilityId.java (@Embeddable, clé composite)
+ │    │                               ShowDateStatus.java, AvailabilityStatus.java
+ │    ├── dto/                     ← ShowDateDto.java, CreateShowDateRequestDto.java
+ │    │                               ShowDateSkillRequirementDto.java, CreateSkillRequirementRequestDto.java
+ │    │                               ArtistAvailabilityDto.java
+ │    ├── mapper/                  ← ShowDateMapper.java, ShowDateSkillRequirementMapper.java, ArtistAvailabilityMapper.java
+ │    └── exception/
+ │         ├── ShowDateNotFoundException.java
+ │         └── mapper/ShowDateNotFoundExceptionMapper.java  (404 Not Found)
+ └── artistbooking/               ← Domaine : réservations artistes, workflow de confirmation
+      ├── controller/              ← ArtistBookingController.java
+      ├── service/                 ← ArtistBookingService.java
+      ├── repository/              ← ArtistBookingRepository.java
+      ├── model/                   ← ArtistBookingEntity.java, BookingStatus.java
+      │                               BookingTimeline.java (@Embeddable, Value Object)
+      ├── dto/                     ← ArtistBookingDto.java, CreateBookingRequestDto.java
+      │                               RespondToBookingRequestDto.java
+      ├── mapper/                  ← ArtistBookingMapper.java (MapStruct)
       └── exception/
-           ├── ShowDateNotFoundException.java
-           └── mapper/ShowDateNotFoundExceptionMapper.java  (404 Not Found)
+           ├── ArtistBookingNotFoundException.java
+           ├── ArtistNotAvailableException.java
+           ├── BookingAlreadyExistsException.java
+           ├── BookingCapacityExceededException.java
+           ├── InvalidBookingTransitionException.java
+           ├── ShowDateNotModifiableException.java
+           ├── SkillRequirementNotFoundException.java
+           └── mapper/
+                ├── ArtistBookingNotFoundExceptionMapper.java     (404 Not Found)
+                ├── ArtistNotAvailableExceptionMapper.java        (409 Conflict)
+                ├── BookingAlreadyExistsExceptionMapper.java      (409 Conflict)
+                ├── BookingCapacityExceededExceptionMapper.java   (409 Conflict)
+                ├── InvalidBookingTransitionExceptionMapper.java  (409 Conflict)
+                ├── ShowDateNotModifiableExceptionMapper.java     (409 Conflict)
+                └── SkillRequirementNotFoundExceptionMapper.java  (404 Not Found)
 ```
 
 **Règle de nommage pour les nouveaux domaines :**
@@ -187,12 +217,20 @@ Service
 
 ### Mappers d'exceptions actuels
 
-| Exception                        | Mapper                                  | Code HTTP        |
-|----------------------------------|-----------------------------------------|------------------|
-| `UserAlreadyExistsException`     | `UserExceptionMapper`                   | `409 Conflict`   |
-| `UserNotFoundException`          | `UserNotFoundExceptionMapper`           | `404 Not Found`  |
-| `CabaretCompanyNotFoundException`| `CabaretCompanyNotFoundExceptionMapper` | `404 Not Found`  |
-| `ShowDateNotFoundException`      | `ShowDateNotFoundExceptionMapper`       | `404 Not Found`  |
+| Exception                           | Mapper                                    | Code HTTP        |
+|-------------------------------------|-------------------------------------------|------------------|
+| `UserAlreadyExistsException`        | `UserExceptionMapper`                     | `409 Conflict`   |
+| `UserNotFoundException`             | `UserNotFoundExceptionMapper`             | `404 Not Found`  |
+| `CabaretCompanyNotFoundException`   | `CabaretCompanyNotFoundExceptionMapper`   | `404 Not Found`  |
+| `CabaretShowNotFoundException`      | `CabaretShowNotFoundExceptionMapper`      | `404 Not Found`  |
+| `ShowDateNotFoundException`         | `ShowDateNotFoundExceptionMapper`         | `404 Not Found`  |
+| `ArtistBookingNotFoundException`    | `ArtistBookingNotFoundExceptionMapper`    | `404 Not Found`  |
+| `SkillRequirementNotFoundException` | `SkillRequirementNotFoundExceptionMapper` | `404 Not Found`  |
+| `ArtistNotAvailableException`       | `ArtistNotAvailableExceptionMapper`       | `409 Conflict`   |
+| `BookingAlreadyExistsException`     | `BookingAlreadyExistsExceptionMapper`     | `409 Conflict`   |
+| `BookingCapacityExceededException`  | `BookingCapacityExceededExceptionMapper`  | `409 Conflict`   |
+| `InvalidBookingTransitionException` | `InvalidBookingTransitionExceptionMapper` | `409 Conflict`   |
+| `ShowDateNotModifiableException`    | `ShowDateNotModifiableExceptionMapper`    | `409 Conflict`   |
 
 ### Règle pour les nouveaux domaines
 
@@ -398,10 +436,10 @@ mvn package
 ### Frontière avec `artistbooking`
 
 Le domaine `showdate` **ne gère pas** les artistes effectivement retenus ni les confirmations de réservation.
-Ces responsabilités appartiennent au domaine futur `artistbooking` :
+Ces responsabilités appartiennent au domaine `artistbooking` :
 
 ```
-showdate                         artistbooking (à venir)
+showdate                         artistbooking
 ─────────────────────────────    ────────────────────────────────
 ShowDate (feuille de route)  →   ArtistBooking (artiste retenu)
 ArtistAvailability (déclaré)      BookingStatus (SELECTED, CONFIRMED…)
@@ -412,9 +450,9 @@ ShowDateSkillRequirement          BookingTimeline (timestamps cycle de vie)
 
 ## Domaine de référence
 
-Le domaine `violetteuser` est le **modèle de référence** pour tous les futurs domaines backend (`showdate`, `artistbooking`, `cabaretcompany`).
+Le domaine `violetteuser` est le **modèle de référence** pour tous les domaines backend (`showdate`, `artistbooking`, `cabaretcompany`).
 
-Avant d'implémenter un nouveau domaine, s'assurer de respecter :
+Pour tout nouveau domaine, s'assurer de respecter :
 1. La structure de packages décrite ci-dessus
 2. L'architecture en couches Controller → Service → Repository
 3. Les conventions DTO / MapStruct

@@ -125,10 +125,9 @@ Controller  →  Service  →  Repository  →  Base de données
 ### Design Patterns
 
 
-| Pattern                      | Type         | Localisation                                                    | Problème résolu                                                                                                                                                                                                                                               |
-| ---------------------------- | ------------ | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Adapter / Enrichissement** | Structure    | `security.VioletteSecurityAugmentor` + `VioletteRolesAugmentor` | Firebase fournit l'identité (JWT validé par OIDC). Les rôles métier (ARTIST, MANAGER) viennent de la base Violette et sont injectés dans la `SecurityIdentity` via un `SecurityIdentityAugmentor`, afin que `@RolesAllowed("MANAGER")` fonctionne au runtime. |
-| **Observer (CDI Events)**    | Comportement | `artistbooking.event.BookingStatusChangedEvent`                 | Quand un artiste refuse une réservation, la date doit libérer une place. Le `ArtistBookingService` fire un CDI Event ; le `ShowDateService` l'observe. Les domaines restent découplés. (À implémenter avec le domaine `artistbooking`.)                       |
+| Pattern                      | Type      | Localisation                                                     | Problème résolu                                                                                                                                                                                                                                               |
+| ---------------------------- | --------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Adapter / Enrichissement** | Structure | `security.VioletteSecurityAugmentor` + `VioletteRolesAugmentor` | Firebase fournit l'identité (JWT validé par OIDC). Les rôles métier (ARTIST, MANAGER) viennent de la base Violette et sont injectés dans la `SecurityIdentity` via un `SecurityIdentityAugmentor`, afin que `@RolesAllowed("MANAGER")` fonctionne au runtime. |
 
 
 ### Modélisation DDD
@@ -160,41 +159,66 @@ artistbooking (à venir)
 io.violette
 │
 ├── health/
-│   └── PingResource.java                   ← Endpoint technique de santé
+│   └── PingResource.java                        ← Endpoint technique de santé
 │
 ├── security/
-│   ├── CurrentUserContextProvider.java     ← Principal JWT → JwtPrincipalInfo (contexte métier)
-│   ├── JwtPrincipalExtractor.java          ← Extraction des claims JWT (sub, email, name)
-│   ├── VioletteSecurityAugmentor.java      ← SecurityIdentityAugmentor : branche les rôles backend
-│   └── VioletteRolesAugmentor.java          ← Charge les rôles depuis la BDD et les ajoute à l'identité
+│   ├── CurrentUserContextProvider.java          ← Principal JWT → JwtPrincipalInfo (contexte métier)
+│   ├── JwtPrincipalExtractor.java               ← Extraction des claims JWT (sub, email, name)
+│   ├── JwtPrincipalInfo.java                    ← Record : firebaseUid, email, name
+│   ├── VioletteSecurityAugmentor.java           ← SecurityIdentityAugmentor : branche les rôles backend
+│   └── VioletteRolesAugmentor.java              ← Charge les rôles depuis la BDD et les ajoute à l'identité
 │
 ├── violetteuser/
 │   ├── controller/VioletteUserController.java
 │   ├── service/VioletteUserService.java
 │   ├── repository/VioletteUserRepository.java
 │   ├── model/
-│   │   ├── VioletteUser.java               ← @Entity, Aggregate Root
-│   │   ├── UserRole.java                   ← Enum : ARTIST, MANAGER
-│   │   └── ArtistSkill.java                ← Enum : DANCE, SINGING, STILT_WALKING, ACROBATICS
-│   └── dto/
-│       ├── UserRegistrationDto.java
-│       ├── UserResponseDto.java
-│       └── UserUpdateDto.java
+│   │   ├── VioletteUserEntity.java              ← @Entity, Aggregate Root
+│   │   ├── UserRole.java                        ← Enum : ARTIST, MANAGER
+│   │   └── ArtistSkill.java                     ← Enum : DANCE, SINGING, STILT_WALKING, ACROBATICS
+│   ├── dto/
+│   │   ├── VioletteUserDto.java
+│   │   ├── AuthenticatedUserDto.java
+│   │   └── CreateUserRequestDto.java
+│   ├── mapper/
+│   │   └── VioletteUserMapper.java
+│   └── exception/
+│       ├── UserAlreadyExistsException.java
+│       ├── UserNotFoundException.java
+│       └── mapper/
+│           ├── UserExceptionMapper.java          (409 Conflict)
+│           └── UserNotFoundExceptionMapper.java  (404 Not Found)
 │
 ├── cabaretcompany/
 │   ├── controller/CabaretCompanyController.java
-│   ├── service/CabaretCompanyService.java
+│   ├── service/
+│   │   ├── CabaretCompanyService.java
+│   │   └── CabaretShowService.java
 │   ├── repository/
 │   │   ├── CabaretCompanyRepository.java
-│   │   └── RevueRepository.java
+│   │   ├── CabaretShowRepository.java
+│   │   └── CompanyMemberRepository.java
 │   ├── model/
-│   │   ├── CabaretCompany.java             ← @Entity, Aggregate Root
-│   │   └── CabaretShow.java                ← @Entity (Revue)
-│   └── dto/
-│       ├── CreateCompanyDto.java
-│       ├── CompanyResponseDto.java
-│       ├── CreateRevueDto.java
-│       └── RevueResponseDto.java
+│   │   ├── CabaretCompanyEntity.java            ← @Entity, Aggregate Root
+│   │   ├── CabaretShowEntity.java               ← @Entity (Revue, table : revue)
+│   │   ├── CompanyMemberEntity.java             ← @Entity, clé composite
+│   │   └── CompanyMemberId.java                 ← @Embeddable, clé composite (companyId, artistId)
+│   ├── dto/
+│   │   ├── CabaretCompanyDto.java
+│   │   ├── CabaretShowDto.java
+│   │   ├── CompanyMemberDto.java
+│   │   ├── CreateCabaretCompanyRequestDto.java
+│   │   └── CreateCabaretShowRequestDto.java
+│   ├── mapper/
+│   │   ├── CabaretCompanyMapper.java
+│   │   ├── CabaretShowMapper.java
+│   │   └── CompanyMemberMapper.java
+│   └── exception/
+│       ├── CabaretCompanyNotFoundException.java
+│       ├── CabaretShowNotFoundException.java
+│       └── mapper/
+│           ├── CabaretCompanyNotFoundExceptionMapper.java  (404 Not Found)
+│           └── CabaretShowNotFoundExceptionMapper.java     (404 Not Found)
 │
 ├── showdate/
 │   ├── controller/ShowDateController.java
@@ -204,40 +228,57 @@ io.violette
 │   │   ├── ShowDateSkillRequirementRepository.java
 │   │   └── ArtistAvailabilityRepository.java
 │   ├── model/
-│   │   ├── ShowDateEntity.java             ← @Entity, Aggregate Root
+│   │   ├── ShowDateEntity.java                  ← @Entity, Aggregate Root
 │   │   ├── ShowDateSkillRequirementEntity.java  ← @Entity (besoin par compétence)
-│   │   ├── ArtistAvailabilityEntity.java   ← @Entity (disponibilité artiste)
-│   │   ├── ArtistAvailabilityId.java       ← @Embeddable, clé composite
-│   │   ├── ShowDateStatus.java             ← Enum : PENDING, OPTIONAL, CONFIRMED, LOCKED, CANCELLED
-│   │   └── AvailabilityStatus.java         ← Enum : PENDING, AVAILABLE, CONDITIONAL, UNAVAILABLE
-│   ├── mapper/
-│   │   ├── ShowDateMapper.java
-│   │   ├── ShowDateSkillRequirementMapper.java
-│   │   └── ArtistAvailabilityMapper.java
+│   │   ├── ArtistAvailabilityEntity.java        ← @Entity (disponibilité artiste)
+│   │   ├── ArtistAvailabilityId.java            ← @Embeddable, clé composite (showDateId, artistId)
+│   │   ├── ShowDateStatus.java                  ← Enum : PENDING, OPTIONAL, CONFIRMED, LOCKED, CANCELLED
+│   │   └── AvailabilityStatus.java              ← Enum : PENDING, AVAILABLE, CONDITIONAL, UNAVAILABLE
 │   ├── dto/
 │   │   ├── ShowDateDto.java
 │   │   ├── CreateShowDateRequestDto.java
 │   │   ├── ShowDateSkillRequirementDto.java
 │   │   ├── CreateSkillRequirementRequestDto.java
 │   │   └── ArtistAvailabilityDto.java
+│   ├── mapper/
+│   │   ├── ShowDateMapper.java
+│   │   ├── ShowDateSkillRequirementMapper.java
+│   │   └── ArtistAvailabilityMapper.java
 │   └── exception/
 │       ├── ShowDateNotFoundException.java
-│       └── mapper/ShowDateNotFoundExceptionMapper.java
+│       └── mapper/
+│           └── ShowDateNotFoundExceptionMapper.java  (404 Not Found)
 │
 └── artistbooking/
     ├── controller/ArtistBookingController.java
-    ├── service/
-    │   ├── ArtistBookingService.java
-    │   └── BookingDomainService.java       ← Domain Service : règles de réservation
+    ├── service/ArtistBookingService.java
     ├── repository/ArtistBookingRepository.java
-    ├── event/BookingStatusChangedEvent.java ← Observer pattern (CDI Event)
     ├── model/
-    │   ├── ArtistBooking.java              ← @Entity, Aggregate Root
-    │   ├── BookingStatus.java              ← Enum : SELECTED, PENDING_CONFIRMATION, CONFIRMED, REFUSED
-    │   └── BookingTimeline.java            ← @Embeddable, Value Object
-    └── dto/
-        ├── BookingResponseDto.java
-        └── BookingStatusUpdateDto.java
+    │   ├── ArtistBookingEntity.java             ← @Entity, Aggregate Root
+    │   ├── BookingStatus.java                   ← Enum : SELECTED, PENDING_CONFIRMATION, CONFIRMED, REFUSED, CANCELLED
+    │   └── BookingTimeline.java                 ← @Embeddable, Value Object (timestamps du cycle de vie)
+    ├── dto/
+    │   ├── ArtistBookingDto.java
+    │   ├── CreateBookingRequestDto.java
+    │   └── RespondToBookingRequestDto.java
+    ├── mapper/
+    │   └── ArtistBookingMapper.java
+    └── exception/
+        ├── ArtistBookingNotFoundException.java
+        ├── ArtistNotAvailableException.java
+        ├── BookingAlreadyExistsException.java
+        ├── BookingCapacityExceededException.java
+        ├── InvalidBookingTransitionException.java
+        ├── ShowDateNotModifiableException.java
+        ├── SkillRequirementNotFoundException.java
+        └── mapper/
+            ├── ArtistBookingNotFoundExceptionMapper.java     (404 Not Found)
+            ├── ArtistNotAvailableExceptionMapper.java        (409 Conflict)
+            ├── BookingAlreadyExistsExceptionMapper.java      (409 Conflict)
+            ├── BookingCapacityExceededExceptionMapper.java   (409 Conflict)
+            ├── InvalidBookingTransitionExceptionMapper.java  (409 Conflict)
+            ├── ShowDateNotModifiableExceptionMapper.java     (409 Conflict)
+            └── SkillRequirementNotFoundExceptionMapper.java  (404 Not Found)
 ```
 
 ---
@@ -419,10 +460,11 @@ Flyway s'exécute **automatiquement au démarrage** de l'application (`quarkus.f
 
 ```
 src/main/resources/db/migration/
-  V1__init.sql       ← Schéma initial complet
-  V2__add_company_member.sql  ← Table company_member (domaine cabaretcompany)
-  V3__add_cabaret_show.sql    ← Table revue (domaine cabaretcompany)
-  V4__create_showdate_tables.sql  ← Tables show_date, show_date_skill_requirement, artist_availability (domaine showdate)
+  V1__init.sql                        ← Schéma initial : violette_user, user_role, artist_skill, cabaret_company, company_member, revue
+  V2__refactor_user_roles.sql         ← Refactoring des tables de rôles utilisateur
+  V3__cabaretcompany_add_updated_at.sql ← Ajout de la colonne updated_at sur cabaret_company
+  V4__create_showdate_tables.sql      ← Tables show_date, show_date_skill_requirement, artist_availability (domaine showdate)
+  V5__create_artist_booking_table.sql ← Table artist_booking (domaine artistbooking)
 ```
 
 ### Convention de nommage
@@ -537,12 +579,12 @@ Génération complète du domaine :
 - Controller REST : 6 endpoints, sécurisés `@RolesAllowed("MANAGER")`
 - Migration Flyway V4 : refonte `show_date`, création `show_date_skill_requirement`, restructuration `artist_availability`
 
-### Phase 6 — Domaine `artistbooking`
+### Phase 6 — Domaine `artistbooking` ✓ (implémenté)
 
-- Entité `ArtistBooking` + Value Object `BookingTimeline`
-- CDI Events : `BookingStatusChangedEvent` (Observer pattern)
-- Domain Service : règles de capacité, workflow de réservation
-- Controller REST : sélection, confirmation, réponse artiste
+- Entité `ArtistBookingEntity` + Value Object `BookingTimeline` (@Embeddable)
+- `BookingStatus` : `SELECTED → PENDING_CONFIRMATION → CONFIRMED | REFUSED | CANCELLED`
+- Règles métier : capacité par compétence, disponibilité artiste, unicité de réservation
+- Controller REST : sélection, déselection, envoi des confirmations, réponse artiste, consultation
 
 ---
 
