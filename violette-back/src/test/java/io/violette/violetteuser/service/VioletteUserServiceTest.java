@@ -1,6 +1,7 @@
 package io.violette.violetteuser.service;
 
 import io.quarkus.test.junit.QuarkusTest;
+import io.violette.artistbooking.repository.ArtistBookingRepository;
 import io.violette.cabaretcompany.repository.CabaretCompanyRepository;
 import io.violette.cabaretcompany.repository.CabaretShowRepository;
 import io.violette.cabaretcompany.repository.CompanyMemberRepository;
@@ -38,6 +39,8 @@ class VioletteUserServiceTest {
     @Inject
     VioletteUserRepository violetteUserRepository;
 
+    @Inject
+    ArtistBookingRepository artistBookingRepository;
     @Inject
     CompanyMemberRepository companyMemberRepository;
     @Inject
@@ -180,7 +183,8 @@ class VioletteUserServiceTest {
     @Transactional
     @DisplayName("getUsers - returns paginated list sorted by createdAt DESC")
     void getUsers_returnsPaginatedListSortedByCreatedAtDesc() {
-        // Ordre de suppression : les entités du domaine showdate référencent show_date, revue et violette_user
+        // Ordre de suppression : artist_booking référence show_date, show_date_skill_requirement et violette_user
+        artistBookingRepository.deleteAll();
         artistAvailabilityRepository.deleteAll();
         showDateSkillRequirementRepository.deleteAll();
         showDateRepository.deleteAll();
