@@ -3,6 +3,36 @@ Plateforme web de gestion des plannings et des cachets pour gérants de compagni
 
 ---
 
+## → Documentation architecture & backend (module architecture logicielle)
+
+**Toute la documentation technique du projet** (architecture, design patterns, DDD, stack, démarrage, tests, Docker, manuel utilisateur) est centralisée dans le README du backend. Un seul lien pour y accéder :
+
+**[📄 violette-back/README.md](violette-back/README.md)**
+
+---
+
+## Documentation
+
+### Pour les examinateurs
+
+| Document | Contenu | Lien |
+|----------|---------|------|
+| **Manuel technique backend** | Architecture, couches, packages, sécurité, démarrage, tests, commandes Maven | [violette-back/README.md](violette-back/README.md) |
+| **Architecture détaillée** | Patterns, DDD, sécurité JWT, flux de requête, décisions de modélisation | [violette-back/ARCHITECTURE.md](violette-back/ARCHITECTURE.md) |
+| **Description fonctionnelle** | Contexte métier, acteurs, fonctionnalités, workflow | [docs/functional-spec.md](docs/functional-spec.md) |
+| **Manuel utilisateur** | Guide gérant et artiste, statuts, bonnes pratiques | [docs/user-manual.md](docs/user-manual.md) |
+| **Workflow de réservation** | Statuts, transitions, règles métier détaillées | [docs/booking-workflow.md](docs/booking-workflow.md) |
+| **Documentation C4** | Explication des diagrammes C4 (contexte, container, composants, zoom niveau 4) | [docs/architecture-c4.md](docs/architecture-c4.md) |
+| **Changelog** | Historique des versions | [CHANGELOG.md](CHANGELOG.md) |
+
+### Intégration continue
+
+Le pipeline CI (GitHub Actions) lance automatiquement `mvn clean verify` à chaque push sur les branches configurées, incluant les tests unitaires et le rapport de couverture JaCoCo (≥ 30 % de lignes couvertes).
+
+→ [.github/workflows/backend-ci.yml](.github/workflows/backend-ci.yml)
+
+---
+
 ## Architecture
 
 ### C4 — Contexte système
@@ -22,6 +52,12 @@ Architecture technique : frontend Flutter, backend Quarkus, bases de données et
 Découpage modulaire du backend par domaine métier (violetteuser, showdate, artistbooking, cabaretcompany).
 
 ![C4 Component](docs/diagrams/c4-component.png)
+
+### C4 — Zoom composant (niveau 4) — Domaine artistbooking
+
+Détail des composants et flux à l’intérieur du domaine **artistbooking** (Controller, Service, Repository, Entity, Event, Observer, Mapper). Source : [docs/diagrams/c4-component-artistbooking.puml](docs/diagrams/c4-component-artistbooking.puml). Pour afficher le PNG : générer à partir du .puml (voir [docs/diagrams/README.md](docs/diagrams/README.md)).
+
+![C4 Component Artistbooking](docs/diagrams/c4-component-artistbooking.png)
 
 ### Domain-Driven Design — Bounded Contexts
 
@@ -76,6 +112,8 @@ cd violette-back
 ./mvnw quarkus:dev
 # ou avec Maven global : mvn quarkus:dev
 ```
+
+**Alternative avec Docker :** backend + MySQL en conteneurs — voir [violette-back/README.md](violette-back/README.md) section « Lancer avec Docker (docker-compose) ».
 
 Journal des versions:
 

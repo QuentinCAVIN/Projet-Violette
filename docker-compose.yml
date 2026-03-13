@@ -1,0 +1,54 @@
+services:
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Base de données MySQL
+  # ─────────────────────────────────────────────────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    container_name: violette-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${DB_NAME:-violette_db}
+      MYSQL_USER: ${DB_USERNAME:-violette}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-violette}
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    volumes:
+      - violette_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost",
+             "-u", "${DB_USERNAME:-violette}", "-p${DB_PASSWORD:-violette}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Backend Quarkus (mode JVM)
+  # Prérequis : mvn package -DskipTests doit avoir été exécuté dans violette-back/
+  # ─────────────────────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: violette-back
+      dockerfile: src/main/docker/Dockerfile.jvm
+    container_name: violette-backend
+    ports:
+      - "8080:8080"
+    environment:
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_NAME: ${DB_NAME:-violette_db}
+      DB_USERNAME: ${DB_USERNAME:-violette}
+      DB_PASSWORD: ${DB_PASSWORD:-violette}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/api/ping || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+volumes:
+  violette_mysql_data:

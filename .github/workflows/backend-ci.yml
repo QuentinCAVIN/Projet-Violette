@@ -2,9 +2,9 @@ name: Backend CI
 
 on:
   push:
-    branches: ["architecture-logicielle"]
+    branches: ["main", "architecture-logicielle", "feature/**"]
   pull_request:
-    branches: ["main", "architecture-logicielle"]
+    branches: ["main", "architecture-logicielle", "feature/**"]
 
 jobs:
   backend-ci:
@@ -28,5 +28,13 @@ jobs:
       - name: Make Maven wrapper executable
         run: chmod +x mvnw
 
-      - name: Build and verify
+      - name: Build and verify (tests unitaires + JaCoCo)
         run: ./mvnw clean verify -B
+
+      - name: Upload JaCoCo report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jacoco-report
+          path: violette-back/target/site/jacoco/
+          retention-days: 7

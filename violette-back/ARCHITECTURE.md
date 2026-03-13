@@ -102,28 +102,58 @@ io.violette
  │              └── UserNotFoundExceptionMapper.java (404 Not Found)
  ├── cabaretcompany/              ← Domaine : compagnies, revues, membres
  │    ├── controller/              ← CabaretCompanyController.java
- │    ├── service/                 ← CabaretCompanyService.java
+ │    ├── service/                 ← CabaretCompanyService.java, CabaretShowService.java
  │    ├── repository/              ← CabaretCompanyRepository.java, CabaretShowRepository.java, CompanyMemberRepository.java
- │    ├── model/                   ← CabaretCompanyEntity.java, CabaretShowEntity.java, CompanyMemberEntity.java
+ │    ├── model/                   ← CabaretCompanyEntity.java, CabaretShowEntity.java
+ │    │                               CompanyMemberEntity.java, CompanyMemberId.java (@Embeddable, clé composite)
  │    ├── dto/                     ← CabaretCompanyDto.java, CabaretShowDto.java, CompanyMemberDto.java
- │    ├── mapper/                  ← CabaretCompanyMapper.java, CabaretShowMapper.java
+ │    │                               CreateCabaretCompanyRequestDto.java, CreateCabaretShowRequestDto.java
+ │    ├── mapper/                  ← CabaretCompanyMapper.java, CabaretShowMapper.java, CompanyMemberMapper.java
  │    └── exception/
  │         ├── CabaretCompanyNotFoundException.java
- │         └── mapper/CabaretCompanyNotFoundExceptionMapper.java  (404 Not Found)
- └── showdate/                    ← Domaine : dates de spectacle, feuille de route, disponibilités
-      ├── controller/              ← ShowDateController.java
-      ├── service/                 ← ShowDateService.java
-      ├── repository/              ← ShowDateRepository.java, ShowDateSkillRequirementRepository.java, ArtistAvailabilityRepository.java
-      ├── model/                   ← ShowDateEntity.java, ShowDateSkillRequirementEntity.java
-      │                               ArtistAvailabilityEntity.java, ArtistAvailabilityId.java
-      │                               ShowDateStatus.java, AvailabilityStatus.java
-      ├── dto/                     ← ShowDateDto.java, CreateShowDateRequestDto.java
-      │                               ShowDateSkillRequirementDto.java, CreateSkillRequirementRequestDto.java
-      │                               ArtistAvailabilityDto.java
-      ├── mapper/                  ← ShowDateMapper.java, ShowDateSkillRequirementMapper.java, ArtistAvailabilityMapper.java
+ │         ├── CabaretShowNotFoundException.java
+ │         └── mapper/
+ │              ├── CabaretCompanyNotFoundExceptionMapper.java    (404 Not Found)
+ │              └── CabaretShowNotFoundExceptionMapper.java       (404 Not Found)
+ ├── showdate/                    ← Domaine : dates de spectacle, feuille de route, disponibilités
+ │    ├── controller/              ← ShowDateController.java
+ │    ├── service/                 ← ShowDateService.java
+ │    ├── repository/              ← ShowDateRepository.java, ShowDateSkillRequirementRepository.java, ArtistAvailabilityRepository.java
+ │    ├── model/                   ← ShowDateEntity.java, ShowDateSkillRequirementEntity.java
+ │    │                               ArtistAvailabilityEntity.java, ArtistAvailabilityId.java (@Embeddable, clé composite)
+ │    │                               ShowDateStatus.java, AvailabilityStatus.java
+ │    ├── dto/                     ← ShowDateDto.java, CreateShowDateRequestDto.java
+ │    │                               ShowDateSkillRequirementDto.java, CreateSkillRequirementRequestDto.java
+ │    │                               ArtistAvailabilityDto.java
+ │    ├── mapper/                  ← ShowDateMapper.java, ShowDateSkillRequirementMapper.java, ArtistAvailabilityMapper.java
+ │    └── exception/
+ │         ├── ShowDateNotFoundException.java
+ │         └── mapper/ShowDateNotFoundExceptionMapper.java  (404 Not Found)
+ └── artistbooking/               ← Domaine : réservations artistes, workflow de confirmation
+      ├── controller/              ← ArtistBookingController.java
+      ├── service/                 ← ArtistBookingService.java
+      ├── repository/              ← ArtistBookingRepository.java
+      ├── model/                   ← ArtistBookingEntity.java, BookingStatus.java
+      │                               BookingTimeline.java (@Embeddable, Value Object)
+      ├── dto/                     ← ArtistBookingDto.java, CreateBookingRequestDto.java
+      │                               RespondToBookingRequestDto.java
+      ├── mapper/                  ← ArtistBookingMapper.java (MapStruct)
       └── exception/
-           ├── ShowDateNotFoundException.java
-           └── mapper/ShowDateNotFoundExceptionMapper.java  (404 Not Found)
+           ├── ArtistBookingNotFoundException.java
+           ├── ArtistNotAvailableException.java
+           ├── BookingAlreadyExistsException.java
+           ├── BookingCapacityExceededException.java
+           ├── InvalidBookingTransitionException.java
+           ├── ShowDateNotModifiableException.java
+           ├── SkillRequirementNotFoundException.java
+           └── mapper/
+                ├── ArtistBookingNotFoundExceptionMapper.java     (404 Not Found)
+                ├── ArtistNotAvailableExceptionMapper.java        (409 Conflict)
+                ├── BookingAlreadyExistsExceptionMapper.java      (409 Conflict)
+                ├── BookingCapacityExceededExceptionMapper.java   (409 Conflict)
+                ├── InvalidBookingTransitionExceptionMapper.java  (409 Conflict)
+                ├── ShowDateNotModifiableExceptionMapper.java     (409 Conflict)
+                └── SkillRequirementNotFoundExceptionMapper.java  (404 Not Found)
 ```
 
 **Règle de nommage pour les nouveaux domaines :**
@@ -187,12 +217,20 @@ Service
 
 ### Mappers d'exceptions actuels
 
-| Exception                        | Mapper                                  | Code HTTP        |
-|----------------------------------|-----------------------------------------|------------------|
-| `UserAlreadyExistsException`     | `UserExceptionMapper`                   | `409 Conflict`   |
-| `UserNotFoundException`          | `UserNotFoundExceptionMapper`           | `404 Not Found`  |
-| `CabaretCompanyNotFoundException`| `CabaretCompanyNotFoundExceptionMapper` | `404 Not Found`  |
-| `ShowDateNotFoundException`      | `ShowDateNotFoundExceptionMapper`       | `404 Not Found`  |
+| Exception                           | Mapper                                    | Code HTTP        |
+|-------------------------------------|-------------------------------------------|------------------|
+| `UserAlreadyExistsException`        | `UserExceptionMapper`                     | `409 Conflict`   |
+| `UserNotFoundException`             | `UserNotFoundExceptionMapper`             | `404 Not Found`  |
+| `CabaretCompanyNotFoundException`   | `CabaretCompanyNotFoundExceptionMapper`   | `404 Not Found`  |
+| `CabaretShowNotFoundException`      | `CabaretShowNotFoundExceptionMapper`      | `404 Not Found`  |
+| `ShowDateNotFoundException`         | `ShowDateNotFoundExceptionMapper`         | `404 Not Found`  |
+| `ArtistBookingNotFoundException`    | `ArtistBookingNotFoundExceptionMapper`    | `404 Not Found`  |
+| `SkillRequirementNotFoundException` | `SkillRequirementNotFoundExceptionMapper` | `404 Not Found`  |
+| `ArtistNotAvailableException`       | `ArtistNotAvailableExceptionMapper`       | `409 Conflict`   |
+| `BookingAlreadyExistsException`     | `BookingAlreadyExistsExceptionMapper`     | `409 Conflict`   |
+| `BookingCapacityExceededException`  | `BookingCapacityExceededExceptionMapper`  | `409 Conflict`   |
+| `InvalidBookingTransitionException` | `InvalidBookingTransitionExceptionMapper` | `409 Conflict`   |
+| `ShowDateNotModifiableException`    | `ShowDateNotModifiableExceptionMapper`    | `409 Conflict`   |
 
 ### Règle pour les nouveaux domaines
 
@@ -304,6 +342,106 @@ LOG.info("Roles loaded for firebaseUid={}: {}", firebaseUid, user.getRoles());
 
 ---
 
+## Design Patterns — actifs
+
+Le projet implémente trois design patterns GoF, un par catégorie.
+
+| Pattern | Catégorie | Emplacement principal |
+|---|---|---|
+| **Singleton** | Création | Tous les `@ApplicationScoped` (services, repositories, security) |
+| **Adapter** | Structurel | `security/VioletteSecurityAugmentor.java` + `VioletteRolesAugmentor.java` |
+| **Observer** | Comportemental | `artistbooking/event/BookingStatusChangedEvent.java` + `BookingStatusChangedObserver.java` |
+
+---
+
+### Singleton — Création
+
+**Principe :** une seule instance d'un composant est créée et partagée pour toute la durée de vie de l'application.
+
+**Dans Violette :** tous les beans annotés `@ApplicationScoped` sont instanciés une seule fois par le conteneur CDI Quarkus. C'est le comportement exact du pattern Singleton : instance unique, accessible globalement via injection de dépendances.
+
+**Exemples :** `ArtistBookingService`, `VioletteUserService`, `ArtistBookingRepository`, `VioletteSecurityAugmentor`, `VioletteRolesAugmentor`, `CurrentUserContextProvider`…
+
+---
+
+### Adapter — Structurel
+
+**Principe :** convertir l'interface d'un composant en une autre interface attendue par le client.
+
+**Dans Violette :** Firebase fournit l'identité (JWT, claim `sub`) mais Quarkus attend une `SecurityIdentity` avec des rôles pour que `@RolesAllowed("MANAGER")` fonctionne. L'Adapter traduit ces deux interfaces incompatibles.
+
+```
+[Firebase JWT / OIDC]           [Quarkus Security]
+   → firebaseUid (claim sub)    ← @RolesAllowed("MANAGER")
+   → pas de rôles métier        ← SecurityIdentity avec rôles
+
+        VioletteSecurityAugmentor  (implements SecurityIdentityAugmentor)
+        └── VioletteRolesAugmentor
+              ├── charge VioletteUserEntity par firebaseUid
+              └── ajoute ARTIST / MANAGER à SecurityIdentity
+```
+
+**Fichiers :**
+```
+src/main/java/io/violette/security/VioletteSecurityAugmentor.java
+src/main/java/io/violette/security/VioletteRolesAugmentor.java
+```
+
+---
+
+### Observer — Comportemental
+
+**Principe :** un objet (observateur) est notifié automatiquement quand un autre objet (sujet) change d'état, sans couplage direct entre eux.
+
+**Dans Violette :** `ArtistBookingService` publie un événement CDI `BookingStatusChangedEvent` à chaque transition de statut de booking. Les observateurs réagissent sans que le service les connaisse.
+
+```
+ArtistBookingService
+  └── bookingStatusChangedEvent.fire(new BookingStatusChangedEvent(...))
+              │
+              ▼  [routage CDI — aucun couplage direct]
+BookingStatusChangedObserver
+  └── onBookingStatusChanged(@Observes event)
+        └── journalisation de la transition
+```
+
+**Transitions couvertes :**
+- `sendConfirmationRequests()` → SELECTED → PENDING_CONFIRMATION
+- `respondToRequest()` → PENDING_CONFIRMATION → CONFIRMED ou REFUSED
+
+**Point d'extension :** l'observateur est le seul point à modifier pour ajouter notifications, synchronisation entre domaines, audit trail, workflows V2.
+
+**Fichiers :**
+```
+src/main/java/io/violette/artistbooking/event/BookingStatusChangedEvent.java
+src/main/java/io/violette/artistbooking/event/BookingStatusChangedObserver.java
+src/main/java/io/violette/artistbooking/service/ArtistBookingService.java
+```
+
+---
+
+### Factory Method — Création (prévu V2, workflows configurables)
+
+**Contexte :** En V1, le workflow de réservation est unique et fixe (disponibilités → confirmation client → sélection → demandes → réponses artistes → verrouillage). Le document [docs/booking-workflow.md](../docs/booking-workflow.md) décrit des **variantes métier** prévues pour la V2 : appel direct (sans phase de disponibilité), remplacement progressif, pré-confirmation manuelle, etc. Chaque compagnie pourra alors avoir un workflow différent.
+
+**Pourquoi une Factory Method :** Le service `ArtistBookingService` ne doit pas contenir une succession de `if (company.getBookingWorkflow() == …)` pour appliquer les règles de validation et les transitions autorisées. Une **Factory Method** permettra d’obtenir la bonne **stratégie de validation** (ou de workflow) en fonction du type configuré sur la compagnie, sans que le service ne connaisse les implémentations concrètes.
+
+**Mise en place prévue :**
+
+1. **Modèle :** Ajout d’un champ `bookingWorkflow` sur `CabaretCompanyEntity` (enum ou type dédié : `CLASSIC`, `DIRECT_CALL`, `PROGRESSIVE_REPLACEMENT`, etc.).
+
+2. **Stratégies :** Définition d’une interface (ex. `BookingValidationStrategy` ou `BookingWorkflowStrategy`) et d’implémentations par type de workflow (ex. `ClassicWorkflowStrategy`, `DirectCallWorkflowStrategy`). Chaque stratégie encapsule les règles de validation et les transitions autorisées pour ce workflow.
+
+3. **Factory :** Une classe ou bean (ex. `BookingWorkflowStrategyFactory`) exposant une méthode du type `getStrategy(BookingWorkflowType type)` ou `getStrategyFor(CabaretCompanyEntity company)`, qui retourne l’instance de stratégie adaptée. Le choix peut être fait via un `switch` sur le type ou une map de beans CDI qualifiés.
+
+4. **Utilisation dans le service :** `ArtistBookingService` injecte la factory et, pour chaque opération (création de booking, envoi de confirmations, etc.), récupère la stratégie de la compagnie concernée puis délègue les validations et transitions à cette stratégie, au lieu d’appliquer une logique unique en dur.
+
+**Bénéfice :** Ouverture/fermeture — ajouter un nouveau type de workflow revient à ajouter une nouvelle implémentation et à l’enregistrer dans la factory, sans modifier le service. Le pattern est justifié par une **hiérarchie de comportements** (une interface, plusieurs stratégies) et un **choix basé sur la configuration métier** (la compagnie), ce qui correspond exactement au cas d’usage d’une Factory Method.
+
+**Référence :** voir la section « Vision V2 — workflows configurables » dans [docs/booking-workflow.md](../docs/booking-workflow.md).
+
+---
+
 ## Règles d'architecture à respecter
 
 ### 1. Séparation des couches
@@ -352,6 +490,14 @@ mvn test
 
 Les tests s'exécutent sur H2 in-memory. Flyway est désactivé en profil test ; le schéma est géré par `quarkus.hibernate-orm.schema-management.strategy=drop-and-create`.
 
+### Couverture (JaCoCo)
+
+```bash
+mvn verify
+```
+
+Génère le rapport JaCoCo (HTML + XML dans `target/site/jacoco/`) et applique le seuil minimal de 30 % de lignes couvertes ; le build échoue si le seuil n'est pas atteint.
+
 ### Mode développement (hot reload)
 
 ```bash
@@ -398,10 +544,10 @@ mvn package
 ### Frontière avec `artistbooking`
 
 Le domaine `showdate` **ne gère pas** les artistes effectivement retenus ni les confirmations de réservation.
-Ces responsabilités appartiennent au domaine futur `artistbooking` :
+Ces responsabilités appartiennent au domaine `artistbooking` :
 
 ```
-showdate                         artistbooking (à venir)
+showdate                         artistbooking
 ─────────────────────────────    ────────────────────────────────
 ShowDate (feuille de route)  →   ArtistBooking (artiste retenu)
 ArtistAvailability (déclaré)      BookingStatus (SELECTED, CONFIRMED…)
@@ -412,9 +558,9 @@ ShowDateSkillRequirement          BookingTimeline (timestamps cycle de vie)
 
 ## Domaine de référence
 
-Le domaine `violetteuser` est le **modèle de référence** pour tous les futurs domaines backend (`showdate`, `artistbooking`, `cabaretcompany`).
+Le domaine `violetteuser` est le **modèle de référence** pour tous les domaines backend (`showdate`, `artistbooking`, `cabaretcompany`).
 
-Avant d'implémenter un nouveau domaine, s'assurer de respecter :
+Pour tout nouveau domaine, s'assurer de respecter :
 1. La structure de packages décrite ci-dessus
 2. L'architecture en couches Controller → Service → Repository
 3. Les conventions DTO / MapStruct
