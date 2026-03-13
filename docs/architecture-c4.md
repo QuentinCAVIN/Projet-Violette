@@ -4,13 +4,14 @@
 
 La **modélisation C4** (Context, Containers, Components, Code) permet de décrire une architecture logicielle à plusieurs niveaux d’abstraction, du système dans son environnement jusqu’aux composants internes. Violette utilise cette approche pour que les parties prenantes (équipe projet, examinateurs) comprennent rapidement le périmètre du système, son découpage technique et la structure du backend.
 
-Les trois niveaux documentés dans ce projet sont :
+Les niveaux documentés dans ce projet sont :
 
 - **System Context (Contexte système)** — Qui utilise Violette et avec quels systèmes externes elle interagit.
 - **Container** — Comment la solution est découpée en applications et services (frontend, backend, bases de données).
 - **Component** — Comment le backend est structuré en couches et en domaines métier.
+- **Zoom composant (niveau 4)** — Détail des composants et flux à l'intérieur d'un domaine (ex. artistbooking).
 
-Les diagrammes existants sont des PNG présents dans le dépôt ; ce document les explique et les relie à l’architecture réelle du projet.
+Les diagrammes sont des PNG présents dans le dépôt (niveau 4 : source PlantUML + PNG) ; ce document les explique et les relie à l’architecture réelle du projet.
 
 ---
 
@@ -143,6 +144,6 @@ Les fichiers des diagrammes C4 se trouvent dans le dépôt aux emplacements suiv
 | System Context | `docs/diagrams/c4-context.png` | — |
 | Container | `docs/diagrams/c4-container.png` | — |
 | Component | `docs/diagrams/c4-component.png` | — |
-| Zoom composant (niveau 4) | `docs/diagrams/c4-component-artistbooking.puml` → `.png` | PNG à générer depuis le .puml (voir [docs/diagrams/README.md](diagrams/README.md)) |
+| Zoom composant (niveau 4) | `docs/diagrams/c4-component-artistbooking.png` | Source : `c4-component-artistbooking.puml` ; régénération (voir [docs/diagrams/README.md](diagrams/README.md)) |
 
 Ils sont référencés dans le **README** à la racine du projet, dans la section « Architecture ». La documentation détaillée du backend (couches, packages, sécurité, patterns) est dans **`violette-back/ARCHITECTURE.md`**.

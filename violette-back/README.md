@@ -224,7 +224,7 @@ showdate
   Entities       : ShowDateSkillRequirement, ArtistAvailability
   Value Objects  : ArtistAvailabilityId (clé composite)
 
-artistbooking (à venir)
+artistbooking
   Aggregate Root : ArtistBooking
   Value Objects  : BookingTimeline (timestamps du cycle de vie)
 ```
