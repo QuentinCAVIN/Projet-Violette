@@ -14,8 +14,8 @@ import static io.restassured.RestAssured.given;
  *   <li>En profil test OIDC est désactivé : pas de validation JWT, toute requête sans
  *       identité sécurisée valide est rejetée (403 Forbidden par Quarkus).</li>
  *   <li>Ce test vérifie que l'endpoint est protégé (appel non authentifié échoue).</li>
- *   <li>Pas de JWT Firebase réel ici : voir docs/testing-and-security.md pour le smoke test
- *       manuel et la décision sur les tests d'intégration Firebase automatisés.</li>
+ *   <li>Pas de JWT Firebase réel ici : voir le README backend, section « Profil Firebase »,
+ *       pour le smoke test manuel avec JWT.</li>
  * </ul>
  */
 @QuarkusTest

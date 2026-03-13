@@ -373,6 +373,39 @@ curl http://localhost:8080/api/ping
 # {"status":"pong","version":"0.1.0"}
 ```
 
+### Lancer avec Docker (docker-compose)
+
+Pour exécuter le backend et MySQL dans des conteneurs (sans installer MySQL localement) :
+
+**Prérequis :** Docker et Docker Compose installés sur la machine.
+
+**Étapes :**
+
+1. **Builder le JAR** (depuis le répertoire `violette-back/`) :
+
+```bash
+./mvnw package -DskipTests
+```
+
+2. **Démarrer la stack** (depuis la **racine du projet** Projet-Violette) :
+
+```bash
+docker compose up
+```
+
+En mode détaché (arrière-plan) : `docker compose up -d`.
+
+3. **Vérification :** une fois les conteneurs démarrés (MySQL puis backend, avec healthchecks), l’API répond sur le port 8080 :
+
+```bash
+curl http://localhost:8080/api/ping
+# {"status":"pong","version":"0.1.0"}
+```
+
+Le backend attend que MySQL soit prêt (healthcheck) avant de démarrer. Les migrations Flyway s’exécutent automatiquement au démarrage du conteneur backend.
+
+**Variables d’environnement :** les valeurs par défaut (base `violette_db`, user `violette`, etc.) sont définies dans le `docker-compose.yml`. Pour les surcharger, copier [.env.example](../.env.example) en `.env` à la racine du projet et adapter les valeurs.
+
 ### Variables d'environnement (optionnel en dev)
 
 Les valeurs par défaut du profil dev (`localhost:3306`, user `violette`, password `violette`) sont configurées dans `application.properties`. Pour les surcharger :
@@ -565,7 +598,7 @@ Une fois l'application démarrée :
 ### Appel à GET /api/users/me (protégé par JWT)
 
 L'endpoint retourne le contexte utilisateur authentifié (firebaseUid, email, name) extrait du JWT.  
-Pour activer la validation Firebase : profil `firebase` et variable `FIREBASE_PROJECT_ID` (voir `application-firebase.properties` et [docs/testing-and-security.md](docs/testing-and-security.md)).
+Pour activer la validation Firebase : profil `firebase` et variable `FIREBASE_PROJECT_ID` (voir `application-firebase.properties` et la section « Profil Firebase et authentification JWT » ci-dessus).
 
 ```bash
 export FIREBASE_PROJECT_ID=your-firebase-project-id
