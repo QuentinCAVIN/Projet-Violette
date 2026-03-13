@@ -360,7 +360,7 @@ class ArtistBookingServiceTest {
         persistAvailability(ctx.showDate, artist2, AvailabilityStatus.AVAILABLE);
 
         // Sélectionner deux artistes
-        ArtistBookingDto b1 = artistBookingService.createBooking(
+        artistBookingService.createBooking(
                 new CreateBookingRequestDto(ctx.showDate.getId(), ctx.artist.getId(), null)
         );
         // Le skillReq de ctx a requiredCount=1 (déjà atteint par b1), on utilise null pour b2
