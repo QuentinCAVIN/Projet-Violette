@@ -196,6 +196,17 @@ BookingStatusChangedObserver
         └── LOG.info("Booking statut changé : {} → {}", old, new)
 ```
 
+#### Création — Factory Method (prévu V2, workflows configurables)
+
+En V2, les compagnies pourront avoir des **workflows de réservation différents** (classique, appel direct, remplacement progressif, etc.). Une **Factory Method** sera introduite pour fournir la **stratégie de validation** adaptée au workflow de chaque compagnie, sans que `ArtistBookingService` n’ait à gérer une logique conditionnelle complexe.
+
+**Mise en place prévue :**
+- Champ `bookingWorkflow` sur `CabaretCompanyEntity` (type de workflow choisi par la compagnie).
+- Interface de stratégie (ex. `BookingValidationStrategy`) et implémentations par type de workflow.
+- Factory (ex. `BookingWorkflowStrategyFactory`) exposant une méthode du type `getStrategyFor(company)` qui retourne la stratégie correspondante.
+- Le service délègue les validations et transitions à la stratégie obtenue via la factory.
+
+**Justification :** choix polymorphique du comportement selon la configuration métier (compagnie) — cas d’usage naturel d’une Factory Method. Détail des variantes V2 : [docs/booking-workflow.md](../docs/booking-workflow.md) section « Vision V2 — workflows configurables ».
 
 ### Modélisation DDD
 

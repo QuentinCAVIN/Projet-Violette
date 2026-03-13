@@ -1,0 +1,30 @@
+@startuml c4-component-artistbooking
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title Zoom Backend — Domaine artistbooking (C4 niveau 4)
+
+' Conteneur backend (contexte du zoom) avec boundary artistbooking à l'intérieur
+Container(backend, "Backend Quarkus", "Java 21, Quarkus", "API REST") {
+    Container_Boundary(artistbooking, "Domaine artistbooking") {
+        Component(controller, "ArtistBookingController", "JAX-RS", "Endpoints REST : sélection, désélection, confirmations, réponses")
+        Component(service, "ArtistBookingService", "Logique métier", "Règles de capacité, disponibilité, transitions de statut")
+        Component(repository, "ArtistBookingRepository", "Panache", "Accès BDD artist_booking")
+        Component(entity, "ArtistBookingEntity", "Aggregate Root", "Réservation + BookingTimeline, BookingStatus")
+        Component(event, "BookingStatusChangedEvent", "CDI Event", "Événement transition de statut")
+        Component(observer, "BookingStatusChangedObserver", "Observer", "Réaction aux changements (log, extension V2)")
+        Component(mapper, "ArtistBookingMapper", "MapStruct", "Entity ↔ DTO")
+    }
+}
+
+' Relations internes
+Rel(controller, service, "délègue")
+Rel(service, repository, "persist / find")
+Rel(service, entity, "crée, met à jour")
+Rel(service, mapper, "toDto")
+Rel(service, event, "fire")
+Rel(event, observer, "notifie (CDI)")
+
+' Légende
+LAYOUT_WITH_LEGEND()
+
+@enduml

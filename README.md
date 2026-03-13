@@ -3,6 +3,14 @@ Plateforme web de gestion des plannings et des cachets pour gérants de compagni
 
 ---
 
+## → Documentation architecture & backend (module architecture logicielle)
+
+**Toute la documentation technique du projet** (architecture, design patterns, DDD, stack, démarrage, tests, Docker, manuel utilisateur) est centralisée dans le README du backend. Un seul lien pour y accéder :
+
+**[📄 violette-back/README.md](violette-back/README.md)**
+
+---
+
 ## Documentation
 
 ### Pour les examinateurs
@@ -44,6 +52,12 @@ Architecture technique : frontend Flutter, backend Quarkus, bases de données et
 Découpage modulaire du backend par domaine métier (violetteuser, showdate, artistbooking, cabaretcompany).
 
 ![C4 Component](docs/diagrams/c4-component.png)
+
+### C4 — Zoom composant (niveau 4) — Domaine artistbooking
+
+Détail des composants et flux à l’intérieur du domaine **artistbooking** (Controller, Service, Repository, Entity, Event, Observer, Mapper). Source : [docs/diagrams/c4-component-artistbooking.puml](docs/diagrams/c4-component-artistbooking.puml). Pour afficher le PNG : générer à partir du .puml (voir [docs/diagrams/README.md](docs/diagrams/README.md)).
+
+![C4 Component Artistbooking](docs/diagrams/c4-component-artistbooking.png)
 
 ### Domain-Driven Design — Bounded Contexts
 

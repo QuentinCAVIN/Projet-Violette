@@ -108,14 +108,41 @@ Un examinateur peut donc s’appuyer sur les trois diagrammes pour comprendre le
 
 ---
 
-## 6. Emplacement des diagrammes
+## 6. Diagramme C4 — Zoom composant (niveau 4)
+
+Une quatrième vue propose un **zoom** sur un domaine métier du backend : le domaine **artistbooking**. Elle répond à la question : *« À l’intérieur de ce domaine, quels composants (classes ou modules) existent et comment interagissent-ils ? »*
+
+### Ce que montre le diagramme
+
+- **ArtistBookingController** — couche REST (JAX-RS), endpoints de sélection, désélection, envoi de confirmations, réponses artiste.
+- **ArtistBookingService** — logique métier (règles de capacité, disponibilité, transitions de statut).
+- **ArtistBookingRepository** — accès BDD (Panache).
+- **ArtistBookingEntity** — aggregate root (réservation, BookingTimeline, BookingStatus).
+- **BookingStatusChangedEvent** — événement CDI émis à chaque transition de statut.
+- **BookingStatusChangedObserver** — observateur qui réagit à l’événement (pattern Observer).
+- **ArtistBookingMapper** — mapping Entity ↔ DTO (MapStruct).
+
+Les relations (délégation, persist, fire, notifie) reflètent le flux réel du code et illustrent la séparation des couches ainsi que le découplage via l’événement CDI.
+
+### Source et génération du PNG
+
+Le diagramme est défini en **PlantUML** (C4-PlantUML) pour rester versionnable et reproductible. Le PNG se génère à partir du fichier source.
+
+| Fichier source | PNG généré | Procédure |
+|----------------|------------|-----------|
+| `docs/diagrams/c4-component-artistbooking.puml` | `docs/diagrams/c4-component-artistbooking.png` | Voir [docs/diagrams/README.md](diagrams/README.md) (Docker, CLI, ou en ligne). |
+
+---
+
+## 7. Emplacement des diagrammes
 
 Les fichiers des diagrammes C4 se trouvent dans le dépôt aux emplacements suivants :
 
-| Niveau | Fichier |
-|--------|---------|
-| System Context | `docs/diagrams/c4-context.png` |
-| Container | `docs/diagrams/c4-container.png` |
-| Component | `docs/diagrams/c4-component.png` |
+| Niveau | Fichier | Remarque |
+|--------|---------|----------|
+| System Context | `docs/diagrams/c4-context.png` | — |
+| Container | `docs/diagrams/c4-container.png` | — |
+| Component | `docs/diagrams/c4-component.png` | — |
+| Zoom composant (niveau 4) | `docs/diagrams/c4-component-artistbooking.puml` → `.png` | PNG à générer depuis le .puml (voir [docs/diagrams/README.md](diagrams/README.md)) |
 
-Ils sont référencés dans le **README** à la racine du projet, dans la section « Architecture », qui présente brièvement chaque vue (contexte système, containers, composants backend) et affiche les images. La documentation détaillée du backend (couches, packages, sécurité, patterns) est dans **`violette-back/ARCHITECTURE.md`**.
+Ils sont référencés dans le **README** à la racine du projet, dans la section « Architecture ». La documentation détaillée du backend (couches, packages, sécurité, patterns) est dans **`violette-back/ARCHITECTURE.md`**.

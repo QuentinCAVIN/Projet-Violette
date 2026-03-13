@@ -420,6 +420,28 @@ src/main/java/io/violette/artistbooking/service/ArtistBookingService.java
 
 ---
 
+### Factory Method — Création (prévu V2, workflows configurables)
+
+**Contexte :** En V1, le workflow de réservation est unique et fixe (disponibilités → confirmation client → sélection → demandes → réponses artistes → verrouillage). Le document [docs/booking-workflow.md](../docs/booking-workflow.md) décrit des **variantes métier** prévues pour la V2 : appel direct (sans phase de disponibilité), remplacement progressif, pré-confirmation manuelle, etc. Chaque compagnie pourra alors avoir un workflow différent.
+
+**Pourquoi une Factory Method :** Le service `ArtistBookingService` ne doit pas contenir une succession de `if (company.getBookingWorkflow() == …)` pour appliquer les règles de validation et les transitions autorisées. Une **Factory Method** permettra d’obtenir la bonne **stratégie de validation** (ou de workflow) en fonction du type configuré sur la compagnie, sans que le service ne connaisse les implémentations concrètes.
+
+**Mise en place prévue :**
+
+1. **Modèle :** Ajout d’un champ `bookingWorkflow` sur `CabaretCompanyEntity` (enum ou type dédié : `CLASSIC`, `DIRECT_CALL`, `PROGRESSIVE_REPLACEMENT`, etc.).
+
+2. **Stratégies :** Définition d’une interface (ex. `BookingValidationStrategy` ou `BookingWorkflowStrategy`) et d’implémentations par type de workflow (ex. `ClassicWorkflowStrategy`, `DirectCallWorkflowStrategy`). Chaque stratégie encapsule les règles de validation et les transitions autorisées pour ce workflow.
+
+3. **Factory :** Une classe ou bean (ex. `BookingWorkflowStrategyFactory`) exposant une méthode du type `getStrategy(BookingWorkflowType type)` ou `getStrategyFor(CabaretCompanyEntity company)`, qui retourne l’instance de stratégie adaptée. Le choix peut être fait via un `switch` sur le type ou une map de beans CDI qualifiés.
+
+4. **Utilisation dans le service :** `ArtistBookingService` injecte la factory et, pour chaque opération (création de booking, envoi de confirmations, etc.), récupère la stratégie de la compagnie concernée puis délègue les validations et transitions à cette stratégie, au lieu d’appliquer une logique unique en dur.
+
+**Bénéfice :** Ouverture/fermeture — ajouter un nouveau type de workflow revient à ajouter une nouvelle implémentation et à l’enregistrer dans la factory, sans modifier le service. Le pattern est justifié par une **hiérarchie de comportements** (une interface, plusieurs stratégies) et un **choix basé sur la configuration métier** (la compagnie), ce qui correspond exactement au cas d’usage d’une Factory Method.
+
+**Référence :** voir la section « Vision V2 — workflows configurables » dans [docs/booking-workflow.md](../docs/booking-workflow.md).
+
+---
+
 ## Règles d'architecture à respecter
 
 ### 1. Séparation des couches
