@@ -73,7 +73,7 @@ Flux fonctionnels principaux : déclaration de disponibilité, réservation d'ar
 
 ---
 
-## État actuel (v0.2.0)
+## État actuel (v0.3.0)
 
 ### Front-end (Flutter)
 - Application Flutter avec architecture Stacked.
@@ -82,14 +82,16 @@ Flux fonctionnels principaux : déclaration de disponibilité, réservation d'ar
 - Vue Planning gérant avec calendrier et gestion des disponibilités par artiste.
 - Profils utilisateurs stockés dans Firestore.
 - Infrastructure de tests unitaires et intégration continue (GitHub Actions).
+- Pas encore raccordé aux endpoints REST du backend Quarkus.
 
-### Back-end (Quarkus) – v0.1.0
-- Architecture modulaire par domaine (violetteuser, cabaretcompany, showdate, artistbooking).
-- Stack : Quarkus 3.29, Hibernate ORM Panache, Flyway, OpenAPI/Swagger.
+### Back-end (Quarkus)
+- Monolithe modulaire structuré par domaine (`violetteuser`, `cabaretcompany`, `showdate`, `artistbooking`).
+- Stack : Quarkus 3.x, Hibernate ORM Panache, Flyway (5 migrations), OpenAPI/Swagger, MapStruct.
 - Schéma SQL relationnel complet (remplace progressivement Firestore).
-- Endpoint de santé : `GET /api/ping`
-- Swagger UI : `http://localhost:8080/swagger-ui`
-- Pas encore connecté au front (phase suivante : intégration JWT Firebase).
+- Sécurité Firebase JWT via Quarkus OIDC, rôles métier (`ARTIST`, `MANAGER`) depuis la base backend.
+- Endpoint de santé : `GET /api/ping` — Swagger UI : `http://localhost:8080/swagger-ui`
+- 18 classes de tests, couverture JaCoCo ≥ 30 %, CI GitHub Actions backend.
+- Déployable via Docker Compose (MySQL 8 + Quarkus JVM).
 
 ## Stack technique
 
