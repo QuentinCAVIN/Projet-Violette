@@ -22,7 +22,7 @@ import static io.restassured.RestAssured.given;
 class VioletteUserControllerTest {
 
     @Test
-    @DisplayName("GET /me without token returns 403")
+    @DisplayName("GET /me sans token retourne 403")
     void getMe_withoutToken_returns403() {
         given()
             .when().get("/api/users/me")

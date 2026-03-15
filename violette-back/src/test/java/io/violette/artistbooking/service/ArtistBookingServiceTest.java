@@ -77,7 +77,7 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("createBooking - nominal: status SELECTED, agreedNetFee snapshot, timeline set")
+    @DisplayName("createBooking — nominal : statut SELECTED, snapshot agreedNetFee, timeline renseignée")
     void createBooking_nominal_returnsSelectedBookingWithSnapshot() {
         Context ctx = buildContext("svc-nom-1");
 
@@ -101,7 +101,7 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("createBooking - agreedNetFee is a snapshot of skillRequirement.netFee at booking time")
+    @DisplayName("createBooking — agreedNetFee est un snapshot du netFee de la compétence au moment de la sélection")
     void createBooking_agreedNetFeeIsSnapshotFromSkillRequirement() {
         Context ctx = buildContext("svc-snap-1");
 
@@ -114,7 +114,7 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("createBooking - without skillRequirement: no fee snapshot, skillRequirementId null")
+    @DisplayName("createBooking — sans compétence : pas de snapshot de cachet, skillRequirementId null")
     void createBooking_withoutSkillRequirement_noFeeSnapshot() {
         Context ctx = buildContext("svc-nosk-1");
 
@@ -135,7 +135,7 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("createBooking - fails when artist availability is not AVAILABLE")
+    @DisplayName("createBooking — échoue si la disponibilité de l'artiste n'est pas AVAILABLE")
     void createBooking_whenArtistNotAvailable_throwsArtistNotAvailableException() {
         Context ctx = buildContext("svc-unavail-1");
         ctx.availability.setStatus(AvailabilityStatus.CONDITIONAL);
@@ -150,7 +150,7 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("createBooking - fails when artist has no availability entry")
+    @DisplayName("createBooking — échoue si aucune disponibilité n'est déclarée pour l'artiste")
     void createBooking_whenNoAvailabilityEntry_throwsArtistNotAvailableException() {
         Context ctx = buildContext("svc-noav-1");
         // Supprime la disponibilité créée par buildContext
@@ -166,7 +166,7 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("createBooking - fails when capacity is reached (requiredCount=1, 1 active booking)")
+    @DisplayName("createBooking — échoue si la capacité est atteinte (requiredCount=1, 1 réservation active)")
     void createBooking_whenCapacityReached_throwsBookingCapacityExceededException() {
         Context ctx = buildContext("svc-cap-1");
 
@@ -189,7 +189,7 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("createBooking - fails when ShowDate is LOCKED")
+    @DisplayName("createBooking — échoue si la date est LOCKED")
     void createBooking_whenShowDateLocked_throwsShowDateNotModifiableException() {
         Context ctx = buildContext("svc-locked-1");
         ctx.showDate.setStatus(ShowDateStatus.LOCKED);
@@ -204,7 +204,7 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("createBooking - fails when ShowDate is CANCELLED")
+    @DisplayName("createBooking — échoue si la date est CANCELLED")
     void createBooking_whenShowDateCancelled_throwsShowDateNotModifiableException() {
         Context ctx = buildContext("svc-sdcanc-1");
         ctx.showDate.setStatus(ShowDateStatus.CANCELLED);
@@ -219,7 +219,7 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("createBooking - fails when ShowDate is PENDING (workflow V1: booking requires CONFIRMED)")
+    @DisplayName("createBooking — échoue si la date est PENDING (workflow V1 : la sélection nécessite CONFIRMED)")
     void createBooking_whenShowDatePending_throwsShowDateNotModifiableException() {
         Context ctx = buildContext("svc-sdpend-1");
         // Repasse en PENDING pour simuler une date non encore confirmée par le client
@@ -235,7 +235,7 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("createBooking - fails when ShowDate is OPTIONAL (workflow V1: booking requires CONFIRMED)")
+    @DisplayName("createBooking — échoue si la date est OPTIONAL (workflow V1 : la sélection nécessite CONFIRMED)")
     void createBooking_whenShowDateOptional_throwsShowDateNotModifiableException() {
         Context ctx = buildContext("svc-sdopt-1");
         ctx.showDate.setStatus(ShowDateStatus.OPTIONAL);
@@ -250,7 +250,7 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("createBooking - fails when booking already exists for this artist on this date")
+    @DisplayName("createBooking — échoue si un booking existe déjà pour cet artiste sur cette date")
     void createBooking_whenBookingAlreadyExists_throwsBookingAlreadyExistsException() {
         Context ctx = buildContext("svc-dup-1");
 
@@ -269,7 +269,7 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("createBooking - fails when skillRequirement belongs to a different showDate")
+    @DisplayName("createBooking — échoue si la compétence appartient à une autre date")
     void createBooking_whenSkillRequirementBelongsToOtherDate_throwsSkillRequirementNotFoundException() {
         Context ctx = buildContext("svc-wrongsk-1");
 
@@ -292,7 +292,7 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("deleteBooking - allowed when status is SELECTED")
+    @DisplayName("deleteBooking — autorisé quand le statut est SELECTED")
     void deleteBooking_whenSelected_deletesBooking() {
         Context ctx = buildContext("svc-del-1");
         ArtistBookingDto created = artistBookingService.createBooking(
@@ -306,7 +306,7 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("deleteBooking - fails when status is PENDING_CONFIRMATION")
+    @DisplayName("deleteBooking — échoue si le statut est PENDING_CONFIRMATION")
     void deleteBooking_whenPendingConfirmation_throwsInvalidBookingTransitionException() {
         Context ctx = buildContext("svc-del-2");
         ArtistBookingEntity booking = persistBookingDirectly(ctx, BookingStatus.PENDING_CONFIRMATION);
@@ -317,7 +317,7 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("deleteBooking - fails when status is CONFIRMED")
+    @DisplayName("deleteBooking — échoue si le statut est CONFIRMED")
     void deleteBooking_whenConfirmed_throwsInvalidBookingTransitionException() {
         Context ctx = buildContext("svc-del-3");
         ArtistBookingEntity booking = persistBookingDirectly(ctx, BookingStatus.CONFIRMED);
@@ -328,7 +328,7 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("deleteBooking - fails when ShowDate is LOCKED")
+    @DisplayName("deleteBooking — échoue si la date est LOCKED")
     void deleteBooking_whenShowDateLocked_throwsShowDateNotModifiableException() {
         Context ctx = buildContext("svc-del-4");
         ArtistBookingEntity booking = persistBookingDirectly(ctx, BookingStatus.SELECTED);
@@ -341,7 +341,7 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("deleteBooking - fails when booking does not exist")
+    @DisplayName("deleteBooking — échoue si le booking n'existe pas")
     void deleteBooking_whenNotFound_throwsArtistBookingNotFoundException() {
         assertThrows(ArtistBookingNotFoundException.class,
                 () -> artistBookingService.deleteBooking(99999L));
@@ -353,7 +353,7 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("sendConfirmationRequests - transitions SELECTED to PENDING_CONFIRMATION and sets requestedAt")
+    @DisplayName("sendConfirmationRequests — passe SELECTED en PENDING_CONFIRMATION et renseigne requestedAt")
     void sendConfirmationRequests_movesSelectedToPendingAndSetsRequestedAt() {
         Context ctx = buildContext("svc-send-1");
         VioletteUserEntity artist2 = buildAndPersistUser("svc-send-1-b", "svc-send-1-b@test.com", Set.of(UserRole.ARTIST));
@@ -381,7 +381,7 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("sendConfirmationRequests - does not affect bookings with non-SELECTED statuses")
+    @DisplayName("sendConfirmationRequests — ne modifie pas les bookings avec un statut autre que SELECTED")
     void sendConfirmationRequests_doesNotModifyNonSelectedBookings() {
         Context ctx = buildContext("svc-send-2");
         VioletteUserEntity artist2 = buildAndPersistUser("svc-send-2-b", "svc-send-2-b@test.com", Set.of(UserRole.ARTIST));
@@ -405,7 +405,7 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("sendConfirmationRequests - fails when ShowDate is LOCKED")
+    @DisplayName("sendConfirmationRequests — échoue si la date est LOCKED")
     void sendConfirmationRequests_whenShowDateLocked_throwsShowDateNotModifiableException() {
         Context ctx = buildContext("svc-send-3");
         ctx.showDate.setStatus(ShowDateStatus.LOCKED);
@@ -421,7 +421,7 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("respondToRequest - accept: PENDING_CONFIRMATION -> CONFIRMED, respondedAt set")
+    @DisplayName("respondToRequest — acceptation : PENDING_CONFIRMATION → CONFIRMED, respondedAt renseigné")
     void respondToRequest_accept_transitionsToConfirmedAndSetsRespondedAt() {
         Context ctx = buildContext("svc-resp-1");
         ArtistBookingEntity booking = persistBookingDirectly(ctx, BookingStatus.PENDING_CONFIRMATION);
@@ -437,7 +437,7 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("respondToRequest - refuse: PENDING_CONFIRMATION -> REFUSED, respondedAt set")
+    @DisplayName("respondToRequest — refus : PENDING_CONFIRMATION → REFUSED, respondedAt renseigné")
     void respondToRequest_refuse_transitionsToRefusedAndSetsRespondedAt() {
         Context ctx = buildContext("svc-resp-2");
         ArtistBookingEntity booking = persistBookingDirectly(ctx, BookingStatus.PENDING_CONFIRMATION);
@@ -457,7 +457,7 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("respondToRequest - fails when booking status is SELECTED (not PENDING_CONFIRMATION)")
+    @DisplayName("respondToRequest — échoue si le statut est SELECTED (pas PENDING_CONFIRMATION)")
     void respondToRequest_whenBookingIsSelected_throwsInvalidBookingTransitionException() {
         Context ctx = buildContext("svc-resp-3");
         ArtistBookingEntity booking = persistBookingDirectly(ctx, BookingStatus.SELECTED);
@@ -469,7 +469,7 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("respondToRequest - fails when booking status is CONFIRMED")
+    @DisplayName("respondToRequest — échoue si le statut est CONFIRMED")
     void respondToRequest_whenBookingIsConfirmed_throwsInvalidBookingTransitionException() {
         Context ctx = buildContext("svc-resp-4");
         ArtistBookingEntity booking = persistBookingDirectly(ctx, BookingStatus.CONFIRMED);
@@ -481,7 +481,7 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("respondToRequest - fails when ShowDate is CANCELLED")
+    @DisplayName("respondToRequest — échoue si la date est CANCELLED")
     void respondToRequest_whenShowDateCancelled_throwsShowDateNotModifiableException() {
         Context ctx = buildContext("svc-resp-sdcanc");
         ArtistBookingEntity booking = persistBookingDirectly(ctx, BookingStatus.PENDING_CONFIRMATION);
@@ -495,7 +495,7 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("respondToRequest - fails when ShowDate is LOCKED")
+    @DisplayName("respondToRequest — échoue si la date est LOCKED")
     void respondToRequest_whenShowDateLocked_throwsShowDateNotModifiableException() {
         Context ctx = buildContext("svc-resp-sdlock");
         ArtistBookingEntity booking = persistBookingDirectly(ctx, BookingStatus.PENDING_CONFIRMATION);
@@ -509,7 +509,7 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("respondToRequest - fails when caller is not the booking owner")
+    @DisplayName("respondToRequest — échoue si le demandeur n'est pas le propriétaire du booking")
     void respondToRequest_whenCallerIsNotOwner_throwsInvalidBookingTransitionException() {
         Context ctx = buildContext("svc-resp-5");
         ArtistBookingEntity booking = persistBookingDirectly(ctx, BookingStatus.PENDING_CONFIRMATION);
@@ -528,7 +528,7 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("getPendingBookingsForCurrentArtist - returns only PENDING_CONFIRMATION bookings for the artist")
+    @DisplayName("getPendingBookingsForCurrentArtist — retourne uniquement les bookings PENDING_CONFIRMATION de l'artiste")
     void getPendingBookingsForCurrentArtist_returnsOnlyPendingConfirmationForArtist() {
         Context ctx = buildContext("svc-pending-1");
 
@@ -553,7 +553,7 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("getPendingBookingsForCurrentArtist - does not return bookings of other artists")
+    @DisplayName("getPendingBookingsForCurrentArtist — ne retourne pas les bookings des autres artistes")
     void getPendingBookingsForCurrentArtist_doesNotReturnOtherArtistsBookings() {
         Context ctx = buildContext("svc-pending-2");
 
@@ -579,7 +579,7 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("getBookingsForShowDate - returns all bookings for the given date")
+    @DisplayName("getBookingsForShowDate — retourne tous les bookings de la date")
     void getBookingsForShowDate_returnsAllBookingsForDate() {
         Context ctx = buildContext("svc-getall-1");
         VioletteUserEntity artist2 = buildAndPersistUser("svc-getall-1b", "svc-getall-1b@test.com", Set.of(UserRole.ARTIST));

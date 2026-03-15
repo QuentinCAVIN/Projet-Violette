@@ -6,6 +6,7 @@ import io.violette.violetteuser.model.ArtistSkill;
 import io.violette.violetteuser.model.UserRole;
 import io.violette.violetteuser.model.VioletteUserEntity;
 import io.violette.violetteuser.repository.VioletteUserRepository;
+import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
@@ -17,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@io.quarkus.test.junit.QuarkusTest
+@QuarkusTest
 class CabaretShowRepositoryTest {
 
     @Inject

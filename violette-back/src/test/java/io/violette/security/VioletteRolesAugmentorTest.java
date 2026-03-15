@@ -31,7 +31,7 @@ class VioletteRolesAugmentorTest {
 
     @Test
     @Transactional
-    @DisplayName("augment adds MANAGER role when user exists in DB with MANAGER")
+    @DisplayName("augment ajoute le rôle MANAGER quand l'utilisateur existe en base avec MANAGER")
     void augment_whenUserHasManagerRole_addsManagerToIdentity() {
         String firebaseUid = "uid-augmentor-manager";
         persistUser(firebaseUid, "manager-aug@example.com", "Manager", "User", java.util.Set.of(UserRole.MANAGER));
@@ -47,7 +47,7 @@ class VioletteRolesAugmentorTest {
 
     @Test
     @Transactional
-    @DisplayName("augment adds ARTIST role when user exists in DB with ARTIST only")
+    @DisplayName("augment ajoute le rôle ARTIST quand l'utilisateur n'a que ce rôle en base")
     void augment_whenUserHasArtistRoleOnly_addsArtistToIdentity() {
         String firebaseUid = "uid-augmentor-artist";
         persistUser(firebaseUid, "artist-aug@example.com", "Artist", "User", java.util.Set.of(UserRole.ARTIST));
@@ -63,7 +63,7 @@ class VioletteRolesAugmentorTest {
 
     @Test
     @Transactional
-    @DisplayName("augment adds no role when user does not exist in DB")
+    @DisplayName("augment n'ajoute aucun rôle quand l'utilisateur n'existe pas en base")
     void augment_whenUserNotInDb_identityUnchanged() {
         Principal principal = () -> "uid-inexistant-xyz";
         var identity = QuarkusSecurityIdentity.builder().setPrincipal(principal).build();

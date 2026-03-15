@@ -56,7 +56,7 @@ class VioletteUserServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("createUser - when user does not exist then creation succeeds and returns DTO")
+    @DisplayName("createUser — l'utilisateur est créé et le DTO est retourné")
     void whenUserDoesNotExist_thenCreationSucceeds() {
         JwtPrincipalInfo principal = new JwtPrincipalInfo("uid-new-001", "new@example.com", "Jean Dupont");
         CreateUserRequestDto request = new CreateUserRequestDto("Jean", "Dupont", null);
@@ -79,7 +79,7 @@ class VioletteUserServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("createUser - when roles omitted then default ARTIST is applied")
+    @DisplayName("createUser — le rôle ARTIST est appliqué par défaut si aucun rôle n'est fourni")
     void whenRolesOmitted_thenDefaultArtistApplied() {
         JwtPrincipalInfo principal = new JwtPrincipalInfo("uid-default-role", "default-role@example.com", "");
         CreateUserRequestDto request = new CreateUserRequestDto("Alice", "Default", null);
@@ -91,7 +91,7 @@ class VioletteUserServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("createUser - when roles provided then they are persisted")
+    @DisplayName("createUser — les rôles fournis sont persistés")
     void whenRolesProvided_thenTheyArePersisted() {
         JwtPrincipalInfo principal = new JwtPrincipalInfo("uid-with-roles", "roles@example.com", "");
         CreateUserRequestDto request = new CreateUserRequestDto("Bob", "Manager", Set.of(UserRole.MANAGER));
@@ -106,7 +106,7 @@ class VioletteUserServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("createUser - when user already exists by firebaseUid then throws UserAlreadyExistsException")
+    @DisplayName("createUser — lève UserAlreadyExistsException si le firebaseUid existe déjà")
     void whenUserExistsByFirebaseUid_thenThrowsUserAlreadyExistsException() {
         persistUser("uid-conflict-001", "conflict-uid@example.com", "Existing", "User", Set.of(UserRole.ARTIST));
 
@@ -121,7 +121,7 @@ class VioletteUserServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("createUser - when user already exists by email then throws UserAlreadyExistsException")
+    @DisplayName("createUser — lève UserAlreadyExistsException si l'email existe déjà")
     void whenUserExistsByEmail_thenThrowsUserAlreadyExistsException() {
         persistUser("uid-other-002", "conflict-email@example.com", "Existing", "User", Set.of(UserRole.ARTIST));
 
@@ -134,7 +134,7 @@ class VioletteUserServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("getUserById - when user exists then returns DTO")
+    @DisplayName("getUserById — retourne le DTO si l'utilisateur existe")
     void whenUserExists_getUserById_returnsDto() {
         VioletteUserEntity entity = persistUser("uid-get-by-id", "getbyid@example.com", "Marie", "Martin", Set.of(UserRole.MANAGER));
         Long id = entity.getId();
@@ -151,7 +151,7 @@ class VioletteUserServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("getUserById - when user does not exist then throws UserNotFoundException")
+    @DisplayName("getUserById — lève UserNotFoundException si l'utilisateur n'existe pas")
     void whenUserDoesNotExist_getUserById_throwsUserNotFoundException() {
         assertThrows(UserNotFoundException.class,
                 () -> violetteUserService.getUserById(99999L));
@@ -159,7 +159,7 @@ class VioletteUserServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("getUserByFirebaseUid - when user exists then returns DTO")
+    @DisplayName("getUserByFirebaseUid — retourne le DTO si l'utilisateur existe")
     void whenUserExists_getUserByFirebaseUid_returnsDto() {
         persistUser("uid-get-by-uid", "getbyuid@example.com", "Paul", "Dupuis", Set.of(UserRole.ARTIST));
 
@@ -173,7 +173,7 @@ class VioletteUserServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("getUserByFirebaseUid - when user does not exist then throws UserNotFoundException")
+    @DisplayName("getUserByFirebaseUid — lève UserNotFoundException si l'utilisateur n'existe pas")
     void whenUserDoesNotExist_getUserByFirebaseUid_throwsUserNotFoundException() {
         assertThrows(UserNotFoundException.class,
                 () -> violetteUserService.getUserByFirebaseUid("uid-inexistant-xyz"));
@@ -181,7 +181,7 @@ class VioletteUserServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("getUsers - returns paginated list sorted by createdAt DESC")
+    @DisplayName("getUsers — retourne la liste paginée triée par createdAt DESC")
     void getUsers_returnsPaginatedListSortedByCreatedAtDesc() {
         // Ordre de suppression : artist_booking référence show_date, show_date_skill_requirement et violette_user
         artistBookingRepository.deleteAll();
@@ -192,6 +192,8 @@ class VioletteUserServiceTest {
         cabaretShowRepository.deleteAll();
         cabaretCompanyRepository.deleteAll();
         violetteUserRepository.deleteAll();
+        violetteUserRepository.flush();
+        assertEquals(0, violetteUserRepository.count(), "Base vide après nettoyage pour isoler le test de pagination");
         persistUser("uid-pag-1", "pag1@example.com", "A", "One", Set.of(UserRole.ARTIST));
         persistUser("uid-pag-2", "pag2@example.com", "B", "Two", Set.of(UserRole.ARTIST));
         persistUser("uid-pag-3", "pag3@example.com", "C", "Three", Set.of(UserRole.ARTIST));
