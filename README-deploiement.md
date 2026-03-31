@@ -13,7 +13,7 @@ Push sur main  (ou PR vers main)
             │
             ├─ mvnw clean verify -B           (tests + JaCoCo)
             ├─ docker build linux/amd64       (Dockerfile.jvm)
-            ├─ push → ghcr.io/quentincavin/violette-back:sha-XXXXXXX
+            ├─ push → ghcr.io/quentincavin/violette-back:tag basé sur le commit SHA (ex: sha-abc1234)
             └─ push → ghcr.io/quentincavin/violette-back:latest
             ↳ Fly.io NON déployé sur push main — build CI uniquement
 
@@ -37,8 +37,36 @@ Tag v*.*.*
 | Déclencheur | Ce qui s'exécute |
 |---|---|
 | Push sur `main` | Tests Maven + build image Docker + push GHCR (CI) |
-| PR vers `main` | Idem (vérification avant merge) |
+| PR vers `main` | Tests + build (sans push GHCR garanti) |
 | Tag `v*.*.*` | Idem + déploiement Fly.io + GitHub Release + APK (CD complet) |
+
+Cette séparation entre `push main` et `tag v*.*.*` permet de sécuriser les déploiements et de distinguer clairement la **CI** (validation continue) de la **CD** (release maîtrisée).
+
+---
+
+## 🔄 Fonctionnement du pipeline
+
+### Push sur `main`
+
+- Exécuter les tests Maven (`./mvnw clean verify -B`)
+- Construire l'image Docker du backend
+- Publier l'image sur GHCR (`tag basé sur le commit SHA`, par exemple `sha-abc1234`, + `latest`)
+- Ne pas déployer sur Fly.io
+
+### Tag `v*.*.*`
+
+- Exécuter les tests Maven
+- Construire et publier l'image Docker sur GHCR
+- Déployer le backend sur Fly.io
+- Créer la GitHub Release
+- Construire l'APK Flutter
+- Publier l'APK sur la GitHub Release
+
+| Déclencheur | Backend | GHCR | Fly.io | GitHub Release | APK |
+|---|---|---|---|---|---|
+| Push sur `main` | Tests + build | Oui | Non | Non | Non |
+| PR vers `main` | Tests + build | Sans push GHCR garanti | Non | Non | Non |
+| Tag `v*.*.*` | Tests + build | Oui | Oui | Oui | Oui |
 
 ---
 
@@ -63,6 +91,36 @@ Projet-Violette/
 
 ---
 
+## 🔐 Comptes et secrets utilisés
+
+### Comptes externes
+
+- `GitHub` : héberge le code, exécute GitHub Actions, publie les Releases et stocke les images Docker dans GHCR
+- `Fly.io` : héberge le backend Quarkus en production ; `min_machines_running = 1` permet d'éviter les cold starts
+- `Aiven` : fournit la base de données MySQL utilisée par le backend
+- `Firebase` : gère l'authentification et la configuration mobile Android
+
+### Secrets GitHub Actions
+
+| Nom | Utilité | Utilisé dans |
+|---|---|---|
+| `FLY_API_TOKEN` | Authentifier `flyctl deploy` depuis GitHub Actions | `deploy.yml` → job `deploy-backend` |
+| `GOOGLE_SERVICES_JSON_BASE64` | Reconstruire `google-services.json` pendant le build Android | `deploy.yml` → job `release-apk` |
+| `ANDROID_KEYSTORE_BASE64` | Reconstruire le keystore de signature Android | `deploy.yml` → job `release-apk` |
+| `ANDROID_KEYSTORE_PASSWORD` | Ouvrir le keystore Android | `deploy.yml` → job `release-apk` |
+| `ANDROID_KEY_ALIAS` | Sélectionner l'alias de signature | `deploy.yml` → job `release-apk` |
+| `ANDROID_KEY_PASSWORD` | Déverrouiller la clé de signature | `deploy.yml` → job `release-apk` |
+
+### Secrets Fly.io
+
+| Variable | Rôle |
+|---|---|
+| `QUARKUS_DATASOURCE_JDBC_URL` | URL JDBC complète vers MySQL Aiven avec `sslMode=REQUIRED` |
+| `QUARKUS_DATASOURCE_USERNAME` | Nom d'utilisateur MySQL Aiven |
+| `QUARKUS_DATASOURCE_PASSWORD` | Mot de passe MySQL Aiven |
+
+---
+
 ## Actions manuelles — dans l'ordre chronologique
 
 ### Étape 1 — Créer un compte Aiven (base MySQL)
@@ -81,6 +139,7 @@ Projet-Violette/
 
 > **Note Aiven :** les services du plan gratuit passent en **pause automatique** après une période d'inactivité.
 > Réactiver depuis la console Aiven avant chaque démo ou soutenance.
+> ⚠️ Le plan gratuit Aiven peut mettre la base en pause après une période d'inactivité.
 
 ---
 

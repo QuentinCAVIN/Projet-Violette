@@ -35,6 +35,14 @@ Le déploiement en production (Fly.io) et la publication de l'APK Android sont d
 → [.github/workflows/backend-ci.yml](.github/workflows/backend-ci.yml) — CI backend (tests + couverture)  
 → [.github/workflows/deploy.yml](.github/workflows/deploy.yml) — CI/CD principal (image Docker + Fly.io + APK)
 
+## 🚀 Déploiement
+
+Le backend Quarkus est déployé sur `Fly.io` et utilise une base `MySQL` hébergée sur `Aiven`. Le pipeline `GitHub Actions` construit et publie l'image Docker sur `GHCR`, puis déclenche le déploiement sur tag `v*.*.*`. L'APK Android de release est publié dans les `GitHub Releases`.
+
+Le déploiement en production est déclenché uniquement via des tags versionnés afin de garantir la stabilité des versions livrées.
+
+Pour le détail des comptes, secrets, étapes manuelles et flux CI/CD, voir [README-deploiement.md](README-deploiement.md).
+
 ---
 
 ## Architecture
