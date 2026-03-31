@@ -1,24 +1,25 @@
-# Déploiement continu — Violette
+# Pipeline CI/CD — Violette
 #
 # Déclencheurs :
-#   • push sur `main`                      → Job 1 (backend) uniquement : build image + deploy Fly.io
-#   • push sur `feat/cicd-deployment-render` → idem (temporaire — retirer après merge dans main)
-#   • push d'un tag v*.*.*                 → Job 1 (backend) + Job 2 (APK) : release complète
+#   • push sur `main` ou PR vers `main` → CI : build Maven + tests + push image Docker sur GHCR
+#   • tag v*.*.*                        → CD : idem CI + déploiement Fly.io + release APK Android
 #
 # Secrets GitHub requis :
-#   FLY_API_TOKEN              → fly tokens create deploy -a violette-back
-#   GOOGLE_SERVICES_JSON_BASE64 → base64 -w0 google-services.json
-#   ANDROID_KEYSTORE_BASE64    → base64 -w0 violette-release.jks
-#   ANDROID_KEYSTORE_PASSWORD  → mot de passe du keystore
-#   ANDROID_KEY_PASSWORD       → mot de passe de la clé
-#   ANDROID_KEY_ALIAS          → alias de la clé (ex: violette-key)
+#   FLY_API_TOKEN               → fly tokens create deploy -a violette-back  (CD uniquement)
+#   GOOGLE_SERVICES_JSON_BASE64 → base64 -w0 google-services.json            (CD uniquement)
+#   ANDROID_KEYSTORE_BASE64     → base64 -w0 violette-release.jks            (CD uniquement)
+#   ANDROID_KEYSTORE_PASSWORD   → mot de passe du keystore                   (CD uniquement)
+#   ANDROID_KEY_PASSWORD        → mot de passe de la clé                     (CD uniquement)
+#   ANDROID_KEY_ALIAS           → alias de la clé (ex: violette-key)         (CD uniquement)
 
 name: Deploy
 
 on:
   push:
-    branches: [main, feat/cicd-deployment-render]
+    branches: [main]
     tags: ["v*.*.*"]
+  pull_request:
+    branches: [main]
 
 permissions:
   contents: write
@@ -93,9 +94,11 @@ jobs:
             ${{ steps.coords.outputs.image }}:latest
 
       - name: Setup flyctl
+        if: startsWith(github.ref, 'refs/tags/v')
         uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Deploy to Fly.io
+        if: startsWith(github.ref, 'refs/tags/v')
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
         run: |
