@@ -1,12 +1,13 @@
 # Configuration Fly.io — Backend Violette (Quarkus JVM, Java 21)
 # Région : Paris (cdg) — shared-cpu-1x, 512 MB RAM
 #
-# Secrets à configurer AVANT le premier déploiement (cf. setup-fly.sh) :
+# Secrets à configurer AVANT le premier déploiement :
 #
-#   fly secrets set \
+#   flyctl secrets set \
 #     QUARKUS_DATASOURCE_JDBC_URL="jdbc:mysql://<HOST>:<PORT>/violette_db?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC&sslMode=REQUIRED" \
 #     QUARKUS_DATASOURCE_USERNAME="<USER_AIVEN>" \
-#     QUARKUS_DATASOURCE_PASSWORD="<PASSWORD_AIVEN>"
+#     QUARKUS_DATASOURCE_PASSWORD="<PASSWORD_AIVEN>" \
+#     --app violette-back
 #
 # Les variables OIDC Firebase (non-sensibles) sont déclarées dans [env] ci-dessous.
 

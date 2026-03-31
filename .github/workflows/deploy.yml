@@ -30,8 +30,8 @@ env:
   IMAGE_NAME: violette-back
 
 # ---------------------------------------------------------------------------
-# Job 1 — Backend : build Maven → image Docker → GHCR → Fly.io
-# S'exécute sur chaque push main ET sur chaque tag v*.*.*
+# Job 1 — Backend : build Maven → image Docker → GHCR (CI sur push/PR main)
+#                                              → Fly.io deploy (CD sur tag uniquement)
 # ---------------------------------------------------------------------------
 jobs:
   deploy-backend:
