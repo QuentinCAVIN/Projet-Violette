@@ -23,13 +23,25 @@ Plateforme web de gestion des plannings et des cachets pour gérants de compagni
 | **Manuel utilisateur** | Guide gérant et artiste, statuts, bonnes pratiques | [docs/user-manual.md](docs/user-manual.md) |
 | **Workflow de réservation** | Statuts, transitions, règles métier détaillées | [docs/booking-workflow.md](docs/booking-workflow.md) |
 | **Documentation C4** | Explication des diagrammes C4 (contexte, container, composants, zoom niveau 4) | [docs/architecture-c4.md](docs/architecture-c4.md) |
+| **Guide de déploiement** | Fly.io, Aiven MySQL, pipeline CI/CD, secrets GitHub, checklist soutenance | [README-deploiement.md](README-deploiement.md) |
 | **Changelog** | Historique des versions | [CHANGELOG.md](CHANGELOG.md) |
 
-### Intégration continue
+### Intégration continue et déploiement
 
-Le pipeline CI (GitHub Actions) lance automatiquement `mvn clean verify` à chaque push sur les branches configurées, incluant les tests unitaires et le rapport de couverture JaCoCo (≥ 30 % de lignes couvertes).
+Le pipeline GitHub Actions lance automatiquement `mvn clean verify` à chaque push sur `main`, incluant les tests unitaires et le rapport de couverture JaCoCo (≥ 30 % de lignes couvertes). Il construit et pousse également l'image Docker vers GHCR.
 
-→ [.github/workflows/backend-ci.yml](.github/workflows/backend-ci.yml)
+Le déploiement en production (Fly.io) et la publication de l'APK Android sont déclenchés par un tag `v*.*.*`.
+
+→ [.github/workflows/backend-ci.yml](.github/workflows/backend-ci.yml) — CI backend (tests + couverture)  
+→ [.github/workflows/deploy.yml](.github/workflows/deploy.yml) — CI/CD principal (image Docker + Fly.io + APK)
+
+## 🚀 Déploiement
+
+Le backend Quarkus est déployé sur `Fly.io` et utilise une base `MySQL` hébergée sur `Aiven`. Le pipeline `GitHub Actions` construit et publie l'image Docker sur `GHCR`, puis déclenche le déploiement sur tag `v*.*.*`. L'APK Android de release est publié dans les `GitHub Releases`.
+
+Le déploiement en production est déclenché uniquement via des tags versionnés afin de garantir la stabilité des versions livrées.
+
+Pour le détail des comptes, secrets, étapes manuelles et flux CI/CD, voir [README-deploiement.md](README-deploiement.md).
 
 ---
 
@@ -91,7 +103,8 @@ Flux fonctionnels principaux : déclaration de disponibilité, réservation d'ar
 - Sécurité Firebase JWT via Quarkus OIDC, rôles métier (`ARTIST`, `MANAGER`) depuis la base backend.
 - Endpoint de santé : `GET /api/ping` — Swagger UI : `http://localhost:8080/swagger-ui`
 - 18 classes de tests, couverture JaCoCo ≥ 30 %, CI GitHub Actions backend.
-- Déployable via Docker Compose (MySQL 8 + Quarkus JVM).
+- Déployable en local via Docker Compose (MySQL 8 + Quarkus JVM).
+- Déployé en production sur Fly.io (région Paris) avec base MySQL Aiven.
 
 ## Stack technique
 

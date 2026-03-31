@@ -3,3 +3,16 @@
 
 # IntelliJ IDEA
 .idea/
+
+# Keystores Android — ne jamais versionner
+*.jks
+*.keystore
+
+# Fichiers base64 temporaires générés localement
+*.b64
+
+# Fichier de signature Android (contient les mots de passe)
+violette_front/android/key.properties
+
+# Firebase — google-services.json contient des clés API
+violette_front/android/app/google-services.json

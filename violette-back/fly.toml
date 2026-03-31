@@ -1,0 +1,52 @@
+# Configuration Fly.io — Backend Violette (Quarkus JVM, Java 21)
+# Région : Paris (cdg) — shared-cpu-1x, 512 MB RAM
+#
+# Secrets à configurer AVANT le premier déploiement :
+#
+#   flyctl secrets set \
+#     QUARKUS_DATASOURCE_JDBC_URL="jdbc:mysql://<HOST>:<PORT>/violette_db?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC&sslMode=REQUIRED" \
+#     QUARKUS_DATASOURCE_USERNAME="<USER_AIVEN>" \
+#     QUARKUS_DATASOURCE_PASSWORD="<PASSWORD_AIVEN>" \
+#     --app violette-back
+#
+# Les variables OIDC Firebase (non-sensibles) sont déclarées dans [env] ci-dessous.
+
+app            = "violette-back"
+primary_region = "cdg"
+
+[build]
+  # Image par défaut (déploiement manuel). En CI/CD, --image surcharge cette valeur.
+  image = "ghcr.io/quentincavin/violette-back:latest"
+
+[env]
+  QUARKUS_OIDC_ENABLED            = "true"
+  QUARKUS_OIDC_APPLICATION_TYPE   = "service"
+  QUARKUS_OIDC_AUTH_SERVER_URL    = "https://securetoken.google.com/violette-1f64e"
+  QUARKUS_OIDC_CLIENT_ID          = "violette-1f64e"
+  QUARKUS_OIDC_TOKEN_ISSUER       = "https://securetoken.google.com/violette-1f64e"
+  QUARKUS_OIDC_TOKEN_AUDIENCE     = "violette-1f64e"
+  QUARKUS_LOG_LEVEL               = "INFO"
+
+[http_service]
+  internal_port        = 8080
+  force_https          = true
+  # Maintenir 1 machine active en permanence (essentiel pour les démos de soutenance).
+  # Passer à 0 hors période de soutenance pour rester dans le tier gratuit.
+  auto_stop_machines   = "stop"
+  auto_start_machines  = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    grace_period = "30s"
+    interval     = "30s"
+    method       = "GET"
+    timeout      = "10s"
+    path         = "/api/ping"
+
+[[vm]]
+  # 512 MB recommandé pour Quarkus JVM.
+  # 256 MB (tier gratuit strict) est possible mais risqué sous charge.
+  # Upgrade via : fly scale memory 512 --app violette-back
+  memory   = "512mb"
+  cpu_kind = "shared"
+  cpus     = 1
