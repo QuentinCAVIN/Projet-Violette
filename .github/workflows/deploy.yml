@@ -1,0 +1,206 @@
+# Déploiement continu — Violette
+#
+# Déclencheurs :
+#   • push sur `main`                      → Job 1 (backend) uniquement : build image + deploy Fly.io
+#   • push sur `feat/cicd-deployment-render` → idem (temporaire — retirer après merge dans main)
+#   • push d'un tag v*.*.*                 → Job 1 (backend) + Job 2 (APK) : release complète
+#
+# Secrets GitHub requis :
+#   FLY_API_TOKEN              → fly tokens create deploy -a violette-back
+#   GOOGLE_SERVICES_JSON_BASE64 → base64 -w0 google-services.json
+#   ANDROID_KEYSTORE_BASE64    → base64 -w0 violette-release.jks
+#   ANDROID_KEYSTORE_PASSWORD  → mot de passe du keystore
+#   ANDROID_KEY_PASSWORD       → mot de passe de la clé
+#   ANDROID_KEY_ALIAS          → alias de la clé (ex: violette-key)
+
+name: Deploy
+
+on:
+  push:
+    branches: [main, feat/cicd-deployment-render]
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  REGISTRY:   ghcr.io
+  IMAGE_NAME: violette-back
+
+# ---------------------------------------------------------------------------
+# Job 1 — Backend : build Maven → image Docker → GHCR → Fly.io
+# S'exécute sur chaque push main ET sur chaque tag v*.*.*
+# ---------------------------------------------------------------------------
+jobs:
+  deploy-backend:
+    name: Build & Deploy Backend
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: violette-back
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+          cache: "maven"
+
+      - name: Make Maven wrapper executable
+        run: chmod +x mvnw
+
+      - name: Build and verify (tests + JaCoCo)
+        run: ./mvnw clean verify -B
+
+      - name: Compute image coordinates
+        id: coords
+        run: |
+          OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+          else
+            TAG="sha-${GITHUB_SHA::7}"
+          fi
+          echo "tag=$TAG"                                   >> "$GITHUB_OUTPUT"
+          echo "image=${{ env.REGISTRY }}/${OWNER_LC}/${{ env.IMAGE_NAME }}" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Fly.io utilise linux/amd64 → pas besoin de QEMU ni de multi-arch.
+      - name: Build and push image (linux/amd64)
+        uses: docker/build-push-action@v6
+        with:
+          context: violette-back
+          file:    violette-back/src/main/docker/Dockerfile.jvm
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ steps.coords.outputs.image }}:${{ steps.coords.outputs.tag }}
+            ${{ steps.coords.outputs.image }}:latest
+
+      - name: Setup flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy to Fly.io
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          flyctl deploy \
+            --image "${{ steps.coords.outputs.image }}:${{ steps.coords.outputs.tag }}" \
+            --wait-timeout 180
+
+      # Créer la GitHub Release uniquement sur les tags — le job APK s'y accroche ensuite.
+      - name: Create GitHub Release (tags only)
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.coords.outputs.tag }}"
+          if gh release view "$TAG" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            echo "Release $TAG existe déjà — ignoré."
+          else
+            gh release create "$TAG" \
+              --repo "${{ github.repository }}" \
+              --title "Release $TAG" \
+              --notes "## Backend\nImage Docker : \`${{ steps.coords.outputs.image }}:$TAG\` déployée sur Fly.io.\n\n## Mobile\nL'APK Android est ajouté par le job **Build & Release APK** ci-dessous." \
+              --verify-tag
+          fi
+
+# ---------------------------------------------------------------------------
+# Job 2 — APK Flutter : build release → upload sur GitHub Release
+# S'exécute UNIQUEMENT sur les tags v*.*.*  (après succès du Job 1)
+# ---------------------------------------------------------------------------
+  release-apk:
+    name: Build & Release APK
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: deploy-backend
+
+    defaults:
+      run:
+        working-directory: violette_front
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17 (requis par Android Gradle Plugin 8.x)
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          # À aligner avec `flutter --version` sur ta machine locale.
+          # Vérifier l'existence : https://github.com/flutter/flutter/releases
+          flutter-version: "3.38.3"
+          channel: stable
+          cache: true
+
+      - name: Restore google-services.json
+        env:
+          GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
+        run: |
+          if [ -z "$GOOGLE_SERVICES_JSON_BASE64" ]; then
+            echo "::error::Secret GOOGLE_SERVICES_JSON_BASE64 manquant."
+            exit 1
+          fi
+          printf '%s' "$GOOGLE_SERVICES_JSON_BASE64" | base64 -d > android/app/google-services.json
+
+      - name: Prepare Android release signing
+        working-directory: violette_front/android
+        env:
+          ANDROID_KEYSTORE_BASE64:    ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD:  ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD:       ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_ALIAS:          ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ] || [ -z "$ANDROID_KEYSTORE_PASSWORD" ] || \
+             [ -z "$ANDROID_KEY_PASSWORD" ]    || [ -z "$ANDROID_KEY_ALIAS" ]; then
+            echo "::error::Un ou plusieurs secrets Android de signature sont manquants."
+            exit 1
+          fi
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 -d > violette-release.jks
+          {
+            echo "storePassword=$ANDROID_KEYSTORE_PASSWORD"
+            echo "keyPassword=$ANDROID_KEY_PASSWORD"
+            echo "keyAlias=$ANDROID_KEY_ALIAS"
+            echo "storeFile=../violette-release.jks"
+          } > key.properties
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build release APK
+        # Note : aucun --dart-define nécessaire pour l'instant.
+        # Le frontend utilise Firebase/Firestore directement — pas d'appel HTTP au backend Quarkus.
+        # À ajouter ici quand la migration Firebase → Quarkus sera effectuée :
+        #   --dart-define=API_BASE_URL=https://violette-back.fly.dev
+        run: flutter build apk --release
+
+      - name: Upload APK to GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          gh release upload "$TAG" \
+            --repo "${{ github.repository }}" \
+            --clobber \
+            build/app/outputs/flutter-apk/app-release.apk
+          echo "APK publié sur : https://github.com/${{ github.repository }}/releases/tag/$TAG"
