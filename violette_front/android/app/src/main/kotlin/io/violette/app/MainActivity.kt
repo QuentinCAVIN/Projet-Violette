@@ -1,4 +1,4 @@
-package com.example.violette_front
+package io.violette.app
 
 import io.flutter.embedding.android.FlutterActivity
 
