@@ -4,28 +4,41 @@ Stack de production : **Fly.io** (backend Quarkus) + **Aiven** (MySQL) + **GitHu
 
 ---
 
-## Architecture de déploiement
+## Architecture CI/CD
 
 ```
-Push sur main
+Push sur main  (ou PR vers main)
     │
-    └─► deploy.yml (Job 1 : deploy-backend)
+    └─► deploy.yml — Job : deploy-backend
             │
-            ├─ mvnw clean verify -B        (tests + JaCoCo)
-            ├─ docker build (linux/amd64)  (Dockerfile.jvm)
+            ├─ mvnw clean verify -B           (tests + JaCoCo)
+            ├─ docker build linux/amd64       (Dockerfile.jvm)
             ├─ push → ghcr.io/quentincavin/violette-back:sha-XXXXXXX
-            ├─ push → ghcr.io/quentincavin/violette-back:latest
-            └─ flyctl deploy --image ...  → violette-back.fly.dev
+            └─ push → ghcr.io/quentincavin/violette-back:latest
+            ↳ Fly.io NON déployé sur push main — build CI uniquement
 
-Push d'un tag v*.*.*
+Tag v*.*.*
     │
-    ├─► deploy.yml (Job 1 : deploy-backend)  [idem push main + crée GitHub Release]
+    ├─► deploy.yml — Job : deploy-backend
+    │       │
+    │       ├─ mvnw clean verify -B
+    │       ├─ docker build + push GHCR       (tag vX.Y.Z + latest)
+    │       ├─ flyctl deploy → violette-back.fly.dev   ← déploiement prod
+    │       └─ gh release create vX.Y.Z
     │
-    └─► deploy.yml (Job 2 : release-apk)    [après succès Job 1]
+    └─► deploy.yml — Job : release-apk        (après succès deploy-backend)
             │
             ├─ flutter build apk --release
             └─ upload app-release.apk → GitHub Release vX.Y.Z
 ```
+
+**Résumé de la stratégie :**
+
+| Déclencheur | Ce qui s'exécute |
+|---|---|
+| Push sur `main` | Tests Maven + build image Docker + push GHCR (CI) |
+| PR vers `main` | Idem (vérification avant merge) |
+| Tag `v*.*.*` | Idem + déploiement Fly.io + GitHub Release + APK (CD complet) |
 
 ---
 
@@ -35,11 +48,9 @@ Push d'un tag v*.*.*
 Projet-Violette/
 ├── .github/
 │   └── workflows/
-│       ├── deploy.yml           ← Pipeline CD principal (Fly.io + APK)
-│       ├── backend-ci.yml       ← CI backend (inchangé)
-│       ├── flutter-ci.yml       ← CI Flutter (inchangé)
-│       ├── backend-cd.yml       ← ARCHIVÉ (Oracle Cloud) — ne pas utiliser
-│       └── flutter-cd.yml       ← ARCHIVÉ (Oracle Cloud) — ne pas utiliser
+│       ├── deploy.yml           ← Pipeline CI/CD principal
+│       ├── backend-ci.yml       ← CI backend indépendant (tests + couverture)
+│       └── flutter-ci.yml       ← CI Flutter indépendant (analyze + tests)
 ├── violette-back/
 │   ├── fly.toml                 ← Configuration Fly.io
 │   ├── src/main/docker/
@@ -47,9 +58,7 @@ Projet-Violette/
 │   └── src/main/resources/
 │       └── application.properties
 ├── violette_front/              ← Application Flutter
-├── setup-fly.sh                 ← Script de première configuration
-├── docker-compose.yml           ← Docker Compose local (dev)
-└── docker-compose.prod.yml      ← ARCHIVÉ (Oracle Cloud)
+└── docker-compose.yml           ← Docker Compose local (dev uniquement)
 ```
 
 ---
@@ -60,24 +69,26 @@ Projet-Violette/
 
 1. Aller sur [https://aiven.io](https://aiven.io) → **Start free**
 2. Créer un projet (ex: `violette`)
-3. Créer un service **MySQL** :
-   - Plan : **Free** (1 CPU, 1 GB RAM, 5 GB stockage)
-   - Version : **MySQL 8**
-   - Région : **Google Cloud Europe West** (ou AWS Frankfurt)
-4. Attendre que le service soit en état **Running**
-5. Dans **Overview → Connection information**, noter :
+3. Créer un service **MySQL 8** — vérifier les limites actuelles du plan gratuit directement sur [aiven.io/pricing](https://aiven.io/pricing), elles sont susceptibles de changer
+4. Choisir une région **Google Cloud Europe West** ou **AWS Frankfurt**
+5. Attendre que le service soit en état **Running**
+6. Dans **Overview → Connection information**, noter :
    - **Host** (ex: `mysql-xxxx-xxxx.aivencloud.com`)
    - **Port** (ex: `12345`)
-   - **User** : `avnadmin`
-   - **Password** : (généré automatiquement)
-   - **Database** : créer une base `violette_db` dans l'onglet **Databases**
-6. Aiven impose SSL — c'est déjà pris en charge par le paramètre `sslMode=REQUIRED` dans `setup-fly.sh`
+   - **User** (ex: `avnadmin`)
+   - **Password** (généré automatiquement)
+7. Dans l'onglet **Databases**, créer une base `violette_db`
+
+> **Note Aiven :** les services du plan gratuit passent en **pause automatique** après une période d'inactivité.
+> Réactiver depuis la console Aiven avant chaque démo ou soutenance.
+
+---
 
 ### Étape 2 — Créer un compte Fly.io
 
 1. Aller sur [https://fly.io](https://fly.io) → **Sign up**
 2. Vérifier l'email
-3. Installer flyctl sur ta machine :
+3. Installer flyctl :
    ```powershell
    # Windows (PowerShell admin)
    iwr https://fly.io/install.ps1 -useb | iex
@@ -87,43 +98,54 @@ Projet-Violette/
    flyctl auth login
    ```
 
-### Étape 3 — Lancer le script de première configuration
+> **Note Fly.io :** vérifier les limites et conditions du plan gratuit sur [fly.io/docs/about/pricing](https://fly.io/docs/about/pricing). Avec `min_machines_running = 1` et `memory = 512mb`, la machine tourne en permanence — ce qui peut dépasser le quota gratuit selon la politique tarifaire en vigueur. Prévoir ~5 $/mois si nécessaire.
 
-Depuis la racine du repo (sur WSL, Git Bash, ou macOS/Linux) :
+---
+
+### Étape 3 — Première configuration Fly.io
+
+Depuis le dossier `violette-back/` :
 
 ```bash
-bash setup-fly.sh
-```
-
-Le script :
-1. Crée l'application `violette-back` sur Fly.io
-2. Injecte les secrets MySQL Aiven
-3. Effectue le premier déploiement (image GHCR `:latest`)
-4. Génère et affiche le `FLY_API_TOKEN`
-
-**⚠ Note Windows :** si tu es sur PowerShell pur, exécute les commandes manuellement (cf. section ci-dessous).
-
-#### Commandes manuelles équivalentes (Windows PowerShell)
-
-```powershell
-# 1. Créer l'app
+# Créer l'application
 flyctl apps create violette-back --machines
 
-# 2. Injecter les secrets (remplacer les valeurs)
+# Injecter les secrets MySQL Aiven (remplacer les valeurs réelles)
+flyctl secrets set \
+  "QUARKUS_DATASOURCE_JDBC_URL=jdbc:mysql://HOST:PORT/violette_db?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC&sslMode=REQUIRED" \
+  "QUARKUS_DATASOURCE_USERNAME=avnadmin" \
+  "QUARKUS_DATASOURCE_PASSWORD=MOT_DE_PASSE_AIVEN" \
+  --app violette-back
+
+# Premier déploiement (depuis violette-back/ où fly.toml est présent)
+flyctl deploy --wait-timeout 180
+```
+
+Vérifier que le backend répond :
+
+```bash
+curl https://violette-back.fly.dev/api/ping
+# Attendu : {"status":"pong","version":"0.3.0"}
+```
+
+Swagger UI : [https://violette-back.fly.dev/swagger-ui](https://violette-back.fly.dev/swagger-ui)
+
+**Commandes équivalentes sous Windows PowerShell :**
+
+```powershell
+flyctl apps create violette-back --machines
+
 flyctl secrets set `
   "QUARKUS_DATASOURCE_JDBC_URL=jdbc:mysql://HOST:PORT/violette_db?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC&sslMode=REQUIRED" `
   "QUARKUS_DATASOURCE_USERNAME=avnadmin" `
   "QUARKUS_DATASOURCE_PASSWORD=MOT_DE_PASSE_AIVEN" `
   --app violette-back
 
-# 3. Premier déploiement (depuis le dossier violette-back)
 cd violette-back
 flyctl deploy --wait-timeout 180
-cd ..
-
-# 4. Générer le token CI/CD
-flyctl tokens create deploy --name "github-actions-violette-back" --app violette-back
 ```
+
+---
 
 ### Étape 4 — Configurer les secrets GitHub Actions
 
@@ -131,12 +153,14 @@ Dans **GitHub → Settings → Secrets and variables → Actions → New reposit
 
 | Nom du secret | Description | Comment l'obtenir |
 |---|---|---|
-| `FLY_API_TOKEN` | Token de déploiement Fly.io | Résultat de `setup-fly.sh` (étape 4) ou `flyctl tokens create deploy` |
+| `FLY_API_TOKEN` | Token de déploiement Fly.io | `flyctl tokens create deploy --name "github-actions" --app violette-back` |
 | `GOOGLE_SERVICES_JSON_BASE64` | `google-services.json` encodé en base64 | `base64 -w0 violette_front/android/app/google-services.json` |
 | `ANDROID_KEYSTORE_BASE64` | Keystore de signature Android en base64 | `base64 -w0 violette-release.jks` |
 | `ANDROID_KEYSTORE_PASSWORD` | Mot de passe du keystore | Choisi lors de `keytool -genkey` |
 | `ANDROID_KEY_PASSWORD` | Mot de passe de la clé | Choisi lors de `keytool -genkey` |
 | `ANDROID_KEY_ALIAS` | Alias de la clé | Ex: `violette-key` |
+
+> **FLY_API_TOKEN :** la commande `flyctl tokens create deploy` génère un token de déploiement dédié au scope de l'application. C'est la méthode recommandée pour GitHub Actions, à préférer au token personnel (`flyctl auth token`).
 
 #### Générer un keystore Android (si pas encore fait)
 
@@ -159,49 +183,38 @@ base64 -w0 violette-release.jks
 [Convert]::ToBase64String([IO.File]::ReadAllBytes("violette-release.jks"))
 ```
 
----
-
-## Premier déploiement
-
-Après `setup-fly.sh`, vérifier que le backend répond :
-
-```bash
-curl https://violette-back.fly.dev/api/ping
-# Attendu : {"status":"pong","version":"0.3.0"}
-```
-
-Swagger UI : [https://violette-back.fly.dev/swagger-ui](https://violette-back.fly.dev/swagger-ui)
-
-Pour forcer un redéploiement manuel :
-
-```bash
-cd violette-back
-flyctl deploy
-```
+> Le fichier `violette-release.jks` est protégé par `.gitignore` — ne jamais le commiter.
 
 ---
 
-## Déclencher la première release APK
+## Déclencher la première release complète (APK + déploiement)
 
 ```bash
 git tag v0.3.0
 git push origin v0.3.0
 ```
 
-Cela déclenche `deploy.yml` avec les deux jobs :
-1. **deploy-backend** : redéploie le backend + crée la GitHub Release `v0.3.0`
-2. **release-apk** : build l'APK + l'uploade sur la release
+Cela déclenche `deploy.yml` avec les deux jobs en séquence :
+1. **deploy-backend** : tests + build image + push GHCR + déploiement Fly.io + création GitHub Release `v0.3.0`
+2. **release-apk** : build APK Flutter + upload sur la release (démarre après succès du job 1)
 
-Résultat : [https://github.com/quentincavin/Projet-Violette/releases](https://github.com/quentincavin/Projet-Violette/releases)
+Résultat visible sur : [https://github.com/QuentinCAVIN/Projet-Violette/releases](https://github.com/QuentinCAVIN/Projet-Violette/releases)
 
 ---
 
 ## Déploiement continu (day-to-day)
 
-| Action | Déclencheur | Résultat |
+| Action | Déclencheur | Ce qui s'exécute |
 |---|---|---|
-| `git push origin main` | Push sur `main` | Backend redéployé sur Fly.io |
-| `git tag vX.Y.Z && git push origin vX.Y.Z` | Tag `v*.*.*` | Backend redéployé + APK publié sur GitHub Releases |
+| `git push origin main` | Push sur `main` | Tests + build image Docker + push GHCR (**pas** de déploiement Fly.io) |
+| `git tag vX.Y.Z && git push origin vX.Y.Z` | Tag `v*.*.*` | Tests + build + push GHCR + **déploiement Fly.io** + APK sur GitHub Releases |
+
+Pour forcer un redéploiement manuel sans créer de tag :
+
+```bash
+cd violette-back
+flyctl deploy
+```
 
 ---
 
@@ -213,6 +226,9 @@ flyctl logs --app violette-back
 
 # Statut des machines
 flyctl status --app violette-back
+
+# Historique des déploiements
+flyctl releases --app violette-back
 
 # SSH dans le container (debug)
 flyctl ssh console --app violette-back
@@ -226,10 +242,10 @@ flyctl apps restart violette-back
 ## Gestion des secrets Fly.io
 
 ```bash
-# Lister les secrets (noms seulement)
+# Lister les secrets configurés (noms uniquement)
 flyctl secrets list --app violette-back
 
-# Mettre à jour un secret (ex: nouveau mot de passe BDD)
+# Mettre à jour un secret
 flyctl secrets set QUARKUS_DATASOURCE_PASSWORD="nouveau_mot_de_passe" --app violette-back
 
 # Supprimer un secret
@@ -240,17 +256,19 @@ flyctl secrets unset NOM_SECRET --app violette-back
 
 ## Mise à l'échelle (soutenance)
 
-Pour garantir la disponibilité pendant la soutenance, passer à `min_machines_running = 1` est déjà configuré dans `fly.toml`. Si besoin de plus de RAM :
+`fly.toml` est configuré avec `min_machines_running = 1` — la machine reste active en permanence. Si la mémoire 512 MB ne suffit pas (OOM visible dans les logs) :
 
 ```bash
-flyctl scale memory 512 --app violette-back
+flyctl scale memory 1024 --app violette-back
 ```
 
-Pour revenir en mode économique après la soutenance :
+Pour passer en mode économique après la soutenance (machine s'arrête si pas de trafic) :
 
 ```bash
-# Éditer fly.toml : min_machines_running = 0
-flyctl deploy  # applique la config
+# Éditer violette-back/fly.toml : min_machines_running = 0
+# Puis redéployer :
+cd violette-back
+flyctl deploy
 ```
 
 ---
@@ -260,31 +278,28 @@ flyctl deploy  # applique la config
 - [ ] `curl https://violette-back.fly.dev/api/ping` répond `{"status":"pong","version":"0.3.0"}`
 - [ ] Swagger UI accessible : `https://violette-back.fly.dev/swagger-ui`
 - [ ] `flyctl status --app violette-back` affiche **1 machine running**
-- [ ] Dernier tag déployé vérifié : `flyctl releases --app violette-back`
-- [ ] APK Android de la dernière release téléchargeable depuis GitHub Releases
-- [ ] APK installé sur l'appareil de démo et fonctionnel
+- [ ] Dernier déploiement listé : `flyctl releases --app violette-back`
+- [ ] Service Aiven MySQL en état **Running** (pas en pause)
+- [ ] APK de la dernière release téléchargeable depuis GitHub Releases
+- [ ] APK installé et fonctionnel sur l'appareil de démo
 - [ ] Authentification Firebase opérationnelle sur l'APK de release
-- [ ] Secret `FLY_API_TOKEN` non expiré dans GitHub (tokens → vérifier validity)
-- [ ] Aiven MySQL en état **Running** (pas en pause automatique)
-
-> **Aiven free tier** : les bases MySQL passent en **pause** après 30 jours d'inactivité.
-> Réactiver depuis la console Aiven si nécessaire.
+- [ ] Secret `FLY_API_TOKEN` présent dans GitHub Actions
 
 ---
 
 ## Variables d'environnement — référence complète
 
-### Secrets Fly.io (sensibles — jamais en clair)
+### Secrets Fly.io (sensibles — injectés via `flyctl secrets set`)
 
-| Variable Fly.io | Correspond à | Valeur |
+| Variable Fly.io | Propriété Quarkus correspondante | Rôle |
 |---|---|---|
-| `QUARKUS_DATASOURCE_JDBC_URL` | `quarkus.datasource.jdbc.url` | `jdbc:mysql://HOST:PORT/violette_db?...&sslMode=REQUIRED` |
-| `QUARKUS_DATASOURCE_USERNAME` | `quarkus.datasource.username` | Utilisateur Aiven |
-| `QUARKUS_DATASOURCE_PASSWORD` | `quarkus.datasource.password` | Mot de passe Aiven |
+| `QUARKUS_DATASOURCE_JDBC_URL` | `quarkus.datasource.jdbc.url` | URL JDBC complète vers Aiven avec `sslMode=REQUIRED` |
+| `QUARKUS_DATASOURCE_USERNAME` | `quarkus.datasource.username` | Utilisateur MySQL Aiven |
+| `QUARKUS_DATASOURCE_PASSWORD` | `quarkus.datasource.password` | Mot de passe MySQL Aiven |
 
-### Variables publiques Fly.io (dans `fly.toml [env]`)
+### Variables publiques Fly.io (déclarées dans `violette-back/fly.toml [env]`)
 
-| Variable | Valeur |
+| Variable | Valeur configurée |
 |---|---|
 | `QUARKUS_OIDC_ENABLED` | `true` |
 | `QUARKUS_OIDC_APPLICATION_TYPE` | `service` |
