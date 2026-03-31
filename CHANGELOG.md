@@ -3,6 +3,42 @@ Toutes les versions suivent la convention Semantic Versioning (MAJOR.MINOR.PATCH
 
 ---
 
+## v0.3.1 – Pipeline de livraison, déploiement Fly.io et documentation de release
+Date : 01-04-2026
+
+### Infrastructure / Livraison
+#### Added
+- Déploiement backend sur Fly.io avec configuration dédiée via `fly.toml`.
+- Utilisation d'Aiven comme base de données MySQL pour l'environnement de production.
+- Pipeline CI/CD principal (`deploy.yml`) pour construire l'image Docker, publier sur GHCR,
+  déployer le backend sur tag versionné et publier l'APK Android dans les GitHub Releases.
+- Publication de l'APK Android via GitHub Releases sur les tags de version.
+
+#### Changed
+- Déclenchement du déploiement backend sur tag versionné uniquement, afin de distinguer
+  la CI continue de la release de production.
+
+### Documentation / Déploiement
+#### Added
+- `README-deploiement.md` : guide de déploiement Fly.io + Aiven, secrets GitHub Actions,
+  flux CI/CD et checklist de soutenance.
+
+#### Changed
+- Harmonisation de la documentation de déploiement avec le workflow GitHub Actions réel.
+- Mise à jour du `README.md` principal pour référencer explicitement le guide de déploiement.
+
+### Front-end (Flutter)
+#### Changed
+- Configuration Android de release : `applicationId` aligné sur `io.violette.app`,
+  préparation de la signature release et publication APK automatisée.
+
+### Repository
+#### Changed
+- Sécurisation des fichiers sensibles dans `.gitignore` (`*.jks`, `*.b64`, `key.properties`,
+  `google-services.json`).
+
+---
+
 ## v0.3.0 – Architecture backend, domaines métier et documentation technique
 Date : 13-03-2026
 
