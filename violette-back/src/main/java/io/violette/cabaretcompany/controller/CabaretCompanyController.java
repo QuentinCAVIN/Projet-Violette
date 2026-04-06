@@ -27,7 +27,7 @@ import java.util.List;
  * Squelette — les endpoints de création/modification seront ajoutés ultérieurement.
  */
 @Path("/companies")
-@Tag(name = "Companies", description = "Gestion des compagnies de cabaret et de leurs revues")
+@Tag(name = "Compagnies", description = "Gestion des compagnies de cabaret et de leurs revues")
 @Authenticated
 public class CabaretCompanyController {
 

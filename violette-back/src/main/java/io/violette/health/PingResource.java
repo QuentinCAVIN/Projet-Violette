@@ -10,7 +10,7 @@ import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 @Path("/ping")
-@Tag(name = "Health", description = "Endpoints de santé et diagnostic")
+@Tag(name = "Santé", description = "Points d'entrée de santé et de diagnostic")
 public class PingResource {
 
     @ConfigProperty(name = "quarkus.application.version")

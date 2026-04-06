@@ -1,4 +1,4 @@
-# Guide de déploiement — Violette
+﻿# Guide de déploiement — Violette
 
 Stack de production : **Fly.io** (backend Quarkus) + **Aiven** (MySQL) + **GitHub Releases** (APK Android).
 
@@ -44,7 +44,7 @@ Cette séparation entre `push main` et `tag v*.*.*` permet de sécuriser les dé
 
 ---
 
-## 🔄 Fonctionnement du pipeline
+## Fonctionnement du pipeline
 
 ### Push sur `main`
 
@@ -91,7 +91,7 @@ Projet-Violette/
 
 ---
 
-## 🔐 Comptes et secrets utilisés
+## Comptes et secrets utilisés
 
 ### Comptes externes
 
@@ -139,7 +139,7 @@ Projet-Violette/
 
 > **Note Aiven :** les services du plan gratuit passent en **pause automatique** après une période d'inactivité.
 > Réactiver depuis la console Aiven avant chaque démo ou soutenance.
-> ⚠️ Le plan gratuit Aiven peut mettre la base en pause après une période d'inactivité.
+> Attention! Le plan gratuit Aiven peut mettre la base en pause après une période d'inactivité.
 
 ---
 
@@ -180,11 +180,13 @@ flyctl secrets set \
 flyctl deploy --wait-timeout 180
 ```
 
+> **OIDC Firebase en production** : les variables `QUARKUS_OIDC_*` sont déclarées dans `fly.toml [env]` avec le project ID Firebase hardcodé. Aucun secret Fly.io supplémentaire n'est nécessaire pour l'authentification. `FIREBASE_PROJECT_ID` n'est requis qu'en développement local avec le profil `firebase`.
+
 Vérifier que le backend répond :
 
 ```bash
 curl https://violette-back.fly.dev/api/ping
-# Attendu : {"status":"pong","version":"0.3.0"}
+# Attendu : {"status":"pong","version":"X.Y.Z"}
 ```
 
 Swagger UI : [https://violette-back.fly.dev/swagger-ui](https://violette-back.fly.dev/swagger-ui)
@@ -249,12 +251,12 @@ base64 -w0 violette-release.jks
 ## Déclencher la première release complète (APK + déploiement)
 
 ```bash
-git tag v0.3.0
-git push origin v0.3.0
+git tag vX.Y.Z
+git push origin vX.Y.Z
 ```
 
 Cela déclenche `deploy.yml` avec les deux jobs en séquence :
-1. **deploy-backend** : tests + build image + push GHCR + déploiement Fly.io + création GitHub Release `v0.3.0`
+1. **deploy-backend** : tests + build image + push GHCR + déploiement Fly.io + création GitHub Release `vX.Y.Z`
 2. **release-apk** : build APK Flutter + upload sur la release (démarre après succès du job 1)
 
 Résultat visible sur : [https://github.com/QuentinCAVIN/Projet-Violette/releases](https://github.com/QuentinCAVIN/Projet-Violette/releases)
@@ -334,11 +336,12 @@ flyctl deploy
 
 ## Checklist pré-soutenance
 
-- [ ] `curl https://violette-back.fly.dev/api/ping` répond `{"status":"pong","version":"0.3.0"}`
+- [ ] `curl https://violette-back.fly.dev/api/ping` répond `pong` et un champ `version` identique à la `<version>` du `violette-back/pom.xml` utilisé pour builder l’image déployée (et cohérente avec le tag de release, ex. sans `-SNAPSHOT` en prod)
 - [ ] Swagger UI accessible : `https://violette-back.fly.dev/swagger-ui`
 - [ ] `flyctl status --app violette-back` affiche **1 machine running**
 - [ ] Dernier déploiement listé : `flyctl releases --app violette-back`
 - [ ] Service Aiven MySQL en état **Running** (pas en pause)
+- [ ] `GET /api/users/me` avec un token Firebase valide → **200** (valide que OIDC est actif et que le token Firebase est accepté en prod)
 - [ ] APK de la dernière release téléchargeable depuis GitHub Releases
 - [ ] APK installé et fonctionnel sur l'appareil de démo
 - [ ] Authentification Firebase opérationnelle sur l'APK de release
@@ -360,10 +363,12 @@ flyctl deploy
 
 | Variable | Valeur configurée |
 |---|---|
-| `QUARKUS_OIDC_ENABLED` | `true` |
 | `QUARKUS_OIDC_APPLICATION_TYPE` | `service` |
 | `QUARKUS_OIDC_AUTH_SERVER_URL` | `https://securetoken.google.com/violette-1f64e` |
 | `QUARKUS_OIDC_CLIENT_ID` | `violette-1f64e` |
 | `QUARKUS_OIDC_TOKEN_ISSUER` | `https://securetoken.google.com/violette-1f64e` |
 | `QUARKUS_OIDC_TOKEN_AUDIENCE` | `violette-1f64e` |
 | `QUARKUS_LOG_LEVEL` | `INFO` |
+
+> **QUARKUS_OIDC_ENABLED** n'est pas dans fly.toml : propriete build-time fixed. Activee via %prod.quarkus.oidc.enabled=true dans application.properties au build de l'image. Les variables ci-dessus sont des parametres runtime OIDC.
+

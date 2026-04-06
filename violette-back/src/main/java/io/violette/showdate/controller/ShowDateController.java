@@ -30,7 +30,7 @@ import java.util.List;
  * Pas de logique métier ici — uniquement routage HTTP et délégation.
  */
 @Path("/show-dates")
-@Tag(name = "ShowDates", description = "Gestion des dates de spectacle (feuilles de route)")
+@Tag(name = "Dates de spectacle", description = "Gestion des dates de spectacle (feuilles de route)")
 @Authenticated
 public class ShowDateController {
 

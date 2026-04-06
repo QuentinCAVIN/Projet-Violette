@@ -381,7 +381,7 @@ Vérification :
 
 ```bash
 curl http://localhost:8080/api/ping
-# {"status":"pong","version":"0.1.0"}
+# {"status":"pong","version":"…"} — la valeur correspond à la balise version du pom.xml au build
 ```
 
 ### Lancer avec Docker (docker-compose)
@@ -410,7 +410,7 @@ En mode détaché (arrière-plan) : `docker compose up -d`.
 
 ```bash
 curl http://localhost:8080/api/ping
-# {"status":"pong","version":"0.1.0"}
+# {"status":"pong","version":"…"} — la valeur correspond à la balise version du pom.xml au build
 ```
 
 Le backend attend que MySQL soit prêt (healthcheck) avant de démarrer. Les migrations Flyway s’exécutent automatiquement au démarrage du conteneur backend.
@@ -446,6 +446,8 @@ Par défaut, OIDC est **désactivé** (`quarkus.oidc.enabled=false`). Les endpoi
 #### Rôle du profil `firebase`
 
 Le fichier `application-firebase.properties` est chargé lorsque le profil `firebase` est actif. Il active OIDC et configure la validation des tokens Firebase (issuer, audience, auth-server-url). Il force aussi une **datasource H2 en mémoire** : aucun MySQL n'est requis pour lancer le backend en local avec Firebase. Sans ce profil, le backend utilise la config par défaut (OIDC désactivé, MySQL).
+
+> **En production (Fly.io)**, OIDC est activé sans le profil `firebase`. Les variables `QUARKUS_OIDC_*` sont déclarées directement dans `fly.toml [env]` avec le project ID Firebase hardcodé (`violette-1f64e`). `FIREBASE_PROJECT_ID` n'est **pas** un secret Fly.io requis — il n'intervient que pour ce profil local. Voir `README-deploiement.md` section "Variables publiques Fly.io".
 
 #### Différence entre `-Dquarkus.profile=firebase` et `QUARKUS_PROFILE=firebase`
 
