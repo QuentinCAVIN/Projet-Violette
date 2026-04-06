@@ -3,6 +3,41 @@ Toutes les versions suivent la convention Semantic Versioning (MAJOR.MINOR.PATCH
 
 ---
 
+## v0.3.2 – Correctifs OIDC production, version backend unifiée et Swagger homogénéisé en français
+Date : 06-04-2026
+
+### Sécurité
+#### Fixed
+- Activation explicite d'OIDC pour le profil de production via `%prod.quarkus.oidc.enabled=true`
+  afin de corriger le refus d'accès (`403`) sur les endpoints `@Authenticated` en production.
+
+### Back-end (Quarkus) / Configuration
+#### Changed
+- Clarification du comportement Quarkus `build-time fixed` pour `quarkus.oidc.enabled` et séparation
+  des paramètres OIDC de build (dans `application.properties`) et runtime (dans `fly.toml [env]`).
+- Centralisation de la version backend dans `violette-back/pom.xml` comme source de vérité.
+- Alignement de `quarkus.application.version` et `quarkus.smallrye-openapi.info-version`
+  sur la version Maven du projet via filtrage de ressources.
+- Configuration du `maven-resources-plugin` avec délimiteur `@` uniquement (`useDefaultDelimiters=false`)
+  pour préserver les expressions Quarkus `${VAR:default}`.
+
+### Documentation API (Swagger / OpenAPI)
+#### Changed
+- Uniformisation en français des libellés exposés dans Swagger/OpenAPI (`@Tag`, `@Operation`,
+  `@APIResponse`) sur les contrôleurs backend (`violetteuser`, `cabaretcompany`, `showdate`,
+  `artistbooking`, `health`).
+- Harmonisation du ton et des formulations des descriptions HTTP (notamment les réponses d'erreur)
+  pour une lecture cohérente côté jury et documentation technique.
+
+### Documentation / Déploiement
+#### Changed
+- Mise à jour de `README-deploiement.md` pour expliciter l'activation OIDC en production,
+  la distinction build-time/runtime et les vérifications de pré-soutenance associées.
+- Mise à jour de `violette-back/README.md` pour clarifier le comportement du profil `firebase`
+  en local et le mode d'activation OIDC en production.
+
+---
+
 ## v0.3.1 – Pipeline de livraison, déploiement Fly.io et documentation de release
 Date : 01-04-2026
 
