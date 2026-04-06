@@ -30,7 +30,7 @@ import java.util.List;
  * Contrôleur utilisateur. Délègue toute la logique au service ; pas de gestion sécurité ni JWT ici.
  */
 @Path("/users")
-@Tag(name = "Users", description = "Authenticated user profile and context")
+@Tag(name = "Utilisateurs", description = "Gestion des profils utilisateurs et du contexte authentifié")
 @Authenticated
 public class VioletteUserController {
 
@@ -43,9 +43,9 @@ public class VioletteUserController {
     @GET
     @Path("/me")
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Current user context", description = "Returns authenticated user info from JWT (firebaseUid, email, name).")
-    @APIResponse(responseCode = "200", description = "Authenticated user", content = @Content(schema = @Schema(implementation = AuthenticatedUserDto.class)))
-    @APIResponse(responseCode = "401", description = "Not authenticated (missing or invalid token)")
+    @Operation(summary = "Contexte de l'utilisateur courant", description = "Retourne les informations de l'utilisateur authentifié depuis le JWT (firebaseUid, email, nom).")
+    @APIResponse(responseCode = "200", description = "Utilisateur authentifié", content = @Content(schema = @Schema(implementation = AuthenticatedUserDto.class)))
+    @APIResponse(responseCode = "401", description = "Non authentifié (token absent ou invalide)")
     public Response me() {
         return currentUserContextProvider.getCurrentPrincipal()
                 .map(violetteUserService::getCurrentUser)
@@ -56,10 +56,10 @@ public class VioletteUserController {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Create user profile", description = "Creates backend user profile from JWT (firebaseUid, email) and request body (firstName, lastName, roles).")
-    @APIResponse(responseCode = "201", description = "User created", content = @Content(schema = @Schema(implementation = VioletteUserDto.class)))
-    @APIResponse(responseCode = "401", description = "Not authenticated")
-    @APIResponse(responseCode = "409", description = "User already exists (same firebaseUid or email)")
+    @Operation(summary = "Créer un profil utilisateur", description = "Crée un profil utilisateur backend à partir du JWT (firebaseUid, email) et du corps de requête (firstName, lastName, roles).")
+    @APIResponse(responseCode = "201", description = "Utilisateur créé", content = @Content(schema = @Schema(implementation = VioletteUserDto.class)))
+    @APIResponse(responseCode = "401", description = "Non authentifié")
+    @APIResponse(responseCode = "409", description = "Utilisateur déjà existant (même firebaseUid ou email)")
     public Response createUser(@Valid CreateUserRequestDto request) {
         return currentUserContextProvider.getCurrentPrincipal()
                 .map(principal -> {
@@ -73,10 +73,10 @@ public class VioletteUserController {
     @Path("/by-firebase/{firebaseUid}")
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed("MANAGER")
-    @Operation(summary = "Get user by Firebase UID", description = "Returns user profile by Firebase UID. Requires MANAGER role.")
-    @APIResponse(responseCode = "200", description = "User found", content = @Content(schema = @Schema(implementation = VioletteUserDto.class)))
-    @APIResponse(responseCode = "403", description = "Forbidden (insufficient role)")
-    @APIResponse(responseCode = "404", description = "User not found")
+    @Operation(summary = "Récupérer un utilisateur par Firebase UID", description = "Retourne le profil utilisateur par Firebase UID. Requiert le rôle MANAGER.")
+    @APIResponse(responseCode = "200", description = "Utilisateur trouvé", content = @Content(schema = @Schema(implementation = VioletteUserDto.class)))
+    @APIResponse(responseCode = "403", description = "Accès refusé (rôle insuffisant)")
+    @APIResponse(responseCode = "404", description = "Utilisateur introuvable")
     public Response getByFirebaseUid(@jakarta.ws.rs.PathParam("firebaseUid") String firebaseUid) {
         VioletteUserDto dto = violetteUserService.getUserByFirebaseUid(firebaseUid);
         return Response.ok(dto).build();
@@ -86,10 +86,10 @@ public class VioletteUserController {
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed("MANAGER")
-    @Operation(summary = "Get user by ID", description = "Returns user profile by id. Requires MANAGER role.")
-    @APIResponse(responseCode = "200", description = "User found", content = @Content(schema = @Schema(implementation = VioletteUserDto.class)))
-    @APIResponse(responseCode = "403", description = "Forbidden (insufficient role)")
-    @APIResponse(responseCode = "404", description = "User not found")
+    @Operation(summary = "Récupérer un utilisateur par identifiant", description = "Retourne le profil utilisateur par identifiant. Requiert le rôle MANAGER.")
+    @APIResponse(responseCode = "200", description = "Utilisateur trouvé", content = @Content(schema = @Schema(implementation = VioletteUserDto.class)))
+    @APIResponse(responseCode = "403", description = "Accès refusé (rôle insuffisant)")
+    @APIResponse(responseCode = "404", description = "Utilisateur introuvable")
     public Response getById(@jakarta.ws.rs.PathParam("id") Long id) {
         VioletteUserDto dto = violetteUserService.getUserById(id);
         return Response.ok(dto).build();
@@ -98,9 +98,9 @@ public class VioletteUserController {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed("MANAGER")
-    @Operation(summary = "List users (paginated)", description = "Returns paginated list of users, sorted by createdAt DESC. Requires MANAGER role.")
-    @APIResponse(responseCode = "200", description = "List of users", content = @Content(schema = @Schema(implementation = VioletteUserDto.class)))
-    @APIResponse(responseCode = "403", description = "Forbidden (insufficient role)")
+    @Operation(summary = "Lister les utilisateurs (pagination)", description = "Retourne la liste paginée des utilisateurs, triée par createdAt DESC. Requiert le rôle MANAGER.")
+    @APIResponse(responseCode = "200", description = "Liste des utilisateurs", content = @Content(schema = @Schema(implementation = VioletteUserDto.class)))
+    @APIResponse(responseCode = "403", description = "Accès refusé (rôle insuffisant)")
     public Response listUsers(
             @QueryParam("page") @DefaultValue("0") int page,
             @QueryParam("size") @DefaultValue("20") int size) {

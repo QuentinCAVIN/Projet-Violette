@@ -35,7 +35,7 @@ import java.util.List;
  * Base path de ce contrôleur : {@code /artist-bookings}.
  */
 @Path("/artist-bookings")
-@Tag(name = "ArtistBookings", description = "Gestion des réservations artistes pour les dates de spectacle")
+@Tag(name = "Réservations artistes", description = "Gestion des réservations artistes pour les dates de spectacle")
 @Authenticated
 public class ArtistBookingController {
 
@@ -59,13 +59,13 @@ public class ArtistBookingController {
     @RolesAllowed("MANAGER")
     @Operation(
             summary = "Sélectionner un artiste pour une date",
-            description = "Crée un booking SELECTED pour un artiste sur une date. Requiert le rôle MANAGER."
+            description = "Crée une réservation en statut SELECTED pour un artiste sur une date. Requiert le rôle MANAGER."
     )
     @APIResponse(responseCode = "201", description = "Artiste sélectionné", content = @Content(schema = @Schema(implementation = ArtistBookingDto.class)))
     @APIResponse(responseCode = "400", description = "Corps de la requête invalide")
     @APIResponse(responseCode = "403", description = "Accès refusé (rôle insuffisant)")
     @APIResponse(responseCode = "404", description = "Date ou artiste introuvable")
-    @APIResponse(responseCode = "409", description = "Booking déjà existant, artiste non disponible, ou capacité atteinte")
+    @APIResponse(responseCode = "409", description = "Réservation déjà existante, artiste non disponible ou capacité atteinte")
     public Response createBooking(@Valid CreateBookingRequestDto request) {
         ArtistBookingDto dto = artistBookingService.createBooking(request);
         return Response.status(Response.Status.CREATED).entity(dto).build();
@@ -84,12 +84,12 @@ public class ArtistBookingController {
     @RolesAllowed("MANAGER")
     @Operation(
             summary = "Désélectionner un artiste",
-            description = "Supprime un booking en statut SELECTED. Requiert le rôle MANAGER."
+            description = "Supprime une réservation en statut SELECTED. Requiert le rôle MANAGER."
     )
     @APIResponse(responseCode = "204", description = "Artiste désélectionné")
     @APIResponse(responseCode = "403", description = "Accès refusé (rôle insuffisant)")
-    @APIResponse(responseCode = "404", description = "Booking introuvable")
-    @APIResponse(responseCode = "409", description = "Le booking n'est plus en statut SELECTED")
+    @APIResponse(responseCode = "404", description = "Réservation introuvable")
+    @APIResponse(responseCode = "409", description = "La réservation n'est plus en statut SELECTED")
     public Response deleteBooking(@PathParam("id") Long id) {
         artistBookingService.deleteBooking(id);
         return Response.noContent().build();
@@ -109,7 +109,7 @@ public class ArtistBookingController {
     @RolesAllowed("MANAGER")
     @Operation(
             summary = "Envoyer les demandes de confirmation",
-            description = "Passe tous les bookings SELECTED de la date en PENDING_CONFIRMATION. Requiert le rôle MANAGER."
+            description = "Passe toutes les réservations SELECTED de la date en PENDING_CONFIRMATION. Requiert le rôle MANAGER."
     )
     @APIResponse(responseCode = "200", description = "Demandes envoyées", content = @Content(schema = @Schema(implementation = ArtistBookingDto.class)))
     @APIResponse(responseCode = "403", description = "Accès refusé (rôle insuffisant)")
@@ -132,10 +132,10 @@ public class ArtistBookingController {
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed("MANAGER")
     @Operation(
-            summary = "Lister les bookings d'une date",
-            description = "Retourne tous les bookings d'une date de spectacle. Requiert le rôle MANAGER."
+            summary = "Lister les réservations d'une date",
+            description = "Retourne toutes les réservations d'une date de spectacle. Requiert le rôle MANAGER."
     )
-    @APIResponse(responseCode = "200", description = "Liste des bookings", content = @Content(schema = @Schema(implementation = ArtistBookingDto.class)))
+    @APIResponse(responseCode = "200", description = "Liste des réservations", content = @Content(schema = @Schema(implementation = ArtistBookingDto.class)))
     @APIResponse(responseCode = "403", description = "Accès refusé (rôle insuffisant)")
     @APIResponse(responseCode = "404", description = "Date introuvable")
     public Response getBookingsForShowDate(@PathParam("showDateId") Long showDateId) {
@@ -164,8 +164,8 @@ public class ArtistBookingController {
     @APIResponse(responseCode = "400", description = "Corps de la requête invalide")
     @APIResponse(responseCode = "401", description = "Non authentifié")
     @APIResponse(responseCode = "403", description = "Accès refusé (rôle insuffisant)")
-    @APIResponse(responseCode = "404", description = "Booking introuvable")
-    @APIResponse(responseCode = "409", description = "Le booking n'est pas en statut PENDING_CONFIRMATION")
+    @APIResponse(responseCode = "404", description = "Réservation introuvable")
+    @APIResponse(responseCode = "409", description = "La réservation n'est pas en statut PENDING_CONFIRMATION")
     public Response respondToRequest(
             @PathParam("id") Long id,
             @Valid RespondToBookingRequestDto request) {
@@ -191,7 +191,7 @@ public class ArtistBookingController {
     @RolesAllowed("ARTIST")
     @Operation(
             summary = "Mes demandes de confirmation en attente",
-            description = "Retourne les bookings PENDING_CONFIRMATION de l'artiste authentifié. Requiert le rôle ARTIST."
+            description = "Retourne les réservations PENDING_CONFIRMATION de l'artiste authentifié. Requiert le rôle ARTIST."
     )
     @APIResponse(responseCode = "200", description = "Liste des demandes en attente", content = @Content(schema = @Schema(implementation = ArtistBookingDto.class)))
     @APIResponse(responseCode = "401", description = "Non authentifié")

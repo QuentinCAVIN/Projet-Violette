@@ -447,6 +447,8 @@ Par défaut, OIDC est **désactivé** (`quarkus.oidc.enabled=false`). Les endpoi
 
 Le fichier `application-firebase.properties` est chargé lorsque le profil `firebase` est actif. Il active OIDC et configure la validation des tokens Firebase (issuer, audience, auth-server-url). Il force aussi une **datasource H2 en mémoire** : aucun MySQL n'est requis pour lancer le backend en local avec Firebase. Sans ce profil, le backend utilise la config par défaut (OIDC désactivé, MySQL).
 
+> **En production (Fly.io)**, OIDC est activé sans le profil `firebase`. Les variables `QUARKUS_OIDC_*` sont déclarées directement dans `fly.toml [env]` avec le project ID Firebase hardcodé (`violette-1f64e`). `FIREBASE_PROJECT_ID` n'est **pas** un secret Fly.io requis — il n'intervient que pour ce profil local. Voir `README-deploiement.md` section "Variables publiques Fly.io".
+
 #### Différence entre `-Dquarkus.profile=firebase` et `QUARKUS_PROFILE=firebase`
 
 - `**-Dquarkus.profile=firebase`** : option Maven/JVM passée au lancement (ex. `mvn quarkus:dev -Dquarkus.profile=firebase`). Le profil est actif pour cette exécution.

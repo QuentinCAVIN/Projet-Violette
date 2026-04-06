@@ -19,7 +19,9 @@ primary_region = "cdg"
   image = "ghcr.io/quentincavin/violette-back:latest"
 
 [env]
-  QUARKUS_OIDC_ENABLED            = "true"
+  # QUARKUS_OIDC_ENABLED n'est pas déclaré ici : c'est une propriété build-time fixed.
+  # Elle est activée pour le profil prod dans application.properties (%prod.quarkus.oidc.enabled=true).
+  # Les variables ci-dessous sont des paramètres runtime OIDC — elles peuvent être surchargées à chaud.
   QUARKUS_OIDC_APPLICATION_TYPE   = "service"
   QUARKUS_OIDC_AUTH_SERVER_URL    = "https://securetoken.google.com/violette-1f64e"
   QUARKUS_OIDC_CLIENT_ID          = "violette-1f64e"
