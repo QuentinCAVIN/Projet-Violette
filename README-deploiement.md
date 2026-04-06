@@ -184,7 +184,7 @@ Vérifier que le backend répond :
 
 ```bash
 curl https://violette-back.fly.dev/api/ping
-# Attendu : {"status":"pong","version":"0.3.0"}
+# Attendu : {"status":"pong","version":"X.Y.Z"}
 ```
 
 Swagger UI : [https://violette-back.fly.dev/swagger-ui](https://violette-back.fly.dev/swagger-ui)
@@ -249,12 +249,12 @@ base64 -w0 violette-release.jks
 ## Déclencher la première release complète (APK + déploiement)
 
 ```bash
-git tag v0.3.0
-git push origin v0.3.0
+git tag vX.Y.Z
+git push origin vX.Y.Z
 ```
 
 Cela déclenche `deploy.yml` avec les deux jobs en séquence :
-1. **deploy-backend** : tests + build image + push GHCR + déploiement Fly.io + création GitHub Release `v0.3.0`
+1. **deploy-backend** : tests + build image + push GHCR + déploiement Fly.io + création GitHub Release `vX.Y.Z`
 2. **release-apk** : build APK Flutter + upload sur la release (démarre après succès du job 1)
 
 Résultat visible sur : [https://github.com/QuentinCAVIN/Projet-Violette/releases](https://github.com/QuentinCAVIN/Projet-Violette/releases)
@@ -334,7 +334,7 @@ flyctl deploy
 
 ## Checklist pré-soutenance
 
-- [ ] `curl https://violette-back.fly.dev/api/ping` répond `{"status":"pong","version":"0.3.0"}`
+- [ ] `curl https://violette-back.fly.dev/api/ping` r�pond `{"status":"pong","version":"X.Y.Z"}` avec la version du tag de release
 - [ ] Swagger UI accessible : `https://violette-back.fly.dev/swagger-ui`
 - [ ] `flyctl status --app violette-back` affiche **1 machine running**
 - [ ] Dernier déploiement listé : `flyctl releases --app violette-back`
@@ -367,3 +367,4 @@ flyctl deploy
 | `QUARKUS_OIDC_TOKEN_ISSUER` | `https://securetoken.google.com/violette-1f64e` |
 | `QUARKUS_OIDC_TOKEN_AUDIENCE` | `violette-1f64e` |
 | `QUARKUS_LOG_LEVEL` | `INFO` |
+

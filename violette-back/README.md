@@ -381,7 +381,7 @@ Vérification :
 
 ```bash
 curl http://localhost:8080/api/ping
-# {"status":"pong","version":"0.1.0"}
+# {"status":"pong","version":"…"} — la valeur correspond à la balise version du pom.xml au build
 ```
 
 ### Lancer avec Docker (docker-compose)
@@ -410,7 +410,7 @@ En mode détaché (arrière-plan) : `docker compose up -d`.
 
 ```bash
 curl http://localhost:8080/api/ping
-# {"status":"pong","version":"0.1.0"}
+# {"status":"pong","version":"…"} — la valeur correspond à la balise version du pom.xml au build
 ```
 
 Le backend attend que MySQL soit prêt (healthcheck) avant de démarrer. Les migrations Flyway s’exécutent automatiquement au démarrage du conteneur backend.
