@@ -159,6 +159,34 @@ class VioletteUserServiceTest {
 
     @Test
     @Transactional
+    @DisplayName("getMyProfile — retourne le profil complet pour le principal JWT courant")
+    void getMyProfile_whenUserExists_returnsFullDto() {
+        persistUser("uid-my-profile", "myprofile@example.com", "Clara", "Renard", Set.of(UserRole.ARTIST));
+        JwtPrincipalInfo principal = new JwtPrincipalInfo("uid-my-profile", "myprofile@example.com", "Clara Renard");
+
+        VioletteUserDto dto = violetteUserService.getMyProfile(principal);
+
+        assertAll(
+                () -> assertNotNull(dto.id()),
+                () -> assertEquals("uid-my-profile", dto.firebaseUid()),
+                () -> assertEquals("Clara", dto.firstName()),
+                () -> assertEquals("Renard", dto.lastName()),
+                () -> assertEquals(Set.of(UserRole.ARTIST), dto.roles())
+        );
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("getMyProfile — lève UserNotFoundException si aucun profil backend n'existe")
+    void getMyProfile_whenUserDoesNotExist_throwsUserNotFoundException() {
+        JwtPrincipalInfo principal = new JwtPrincipalInfo("uid-no-profile-xyz", "noprofile@example.com", "");
+
+        assertThrows(UserNotFoundException.class,
+                () -> violetteUserService.getMyProfile(principal));
+    }
+
+    @Test
+    @Transactional
     @DisplayName("getUserByFirebaseUid — retourne le DTO si l'utilisateur existe")
     void whenUserExists_getUserByFirebaseUid_returnsDto() {
         persistUser("uid-get-by-uid", "getbyuid@example.com", "Paul", "Dupuis", Set.of(UserRole.ARTIST));

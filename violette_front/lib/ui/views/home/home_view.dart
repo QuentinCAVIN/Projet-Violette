@@ -11,7 +11,7 @@ class HomeView extends StackedView<HomeViewModel> {
 
   @override
   Widget builder(BuildContext context, HomeViewModel viewModel, Widget? child) {
-    final currentUser = viewModel.currentUser; //Pour test de récupération user
+    final currentUser = viewModel.currentUser;
 
     // Pour gérer l'erreur du User null
     if (viewModel.isBusy) {
@@ -22,7 +22,9 @@ class HomeView extends StackedView<HomeViewModel> {
       );
     }
 
-    // TODO -> A retirer probablement inutile?
+    // currentUser == null sans isBusy signifie que loadUser() a déclenché une
+    // navigation (logout + LoginView). La view sera détruite immédiatement ;
+    // ce fallback n'est jamais visible en pratique.
     if (currentUser == null) {
       return const Scaffold(
         body: Center(
@@ -39,8 +41,7 @@ class HomeView extends StackedView<HomeViewModel> {
               child: Column(
                 children: [
                   verticalSpaceLarge,
-                  //**********************************************************
-                  // SECTION: DEMANDES EN ATTENTE
+                  // SECTION : DEMANDES EN ATTENTE
                     if (viewModel.pendingRequests.isNotEmpty) ...[
                       Align(
                         alignment: Alignment.centerLeft,
@@ -64,10 +65,8 @@ class HomeView extends StackedView<HomeViewModel> {
                       }),
                       verticalSpaceMedium,
                     ],
-                    //**********************************************************
 
-                    //**********************************************************
-                    //Insertion des infos du User dans la view de base pour test
+                    // SECTION : PROFIL
                     Column(
                       children: [
                         Text(
@@ -76,7 +75,6 @@ class HomeView extends StackedView<HomeViewModel> {
                         ),
                       ],
                     ),
-                    //**********************************************************
                     const SizedBox(height: 16),
                     Card(
                       child: ListTile(
@@ -136,7 +134,6 @@ class HomeView extends StackedView<HomeViewModel> {
   @override
   HomeViewModel viewModelBuilder(BuildContext context) => HomeViewModel();
 
-  //TODO A virer quand j'aurais rendu le User accecible globalement
   @override
   void onViewModelReady(HomeViewModel viewModel) {
     viewModel.loadUser();

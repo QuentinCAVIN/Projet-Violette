@@ -20,6 +20,12 @@ dependencies:
   table_calendar: ^3.2.0
   intl: ^0.20.2
 
+  # Client REST généré par OpenAPI Generator — ne pas modifier manuellement
+  violette_api_client:
+    path: ../violette_api_client
+  dio: ^5.7.0
+  built_collection: '>=5.1.1 <6.0.0'
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

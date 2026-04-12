@@ -98,6 +98,20 @@ public class VioletteUserService {
     }
 
     /**
+     * Récupère le profil complet de l'utilisateur courant (identifié par son JWT).
+     *
+     * @param principal infos JWT du token Bearer courant
+     * @return DTO utilisateur complet (firstName, lastName, roles, skills)
+     * @throws UserNotFoundException si aucun profil backend n'existe pour ce firebaseUid
+     */
+    public VioletteUserDto getMyProfile(JwtPrincipalInfo principal) {
+        LOG.info("Loading profile for firebaseUid={}", principal.firebaseUid());
+        return violetteUserRepository.findByFirebaseUid(principal.firebaseUid())
+                .map(violetteUserMapper::toDto)
+                .orElseThrow(UserNotFoundException::new);
+    }
+
+    /**
      * Récupère un utilisateur par son Firebase UID.
      *
      * @throws UserNotFoundException si l'utilisateur n'existe pas

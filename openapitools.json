@@ -1,0 +1,25 @@
+{
+  "$schema": "node_modules/@openapitools/openapi-generator-cli/config.schema.json",
+  "spaces": 2,
+  "generator-cli": {
+    "version": "7.21.0",
+    "generators": {
+      "violette-dart-client": {
+        "generatorName": "dart-dio",
+        "inputSpec": "violette-back/target/openapi/openapi.yaml",
+        "output": "violette_api_client",
+        "additionalProperties": {
+          "pubName": "violette_api_client",
+          "pubAuthor": "Equipe Violette",
+          "pubVersion": "1.0.0",
+          "nullSafe": true,
+          "dateLibrary": "core",
+          "serializationLibrary": "built_value"
+        },
+        "globalProperty": {
+          "skipFormModel": "false"
+        }
+      }
+    }
+  }
+}

@@ -43,3 +43,6 @@ nb-configuration.xml
 /.quarkus/cli/plugins/
 # TLS Certificates
 .certs/
+
+# OpenAPI Generator — stub créé automatiquement si npx est lancé depuis ce répertoire
+/openapitools.json
