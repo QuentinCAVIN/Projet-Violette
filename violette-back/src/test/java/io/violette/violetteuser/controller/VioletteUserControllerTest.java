@@ -29,4 +29,13 @@ class VioletteUserControllerTest {
             .then()
                 .statusCode(403);
     }
+
+    @Test
+    @DisplayName("GET /me/profile sans token retourne 403")
+    void getMyProfile_withoutToken_returns403() {
+        given()
+            .when().get("/api/users/me/profile")
+            .then()
+                .statusCode(403);
+    }
 }

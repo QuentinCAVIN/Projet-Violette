@@ -63,6 +63,8 @@ class LoginViewModel extends FormViewModel {
       rebuildUi();
       return;
     }
+
+    _navigationService.replaceWithHomeView();
   }
 
   void navigateToRegister() {

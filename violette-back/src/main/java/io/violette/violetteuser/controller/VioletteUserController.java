@@ -53,6 +53,20 @@ public class VioletteUserController {
                 .orElse(Response.status(Response.Status.UNAUTHORIZED).build());
     }
 
+    @GET
+    @Path("/me/profile")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Profil complet de l'utilisateur courant", description = "Retourne le profil backend complet (firstName, lastName, rôles, compétences) de l'utilisateur authentifié. Accessible à tout utilisateur ayant un profil backend créé.")
+    @APIResponse(responseCode = "200", description = "Profil complet retourné", content = @Content(schema = @Schema(implementation = VioletteUserDto.class)))
+    @APIResponse(responseCode = "401", description = "Non authentifié (token absent ou invalide)")
+    @APIResponse(responseCode = "404", description = "Aucun profil backend pour cet utilisateur (profil non encore créé)")
+    public Response getMyProfile() {
+        return currentUserContextProvider.getCurrentPrincipal()
+                .map(violetteUserService::getMyProfile)
+                .map(dto -> Response.ok(dto).build())
+                .orElse(Response.status(Response.Status.UNAUTHORIZED).build());
+    }
+
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)

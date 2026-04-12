@@ -1,10 +1,7 @@
 import 'dart:async';
 import 'package:stacked_firebase_auth/stacked_firebase_auth.dart';
-import 'package:violette_front/app/app.bottomsheets.dart';
-import 'package:violette_front/app/app.dialogs.dart';
 import 'package:violette_front/app/app.locator.dart';
 import 'package:violette_front/app/app.router.dart';
-import 'package:violette_front/ui/common/app_strings.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
 
@@ -18,7 +15,6 @@ import 'package:violette_front/repositories/user_repository.dart';
 
 class HomeViewModel extends BaseViewModel {
   final _dialogService = locator<DialogService>();
-  final _bottomSheetService = locator<BottomSheetService>();
   final _authenticationService = locator<FirebaseAuthenticationService>();
   final _userRepository = locator<UserRepository>();
   final _navigationService = locator<NavigationService>();
@@ -27,12 +23,14 @@ class HomeViewModel extends BaseViewModel {
   final _snackbarService = locator<SnackbarService>();
 
   VioletteUser? currentUser;
+
   List<ArtistBooking> pendingRequests = [];
   Map<String, ShowDate> requestsShowDates = {};
   StreamSubscription<List<ArtistBooking>>? _pendingRequestsSub;
 
-  void logOut() {
-    _authenticationService.logout();
+  Future<void> logOut() async {
+    await _authenticationService.logout();
+    _navigationService.replaceWithLoginView();
   }
 
   void navigateToAvailabilityChoiceView() {
@@ -49,32 +47,52 @@ class HomeViewModel extends BaseViewModel {
 
   Future<void> loadUser() async {
     setBusy(true);
+    try {
+      final firebaseUser = _authenticationService.currentUser;
+      if (firebaseUser == null) {
+        _navigationService.replaceWithLoginView();
+        return;
+      }
 
-    final firebaseUser = _authenticationService.currentUser;
-    if (firebaseUser == null) {
+      final uid = firebaseUser.uid;
+      try {
+        currentUser = await _userRepository.getUser(uid);
+      } catch (e) {
+        // Erreur réseau, backend inaccessible, token invalide, etc.
+        await _dialogService.showDialog(
+          title: 'Profil utilisateur',
+          description:
+              'Impossible de charger le profil depuis le backend. '
+              'Vérifie le démarrage Quarkus (profil firebase, FIREBASE_PROJECT_ID) '
+              'et la connexion réseau (adb reverse sur téléphone USB). '
+              '\n\n$e',
+        );
+        currentUser = null;
+        return;
+      }
+
+      // getUser retourne null si le backend répond 404 (profil absent).
+      // Ce cas ne devrait plus se produire grâce au routage de StartupViewModel,
+      // mais peut survenir si LoginViewModel navigue ici pour un compte sans profil.
+      // On déconnecte Firebase pour repartir d'un état cohérent.
+      if (currentUser == null) {
+        await _authenticationService.logout();
+        _navigationService.replaceWithLoginView();
+        return;
+      }
+
+      // Si l'utilisateur courant est un artiste, on écoute ses demandes de confirmation en attente.
+      // Objectif : afficher sur la home une liste "Demandes en attente" avec Accept / Refuse.
+      if (currentUser!.roles.contains(Role.artist)) {
+        _listenToPendingRequests(uid);
+      }
+    } finally {
       setBusy(false);
-
-      _navigationService.replaceWithLoginView();
-      return;
+      rebuildUi();
     }
-
-    final uid = firebaseUser.uid;
-    currentUser = await _userRepository.getUser(uid);
-
-    // Si l'utilisateur courant est un artiste, on écoute ses demandes de confirmation en attente.
-// Objectif : afficher sur la home une liste "Demandes en attente" avec Accept / Refuse.
-    if (currentUser != null && currentUser!.roles.contains(Role.artist)) {
-      _listenToPendingRequests(uid);
-    }
-
-    setBusy(false);
-    rebuildUi();
   }
 
-  /// Subscription utilisée pour écouter les demandes en attente.
-  /// À déclarer en attribut dans la classe : StreamSubscription<List<ArtistBooking>>? _pendingRequestsSub;
   void _listenToPendingRequests(String artistId) {
-    // IMPORTANT : stocker la subscription pour pouvoir l'annuler dans dispose()
     _pendingRequestsSub?.cancel();
     _pendingRequestsSub = _bookingRepository
         .watchPendingRequestsForArtist(artistId)
@@ -136,7 +154,6 @@ class HomeViewModel extends BaseViewModel {
       await _bookingRepository.respondToRequest(
           dateId, booking.artistId, accept);
 
-      // Feedback
       _snackbarService.showSnackbar(
         message: accept
             ? "C'est noté ! Présence confirmée."
@@ -144,7 +161,7 @@ class HomeViewModel extends BaseViewModel {
         duration: const Duration(seconds: 2),
       );
 
-      // Optimistic Update: Remove from list immediately
+      // Mise à jour optimiste : on retire immédiatement la demande de la liste.
       pendingRequests.removeWhere(
           (b) => b.artistId == booking.artistId && b.dateId == dateId);
       rebuildUi();
@@ -162,31 +179,4 @@ class HomeViewModel extends BaseViewModel {
     super.dispose();
   }
 
-  ////////// CI DESSOUS FONCTIONS CREE PAR STACKED //////////
-
-  String get counterLabel => 'Counter is: $_counter';
-
-  int _counter = 0;
-
-  void incrementCounter() {
-    _counter++;
-    rebuildUi();
-  }
-
-  void showDialog() {
-    _dialogService.showCustomDialog(
-      variant: DialogType.infoAlert,
-      title: 'Violllleeeeeettttttteeee',
-      description:
-          'Salut ${currentUser!.firstName} tu es notre ${currentUser!.roles[0]} préféré!',
-    );
-  }
-
-  void showBottomSheet() {
-    _bottomSheetService.showCustomSheet(
-      variant: BottomSheetType.notice,
-      title: ksHomeBottomSheetTitle,
-      description: ksHomeBottomSheetDescription,
-    );
-  }
 }

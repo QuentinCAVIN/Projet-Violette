@@ -99,7 +99,18 @@ class RegisterViewModel extends FormViewModel {
         lastName: lastName,
         email: email,
         roles: [role]);
-    await _userRepository.addUser(user);
+    try {
+      await _userRepository.addUser(user);
+    } catch (e) {
+      globalErrorMessage =
+          'Impossible de créer le profil sur le serveur. Vérifie que le backend '
+          'tourne (profil firebase + FIREBASE_PROJECT_ID) et que adb reverse '
+          'est actif si tu es sur téléphone USB. Détail : $e';
+      rebuildUi();
+      return;
+    }
+
+    _navigationService.replaceWithHomeView();
   }
 
   void navigateToLogin() {
