@@ -91,10 +91,12 @@ L'authentification reste assurée par **Firebase Auth** côté frontend : le fro
 ### Bases de données par environnement
 
 
-| Environnement | Base de données |
-| ------------- | --------------- |
-| Dev / Prod    | MySQL 8+        |
-| Tests JUnit   | H2 in-memory    |
+| Environnement                   | Base de données                       | Profil Quarkus |
+| ------------------------------- | ------------------------------------- | -------------- |
+| Dev local (défaut)              | MySQL 8+                              | `dev`          |
+| Dev local avec Firebase JWT     | H2 in-memory (MySQL **non** requis)   | `firebase`     |
+| Production                      | MySQL 8+ (Aiven via Fly.io)           | `prod`         |
+| Tests JUnit                     | H2 in-memory                          | `test`         |
 
 
 ---
@@ -461,8 +463,9 @@ Les deux peuvent être utilisés. Sous Windows PowerShell, l'option `-D` doit ê
 **Windows (PowerShell)** :
 
 ```powershell
-# Définir le Project ID (obligatoire pour le profil firebase)
-$env:FIREBASE_PROJECT_ID="q"
+# Définir le Project ID Firebase (obligatoire pour le profil firebase)
+# Remplacer "violette-1f64e" par l'ID de votre projet Firebase si différent
+$env:FIREBASE_PROJECT_ID="violette-1f64e"
 
 # Option 1 : profil via variable d'environnement
 $env:QUARKUS_PROFILE="firebase"
@@ -508,7 +511,7 @@ curl -H "Authorization: Bearer VOTRE_JWT_FIREBASE" http://localhost:8080/api/use
 curl -X POST -H "Authorization: Bearer VOTRE_JWT_FIREBASE" \
   -H "Content-Type: application/json" \
   http://localhost:8080/api/users \
-  -d '{"firstName":"Jean","lastName":"Dupont"}'
+  -d '{"firstName":"Jean","lastName":"Dupont","roles":["ARTIST"]}'
 ```
 
 - Création réussie : **201** et JSON utilisateur (id, firebaseUid, email, firstName, lastName, roles, etc.).
@@ -516,13 +519,25 @@ curl -X POST -H "Authorization: Bearer VOTRE_JWT_FIREBASE" \
 - Body invalide (ex. firstName manquant) : **400 Bad Request**.
 - Sans token : **401** ou **403**.
 
+**GET /api/users/me/profile** (profil backend complet de l'utilisateur courant) :
+
+```bash
+curl -H "Authorization: Bearer VOTRE_JWT_FIREBASE" http://localhost:8080/api/users/me/profile
+```
+
+- Profil trouvé : **200** et JSON utilisateur complet (firebaseUid, firstName, lastName, email, roles, skills).
+- Aucun profil backend créé pour cet utilisateur : **404 Not Found**.
+- Sans token : **401** ou **403**.
+
+> C'est l'endpoint utilisé par le frontend Flutter pour charger le profil au démarrage (migration Firestore → REST, domaine `user`).
+
 #### Rôles métier et sécurité par rôle
 
 - **Firebase fournit l'identité** : le JWT est validé par Quarkus OIDC ; le principal (claim `sub`) identifie l'utilisateur.
 - **La base backend Violette fournit les rôles** : la source de vérité des rôles (ARTIST, MANAGER) est la table `violette_user` / `user_role`, pas les custom claims Firebase.
 - **Mécanisme d'enrichissement** : après validation du JWT, un `SecurityIdentityAugmentor` (`VioletteSecurityAugmentor`) récupère le `firebaseUid` (claim `sub`), charge l'utilisateur en base via `VioletteUserRepository`, et ajoute ses rôles à la `SecurityIdentity`. Les annotations `@RolesAllowed("MANAGER")` deviennent ainsi effectives.
 - **Endpoints concernés** :
-  - `GET /api/users/me` et `POST /api/users` : tout utilisateur **authentifié** (JWT valide).
+  - `GET /api/users/me`, `GET /api/users/me/profile` et `POST /api/users` : tout utilisateur **authentifié** (JWT valide). `/me/profile` retourne 404 si aucun profil backend n'existe encore pour cet utilisateur.
   - `GET /api/users/{id}`, `GET /api/users/by-firebase/{firebaseUid}`, `GET /api/users?page=&size=` : **MANAGER** uniquement (403 si l'utilisateur n'a pas le rôle MANAGER en base).
 
 ---
@@ -665,24 +680,22 @@ Les tests utilisent le profil `test` défini dans `src/test/resources/applicatio
 
 ---
 
-## 11. Prochaines phases
+## 11. Historique des phases et prochaines étapes
 
-### Phase 2 — Sécurité Firebase JWT (en place)
+### Phase 2 — Sécurité Firebase JWT ✓ (implémentée)
 
 - OIDC activé avec le profil `firebase` ; validation des tokens Firebase (issuer, audience).
 - `VioletteSecurityAugmentor` + `VioletteRolesAugmentor` : enrichissement de la `SecurityIdentity` avec les rôles chargés depuis la base Violette (ARTIST, MANAGER).
 - Endpoints protégés : `@Authenticated` pour `/me` et `POST /users` ; `@RolesAllowed("MANAGER")` pour les GET de lecture utilisateur.
 
-### Phase 3 — Domaine `violetteuser`
-
-Génération complète du domaine :
+### Phase 3 — Domaine `violetteuser` ✓ (implémenté)
 
 - Entité `VioletteUser` + enums `UserRole`, `ArtistSkill`
 - DTOs d'enregistrement et de réponse
 - Service + Repository
-- Controller REST (`POST /users`, `GET /users/{id}`, `PUT /users/{id}`)
+- Controller REST (`POST /users`, `GET /users/me`, `GET /users/me/profile`, `GET /users/{id}`, etc.)
 
-### Phase 4 — Domaine `cabaretcompany`
+### Phase 4 — Domaine `cabaretcompany` ✓ (implémenté)
 
 - Entités `CabaretCompany`, `Revue`
 - Gestion des membres de la compagnie

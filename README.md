@@ -24,6 +24,7 @@ Plateforme web de gestion des plannings et des cachets pour gérants de compagni
 | **Workflow de réservation** | Statuts, transitions, règles métier détaillées | [docs/booking-workflow.md](docs/booking-workflow.md) |
 | **Documentation C4** | Explication des diagrammes C4 (contexte, container, composants, zoom niveau 4) | [docs/architecture-c4.md](docs/architecture-c4.md) |
 | **Guide de déploiement** | Fly.io, Aiven MySQL, pipeline CI/CD, secrets GitHub, checklist soutenance | [README-deploiement.md](README-deploiement.md) |
+| **Migration domaine user** | Setup OpenAPI Generator, client Dart généré, flux REST user, adb reverse, dette résiduelle | [docs/migration-domaine-user.md](docs/migration-domaine-user.md) |
 | **Changelog** | Historique des versions | [CHANGELOG.md](CHANGELOG.md) |
 
 ### Intégration continue et déploiement
@@ -35,7 +36,7 @@ Le déploiement en production (Fly.io) et la publication de l'APK Android sont d
 → [.github/workflows/backend-ci.yml](.github/workflows/backend-ci.yml) — CI backend (tests + couverture)  
 → [.github/workflows/deploy.yml](.github/workflows/deploy.yml) — CI/CD principal (image Docker + Fly.io + APK)
 
-## 🚀 Déploiement
+## Déploiement
 
 Le backend Quarkus est déployé sur `Fly.io` et utilise une base `MySQL` hébergée sur `Aiven`. Le pipeline `GitHub Actions` construit et publie l'image Docker sur `GHCR`, puis déclenche le déploiement sur tag `v*.*.*`. L'APK Android de release est publié dans les `GitHub Releases`.
 
@@ -85,31 +86,35 @@ Flux fonctionnels principaux : déclaration de disponibilité, réservation d'ar
 
 ---
 
-## État actuel (v0.3.0)
+## État actuel — branche `main`
+
+> Dernière version déployée : **v0.3.2**
 
 ### Front-end (Flutter)
 - Application Flutter avec architecture Stacked.
 - Authentification Firebase avec gestion des rôles (gérant / artiste).
 - Création et gestion des dates de spectacle (ShowDate).
 - Vue Planning gérant avec calendrier et gestion des disponibilités par artiste.
-- Profils utilisateurs stockés dans Firestore.
 - Infrastructure de tests unitaires et intégration continue (GitHub Actions).
-- Pas encore raccordé aux endpoints REST du backend Quarkus.
+- **Migration Firestore → REST en cours** : domaine `user` migré (POC validé — profil backend chargé depuis le backend Quarkus via client OpenAPI). Les domaines `showdate`, `booking` et `company` restent sur Firebase/Firestore dans l'attente de leur migration.
 
 ### Back-end (Quarkus)
 - Monolithe modulaire structuré par domaine (`violetteuser`, `cabaretcompany`, `showdate`, `artistbooking`).
 - Stack : Quarkus 3.x, Hibernate ORM Panache, Flyway (5 migrations), OpenAPI/Swagger, MapStruct.
 - Schéma SQL relationnel complet (remplace progressivement Firestore).
-- Sécurité Firebase JWT via Quarkus OIDC, rôles métier (`ARTIST`, `MANAGER`) depuis la base backend.
+- Sécurité Firebase JWT via Quarkus OIDC (validée en production depuis v0.3.2), rôles métier (`ARTIST`, `MANAGER`) depuis la base backend.
 - Endpoint de santé : `GET /api/ping` — Swagger UI : `http://localhost:8080/swagger-ui`
+- Documentation API Swagger uniformisée en français (depuis v0.3.2).
 - 18 classes de tests, couverture JaCoCo ≥ 30 %, CI GitHub Actions backend.
 - Déployable en local via Docker Compose (MySQL 8 + Quarkus JVM).
-- Déployé en production sur Fly.io (région Paris) avec base MySQL Aiven.
+- Déployé en production sur Fly.io (région Paris) avec base MySQL Aiven (depuis v0.3.1).
+- Pipeline CI/CD GitHub Actions : build + tests + image Docker GHCR à chaque push ; déploiement Fly.io + APK Android sur tag `v*.*.*` (depuis v0.3.1).
 
 ## Stack technique
 
-- Front : Flutter + Stacked + Firebase Auth + Firestore
-- Back : Quarkus (Java)
+- Front : Flutter + Stacked + Firebase Auth + Firestore (migration REST en cours)
+- Back : Quarkus (Java 21), MySQL / H2
+- Client API généré : `violette_api_client/` — package Dart/Dio généré depuis le spec OpenAPI du backend (voir [openapitools.json](openapitools.json))
 
 ## Lancement rapide
 
@@ -127,6 +132,20 @@ cd violette-back
 ./mvnw quarkus:dev
 # ou avec Maven global : mvn quarkus:dev
 ```
+
+> **Pour tester le POC mobile (frontend Flutter ↔ backend)** : ajouter le profil `firebase` afin d'activer la validation des JWT Firebase (sinon les endpoints protégés retournent 403). Base H2 in-memory — MySQL non requis.
+>
+> ```bash
+> # Linux / macOS
+> export FIREBASE_PROJECT_ID="violette-1f64e"
+> ./mvnw quarkus:dev -Dquarkus.profile=firebase
+>
+> # Windows (PowerShell)
+> $env:FIREBASE_PROJECT_ID="violette-1f64e"
+> mvn quarkus:dev "-Dquarkus.profile=firebase"
+> ```
+>
+> Voir [violette-back/README.md](violette-back/README.md) section « Profil Firebase et authentification JWT » pour le détail complet.
 
 **Alternative avec Docker :** backend + MySQL en conteneurs — voir [violette-back/README.md](violette-back/README.md) section « Lancer avec Docker (docker-compose) ».
 

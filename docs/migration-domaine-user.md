@@ -110,7 +110,8 @@ npm install @openapitools/openapi-generator-cli -D
 
 ```bash
 cd violette-back
-mvn quarkus:dev -Dquarkus.profile=firebase
+./mvnw quarkus:dev -Dquarkus.profile=firebase
+# ou : mvn quarkus:dev -Dquarkus.profile=firebase (si Maven global installé)
 ```
 
 Le fichier `violette-back/target/openapi/openapi.yaml` est généré automatiquement au démarrage.
@@ -141,23 +142,21 @@ dart run build_runner build --delete-conflicting-outputs
 
 ## Lancer le backend localement avec le profil Firebase
 
-### Variables d'environnement requises
+### Variable d'environnement requise
 
 ```bash
-FIREBASE_PROJECT_ID=<ton-project-id-firebase>
-DB_URL=jdbc:mysql://localhost:3306/violette
-DB_USER=<user>
-DB_PASSWORD=<password>
+FIREBASE_PROJECT_ID=violette-1f64e   # ID du projet Firebase
 ```
 
-En développement, H2 in-memory est utilisé (pas besoin de MySQL) avec le profil `dev`.
-Le profil `firebase` active la validation des JWT Firebase OIDC.
+Le profil `firebase` utilise H2 in-memory — **MySQL n'est pas nécessaire**.
+`DB_URL`, `DB_USER`, `DB_PASSWORD` ne sont requis que pour le profil `dev` (MySQL local) ou `prod`.
 
 ### Démarrage
 
 ```bash
 cd violette-back
-mvn quarkus:dev -Dquarkus.profile=firebase
+./mvnw quarkus:dev -Dquarkus.profile=firebase
+# ou : mvn quarkus:dev -Dquarkus.profile=firebase (si Maven global installé)
 ```
 
 Swagger UI disponible sur : `http://localhost:8080/swagger-ui`
