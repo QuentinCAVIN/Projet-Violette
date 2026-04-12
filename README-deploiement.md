@@ -1,4 +1,4 @@
-﻿# Guide de déploiement — Violette
+# Guide de déploiement — Violette
 
 Stack de production : **Fly.io** (backend Quarkus) + **Aiven** (MySQL) + **GitHub Releases** (APK Android).
 
@@ -370,5 +370,5 @@ flyctl deploy
 | `QUARKUS_OIDC_TOKEN_AUDIENCE` | `violette-1f64e` |
 | `QUARKUS_LOG_LEVEL` | `INFO` |
 
-> **QUARKUS_OIDC_ENABLED** n'est pas dans fly.toml : propriete build-time fixed. Activee via %prod.quarkus.oidc.enabled=true dans application.properties au build de l'image. Les variables ci-dessus sont des parametres runtime OIDC.
+> **`QUARKUS_OIDC_ENABLED`** n'est pas dans `fly.toml` : propriété build-time fixée. Activée via `%prod.quarkus.oidc.enabled=true` dans `application.properties` au moment du build de l'image Docker. Les variables ci-dessus sont des paramètres runtime OIDC injectés au démarrage du conteneur.
 

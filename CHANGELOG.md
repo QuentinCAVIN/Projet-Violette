@@ -3,6 +3,39 @@ Toutes les versions suivent la convention Semantic Versioning (MAJOR.MINOR.PATCH
 
 ---
 
+## [Unreleased] — travaux en cours sur main
+
+### Front-end (Flutter) / Migration REST
+#### Added
+- Mise en place d'OpenAPI Generator (`openapitools.json`) avec le générateur `dart-dio` ; client Dart
+  généré dans `violette_api_client/` à partir du spec OpenAPI du backend.
+- `DioClient` : client HTTP Dio avec intercepteur JWT Firebase (injection automatique du Bearer token).
+- `UserRemoteDataSource` : couche d'accès aux endpoints utilisateur du backend ; seul point d'import
+  du client généré.
+- `RestUserRepository` : implémentation de `UserRepository` via `UserRemoteDataSource` ; remplace
+  `FirestoreUserRepository` pour le domaine `user`.
+- `UserMapper` : conversion `VioletteUserDto` (built_value) ↔ `VioletteUser` (modèle métier Flutter).
+- `docs/migration-domaine-user.md` : documentation technique complète de la migration (setup,
+  flux auth, régénération client, adb reverse, dette résiduelle).
+
+#### Changed
+- `StartupViewModel` : routage initial déterministe — vérifie l'existence du profil backend au
+  démarrage avant de naviguer (Firebase session + profil absent → logout + LoginView).
+- `StartupView` : ajout d'un écran d'erreur avec bouton « Réessayer » si le backend est inaccessible.
+- `HomeViewModel` : profil backend absent → logout + LoginView (cohérent avec StartupViewModel) ;
+  suppression du dead code Stacked (scaffolding généré inutilisé).
+- `RegisterViewModel` : gestion d'erreur backend explicite lors de la création du profil.
+- `LoginViewModel` : navigation vers HomeView après connexion réussie.
+
+### Back-end (Quarkus)
+#### Added
+- `GET /api/users/me/profile` : nouvel endpoint retournant le `VioletteUserDto` complet de
+  l'utilisateur authentifié courant (200 si profil trouvé, 404 sinon).
+- Export automatique du spec OpenAPI vers `target/openapi/openapi.yaml` en profils `dev` et `test`
+  (propriété `quarkus.smallrye-openapi.store-schema-directory`).
+
+---
+
 ## v0.3.2 – Correctifs OIDC production, version backend unifiée et Swagger homogénéisé en français
 Date : 06-04-2026
 
@@ -10,12 +43,17 @@ Date : 06-04-2026
 #### Fixed
 - Activation explicite d'OIDC pour le profil de production via `%prod.quarkus.oidc.enabled=true`
   afin de corriger le refus d'accès (`403`) sur les endpoints `@Authenticated` en production.
+  Cause racine : `quarkus.oidc.enabled` est une propriété build-time Quarkus — impossible à activer
+  via variable d'environnement au runtime.
 
 ### Back-end (Quarkus) / Configuration
 #### Changed
-- Clarification du comportement Quarkus `build-time fixed` pour `quarkus.oidc.enabled` et séparation
-  des paramètres OIDC de build (dans `application.properties`) et runtime (dans `fly.toml [env]`).
-- Centralisation de la version backend dans `violette-back/pom.xml` comme source de vérité.
+- Suppression de `QUARKUS_OIDC_ENABLED` dans `fly.toml` : variable sans effet pour une propriété
+  build-time Quarkus, source de confusion supprimée.
+- Clarification du comportement `build-time fixed` et séparation des paramètres OIDC :
+  - build-time (dans `application.properties`) : `quarkus.oidc.enabled`, profils `%dev`/`%prod`
+  - runtime (dans `fly.toml [env]`) : URL du serveur OIDC, client ID, issuer, audience
+- Centralisation de la version backend dans `violette-back/pom.xml` comme unique source de vérité.
 - Alignement de `quarkus.application.version` et `quarkus.smallrye-openapi.info-version`
   sur la version Maven du projet via filtrage de ressources.
 - Configuration du `maven-resources-plugin` avec délimiteur `@` uniquement (`useDefaultDelimiters=false`)
@@ -43,20 +81,25 @@ Date : 01-04-2026
 
 ### Infrastructure / Livraison
 #### Added
-- Déploiement backend sur Fly.io avec configuration dédiée via `fly.toml`.
+- Déploiement backend sur Fly.io avec configuration dédiée via `fly.toml` (région Paris,
+  `min_machines_running = 1`, mémoire 512 MB).
 - Utilisation d'Aiven comme base de données MySQL pour l'environnement de production.
-- Pipeline CI/CD principal (`deploy.yml`) pour construire l'image Docker, publier sur GHCR,
-  déployer le backend sur tag versionné et publier l'APK Android dans les GitHub Releases.
+- Pipeline CI/CD principal (`deploy.yml`) avec stratégie à deux niveaux :
+  - **Push sur `main`** → tests Maven + build image Docker + push GHCR (CI uniquement, pas de déploiement).
+  - **Tag `v*.*.*`** → idem + déploiement Fly.io + création GitHub Release + build et publication APK Android (CD complet).
+- Configuration des secrets GitHub Actions : `FLY_API_TOKEN`, `GOOGLE_SERVICES_JSON_BASE64`,
+  `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`.
+- Variables OIDC Firebase déclarées en clair dans `fly.toml [env]` (non sensibles, liées au project ID Firebase).
 - Publication de l'APK Android via GitHub Releases sur les tags de version.
 
 #### Changed
-- Déclenchement du déploiement backend sur tag versionné uniquement, afin de distinguer
+- Déclenchement du déploiement Fly.io sur tag versionné uniquement, afin de distinguer
   la CI continue de la release de production.
 
 ### Documentation / Déploiement
 #### Added
-- `README-deploiement.md` : guide de déploiement Fly.io + Aiven, secrets GitHub Actions,
-  flux CI/CD et checklist de soutenance.
+- `README-deploiement.md` : guide de déploiement Fly.io + Aiven, configuration des secrets
+  GitHub Actions, flux CI/CD détaillé, checklist de pré-soutenance.
 
 #### Changed
 - Harmonisation de la documentation de déploiement avec le workflow GitHub Actions réel.
