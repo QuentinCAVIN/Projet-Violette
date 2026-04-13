@@ -28,8 +28,8 @@ jobs:
       - name: Make Maven wrapper executable
         run: chmod +x mvnw
 
-      - name: Build and verify (tests unitaires + JaCoCo)
-        run: ./mvnw clean verify -B
+      - name: Build and verify (tests unitaires + ITs + JaCoCo)
+        run: ./mvnw clean verify -B -DskipITs=false
 
       - name: Upload JaCoCo report
         uses: actions/upload-artifact@v4
