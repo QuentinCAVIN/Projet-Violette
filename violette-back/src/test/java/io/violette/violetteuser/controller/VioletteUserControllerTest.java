@@ -7,13 +7,14 @@ import org.junit.jupiter.api.Test;
 import static io.restassured.RestAssured.given;
 
 /**
- * Tests de protection de l'endpoint GET /api/users/me.
+ * Tests HTTP « sans token » sur les endpoints {@code /api/users/me} et {@code /api/users/me/profile}.
  *
  * <p>Stratégie :
  * <ul>
- *   <li>En profil test OIDC est désactivé : pas de validation JWT, toute requête sans
- *       identité sécurisée valide est rejetée (403 Forbidden par Quarkus).</li>
- *   <li>Ce test vérifie que l'endpoint est protégé (appel non authentifié échoue).</li>
+ *   <li>Requête sans en-tête {@code Authorization} : la pile sécurité Quarkus rejette l'accès
+ *       aux ressources {@code @Authenticated} (réponse 401 Unauthorized avec le profil test actuel).</li>
+ *   <li>Les scénarios avec principal JWT simulé et accès au contrôleur (200 / 404 / 401 applicatif)
+ *       sont dans {@link VioletteUserControllerProfileTest}.</li>
  *   <li>Pas de JWT Firebase réel ici : voir le README backend, section « Profil Firebase »,
  *       pour le smoke test manuel avec JWT.</li>
  * </ul>
@@ -22,20 +23,20 @@ import static io.restassured.RestAssured.given;
 class VioletteUserControllerTest {
 
     @Test
-    @DisplayName("GET /me sans token retourne 403")
-    void getMe_withoutToken_returns403() {
+    @DisplayName("GET /me sans token retourne 401")
+    void getMe_withoutToken_returns401() {
         given()
             .when().get("/api/users/me")
             .then()
-                .statusCode(403);
+                .statusCode(401);
     }
 
     @Test
-    @DisplayName("GET /me/profile sans token retourne 403")
-    void getMyProfile_withoutToken_returns403() {
+    @DisplayName("GET /me/profile sans token retourne 401")
+    void getMyProfile_withoutToken_returns401() {
         given()
             .when().get("/api/users/me/profile")
             .then()
-                .statusCode(403);
+                .statusCode(401);
     }
 }
