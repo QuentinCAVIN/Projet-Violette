@@ -138,7 +138,7 @@ class ArtistBookingServiceTest {
     @DisplayName("createBooking — échoue si la disponibilité de l'artiste n'est pas AVAILABLE")
     void createBooking_whenArtistNotAvailable_throwsArtistNotAvailableException() {
         Context ctx = buildContext("svc-unavail-1");
-        ctx.availability.setStatus(AvailabilityStatus.CONDITIONAL);
+        ctx.availability.setStatus(AvailabilityStatus.IF_NEEDED);
         availabilityRepository.flush();
 
         assertThrows(ArtistNotAvailableException.class, () ->
