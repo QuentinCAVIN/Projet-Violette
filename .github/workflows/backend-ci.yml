@@ -2,9 +2,9 @@ name: Backend CI
 
 on:
   push:
-    branches: ["main", "architecture-logicielle", "feature/**"]
+    branches: ["main", "feature/**", "refactor/**"]
   pull_request:
-    branches: ["main", "architecture-logicielle", "feature/**"]
+    branches: ["main"]
 
 jobs:
   backend-ci:
