@@ -5,10 +5,10 @@ package io.violette.showdate.model;
  *
  * <p>Transitions autorisées (après première saisie, retour à PENDING interdit) :
  * <pre>
- * PENDING     → AVAILABLE | CONDITIONAL | UNAVAILABLE  (première saisie)
- * AVAILABLE   → CONDITIONAL | UNAVAILABLE               (modification)
- * CONDITIONAL → AVAILABLE | UNAVAILABLE                 (modification)
- * UNAVAILABLE → AVAILABLE | CONDITIONAL                 (modification)
+ * PENDING    → AVAILABLE | IF_NEEDED | UNAVAILABLE  (première saisie)
+ * AVAILABLE  → IF_NEEDED | UNAVAILABLE              (modification)
+ * IF_NEEDED  → AVAILABLE | UNAVAILABLE              (modification)
+ * UNAVAILABLE → AVAILABLE | IF_NEEDED               (modification)
  * </pre>
  */
 public enum AvailabilityStatus {
@@ -16,8 +16,8 @@ public enum AvailabilityStatus {
     PENDING,
     /** Artiste disponible et sans condition. */
     AVAILABLE,
-    /** Artiste disponible sous conditions (horaires, déplacement, etc.). */
-    CONDITIONAL,
+    /** Artiste disponible si besoin, mais non prioritaire. */
+    IF_NEEDED,
     /** Artiste indisponible. */
     UNAVAILABLE
 }

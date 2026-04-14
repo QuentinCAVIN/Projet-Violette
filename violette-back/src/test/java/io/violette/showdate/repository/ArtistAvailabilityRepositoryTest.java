@@ -107,7 +107,7 @@ class ArtistAvailabilityRepositoryTest {
         ShowDateEntity showDate = buildAndPersistShowDate(company, LocalDate.of(2025, 6, 3));
 
         persistAvailability(showDate, artist1, AvailabilityStatus.AVAILABLE);
-        persistAvailability(showDate, artist2, AvailabilityStatus.CONDITIONAL);
+        persistAvailability(showDate, artist2, AvailabilityStatus.IF_NEEDED);
         persistAvailability(showDate, artist3, AvailabilityStatus.UNAVAILABLE);
         availabilityRepository.flush();
 
@@ -115,7 +115,7 @@ class ArtistAvailabilityRepositoryTest {
 
         assertEquals(3, list.size());
         assertTrue(list.stream().anyMatch(a -> a.getStatus() == AvailabilityStatus.AVAILABLE));
-        assertTrue(list.stream().anyMatch(a -> a.getStatus() == AvailabilityStatus.CONDITIONAL));
+        assertTrue(list.stream().anyMatch(a -> a.getStatus() == AvailabilityStatus.IF_NEEDED));
         assertTrue(list.stream().anyMatch(a -> a.getStatus() == AvailabilityStatus.UNAVAILABLE));
     }
 
@@ -169,7 +169,7 @@ class ArtistAvailabilityRepositoryTest {
 
         // 2 disponibilités artistes
         persistAvailability(showDate, artist1, AvailabilityStatus.AVAILABLE);
-        persistAvailability(showDate, artist2, AvailabilityStatus.CONDITIONAL);
+        persistAvailability(showDate, artist2, AvailabilityStatus.IF_NEEDED);
 
         skillRequirementRepository.flush();
         availabilityRepository.flush();
@@ -183,7 +183,7 @@ class ArtistAvailabilityRepositoryTest {
                 () -> assertTrue(requirements.stream().anyMatch(r -> r.getSkill() == ArtistSkill.DANCE)),
                 () -> assertTrue(requirements.stream().anyMatch(r -> r.getSkill() == ArtistSkill.SINGING)),
                 () -> assertTrue(availabilities.stream().anyMatch(a -> a.getStatus() == AvailabilityStatus.AVAILABLE)),
-                () -> assertTrue(availabilities.stream().anyMatch(a -> a.getStatus() == AvailabilityStatus.CONDITIONAL))
+                () -> assertTrue(availabilities.stream().anyMatch(a -> a.getStatus() == AvailabilityStatus.IF_NEEDED))
         );
     }
 
@@ -214,7 +214,7 @@ class ArtistAvailabilityRepositoryTest {
         sd.setCompany(company);
         sd.setEventDate(eventDate);
         sd.setMeetingTime(LocalTime.of(10, 0));
-        sd.setAddress("12 rue du Spectacle, 69001 Lyon");
+        sd.setLocation("12 rue du Spectacle, 69001 Lyon");
         sd.setClientContactName("Client Test");
         sd.setClientContactPhone("0600000000");
         showDateRepository.persistAndFlush(sd);

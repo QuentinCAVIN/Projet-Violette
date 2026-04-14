@@ -62,14 +62,13 @@ public class ShowDateEntity {
     @Column(name = "meeting_time", nullable = false)
     private LocalTime meetingTime;
 
-    @Size(max = 255)
-    @Column(name = "venue_name", length = 255)
-    private String venueName;
-
+    /**
+     * Champ libre de localisation (nom de lieu, département, adresse précise, etc.).
+     */
     @NotBlank
     @Size(max = 500)
     @Column(nullable = false, length = 500)
-    private String address;
+    private String location;
 
     @NotBlank
     @Size(max = 255)
@@ -135,20 +134,12 @@ public class ShowDateEntity {
         this.meetingTime = meetingTime;
     }
 
-    public String getVenueName() {
-        return venueName;
+    public String getLocation() {
+        return location;
     }
 
-    public void setVenueName(String venueName) {
-        this.venueName = venueName;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
+    public void setLocation(String location) {
+        this.location = location;
     }
 
     public String getClientContactName() {

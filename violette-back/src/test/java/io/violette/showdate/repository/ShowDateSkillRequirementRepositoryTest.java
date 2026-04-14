@@ -11,6 +11,7 @@ import io.violette.violetteuser.model.VioletteUserEntity;
 import io.violette.violetteuser.repository.VioletteUserRepository;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -41,6 +42,7 @@ class ShowDateSkillRequirementRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("Un besoin artistique persisté est relu avec tous ses champs")
     void givenSkillRequirement_whenPersisted_thenAllFieldsCanBeReloaded() {
         ShowDateEntity showDate = buildAndPersistShowDate("req-mgr-1", "req-mgr-1@test.com");
 
@@ -65,6 +67,7 @@ class ShowDateSkillRequirementRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("Pour une date, findByShowDateId retourne tous les besoins liés")
     void givenMultipleSkillRequirementsForSameDate_whenFindByShowDateId_thenReturnAll() {
         ShowDateEntity showDate = buildAndPersistShowDate("req-mgr-2", "req-mgr-2@test.com");
 
@@ -86,6 +89,7 @@ class ShowDateSkillRequirementRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("Pour deux dates distinctes, findByShowDateId ne mélange pas les besoins")
     void givenTwoDatesWithDifferentRequirements_whenFindByShowDateId_thenReturnOnlyCorrectDate() {
         ShowDateEntity date1 = buildAndPersistShowDate("req-mgr-3", "req-mgr-3@test.com");
         ShowDateEntity date2 = buildAndPersistShowDate("req-mgr-4", "req-mgr-4@test.com");
@@ -108,6 +112,7 @@ class ShowDateSkillRequirementRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("Un besoin avec cachet net à zéro est accepté en persistance")
     void givenSkillRequirementWithNetFeeZero_whenPersisted_thenNetFeeIsAccepted() {
         ShowDateEntity showDate = buildAndPersistShowDate("req-mgr-5", "req-mgr-5@test.com");
 
@@ -117,6 +122,33 @@ class ShowDateSkillRequirementRepositoryTest {
         ShowDateSkillRequirementEntity found = skillRequirementRepository.findById(req.getId());
 
         assertEquals(new BigDecimal("0.00"), found.getNetFee());
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("sumRequiredCountByShowDateId additionne les effectifs requis de tous les besoins de la date")
+    void sumRequiredCountByShowDateId_whenMultipleRequirementsExist_returnsSumOfRequiredCounts() {
+        ShowDateEntity showDate = buildAndPersistShowDate("req-mgr-6", "req-mgr-6@test.com");
+
+        skillRequirementRepository.persist(buildRequirement(showDate, ArtistSkill.DANCE, 2, "120.00"));
+        skillRequirementRepository.persist(buildRequirement(showDate, ArtistSkill.SINGING, 1, "150.00"));
+        skillRequirementRepository.persist(buildRequirement(showDate, ArtistSkill.ACROBATICS, 3, "200.00"));
+        skillRequirementRepository.flush();
+
+        int total = skillRequirementRepository.sumRequiredCountByShowDateId(showDate.getId());
+
+        assertEquals(6, total);
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("sumRequiredCountByShowDateId retourne 0 lorsqu'aucun besoin n'existe pour la date")
+    void sumRequiredCountByShowDateId_whenNoRequirementsExist_returnsZero() {
+        ShowDateEntity showDate = buildAndPersistShowDate("req-mgr-7", "req-mgr-7@test.com");
+
+        int total = skillRequirementRepository.sumRequiredCountByShowDateId(showDate.getId());
+
+        assertEquals(0, total);
     }
 
     // --- Helpers ---
@@ -140,7 +172,7 @@ class ShowDateSkillRequirementRepositoryTest {
         sd.setCompany(company);
         sd.setEventDate(LocalDate.of(2025, 10, 1));
         sd.setMeetingTime(LocalTime.of(9, 0));
-        sd.setAddress("12 avenue de l'Art, Lyon");
+        sd.setLocation("12 avenue de l'Art, Lyon");
         sd.setClientContactName("Marie Dupont");
         sd.setClientContactPhone("0700000001");
         showDateRepository.persistAndFlush(sd);

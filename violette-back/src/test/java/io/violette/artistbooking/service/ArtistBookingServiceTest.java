@@ -138,7 +138,7 @@ class ArtistBookingServiceTest {
     @DisplayName("createBooking — échoue si la disponibilité de l'artiste n'est pas AVAILABLE")
     void createBooking_whenArtistNotAvailable_throwsArtistNotAvailableException() {
         Context ctx = buildContext("svc-unavail-1");
-        ctx.availability.setStatus(AvailabilityStatus.CONDITIONAL);
+        ctx.availability.setStatus(AvailabilityStatus.IF_NEEDED);
         availabilityRepository.flush();
 
         assertThrows(ArtistNotAvailableException.class, () ->
@@ -664,7 +664,7 @@ class ArtistBookingServiceTest {
         sd.setCompany(company);
         sd.setEventDate(eventDate);
         sd.setMeetingTime(LocalTime.of(10, 0));
-        sd.setAddress("12 rue du Spectacle, 75001 Paris");
+        sd.setLocation("12 rue du Spectacle, 75001 Paris");
         sd.setClientContactName("Client Test");
         sd.setClientContactPhone("0600000000");
         showDateRepository.persistAndFlush(sd);

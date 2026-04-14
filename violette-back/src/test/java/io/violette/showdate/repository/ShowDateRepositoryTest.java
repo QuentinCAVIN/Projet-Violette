@@ -45,7 +45,6 @@ class ShowDateRepositoryTest {
         CabaretCompanyEntity company = buildAndPersistCompany("sd-mgr-1", "sd-mgr-1@test.com", "Compagnie Logistics");
 
         ShowDateEntity showDate = buildShowDate(company, LocalDate.of(2025, 6, 15), LocalTime.of(9, 0));
-        showDate.setVenueName("Salle des Fêtes de Paris");
         showDate.setShowDetails("Grande revue d'été — décor baroque");
         showDateRepository.persistAndFlush(showDate);
 
@@ -55,8 +54,7 @@ class ShowDateRepositoryTest {
         assertAll(
                 () -> assertEquals(LocalDate.of(2025, 6, 15), found.getEventDate()),
                 () -> assertEquals(LocalTime.of(9, 0), found.getMeetingTime()),
-                () -> assertEquals("Salle des Fêtes de Paris", found.getVenueName()),
-                () -> assertEquals("42 rue des Arts, 75001 Paris", found.getAddress()),
+                () -> assertEquals("42 rue des Arts, 75001 Paris", found.getLocation()),
                 () -> assertEquals("Jean Client", found.getClientContactName()),
                 () -> assertEquals("0600000001", found.getClientContactPhone()),
                 () -> assertEquals("Grande revue d'été — décor baroque", found.getShowDetails()),
@@ -107,16 +105,15 @@ class ShowDateRepositoryTest {
 
     @Test
     @Transactional
-    void givenShowDateWithoutVenueName_whenPersisted_thenVenueNameIsNull() {
+    void givenShowDateWithLocation_whenPersisted_thenLocationIsStored() {
         CabaretCompanyEntity company = buildAndPersistCompany("sd-mgr-4", "sd-mgr-4@test.com", "Compagnie Sans Lieu");
 
         ShowDateEntity showDate = buildShowDate(company, LocalDate.of(2025, 9, 5), LocalTime.of(10, 0));
-        // venueName left null (optional field)
         showDateRepository.persistAndFlush(showDate);
 
         ShowDateEntity found = showDateRepository.findById(showDate.getId());
 
-        assertNull(found.getVenueName());
+        assertEquals("42 rue des Arts, 75001 Paris", found.getLocation());
     }
 
     @Test
@@ -161,7 +158,7 @@ class ShowDateRepositoryTest {
         sd.setCompany(company);
         sd.setEventDate(date);
         sd.setMeetingTime(meetingTime);
-        sd.setAddress("42 rue des Arts, 75001 Paris");
+        sd.setLocation("42 rue des Arts, 75001 Paris");
         sd.setClientContactName("Jean Client");
         sd.setClientContactPhone("0600000001");
         return sd;

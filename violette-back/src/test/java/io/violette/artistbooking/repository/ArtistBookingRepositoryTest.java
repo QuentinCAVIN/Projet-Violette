@@ -16,6 +16,7 @@ import io.violette.violetteuser.model.VioletteUserEntity;
 import io.violette.violetteuser.repository.VioletteUserRepository;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -58,6 +59,7 @@ class ArtistBookingRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("Une réservation complète persistée est relue avec tous ses champs et le statut par défaut")
     void givenBookingWithAllFields_whenPersisted_thenCanBeFullyReloaded() {
         VioletteUserEntity manager = buildAndPersistUser("bk-mgr-1", "bk-mgr-1@test.com", Set.of(UserRole.MANAGER));
         VioletteUserEntity artist = buildAndPersistUser("bk-artist-1", "bk-artist-1@test.com", Set.of(UserRole.ARTIST));
@@ -90,6 +92,7 @@ class ArtistBookingRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("Sans besoin artistique ni cachet convenu, la réservation persistée garde ces champs à null")
     void givenBookingWithoutSkillRequirement_whenPersisted_thenSkillRequirementIsNull() {
         VioletteUserEntity manager = buildAndPersistUser("bk-mgr-2", "bk-mgr-2@test.com", Set.of(UserRole.MANAGER));
         VioletteUserEntity artist = buildAndPersistUser("bk-artist-2", "bk-artist-2@test.com", Set.of(UserRole.ARTIST));
@@ -113,6 +116,7 @@ class ArtistBookingRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("findByShowDateIdAndArtistId retourne la réservation existante pour la paire date / artiste")
     void givenExistingBooking_whenFindByShowDateIdAndArtistId_thenReturnsIt() {
         VioletteUserEntity manager = buildAndPersistUser("bk-mgr-3", "bk-mgr-3@test.com", Set.of(UserRole.MANAGER));
         VioletteUserEntity artist = buildAndPersistUser("bk-artist-3", "bk-artist-3@test.com", Set.of(UserRole.ARTIST));
@@ -130,6 +134,7 @@ class ArtistBookingRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("findByShowDateIdAndArtistId retourne vide lorsqu'aucune réservation n'existe pour la paire")
     void givenNoBookingForArtistOnDate_whenFindByShowDateIdAndArtistId_thenReturnsEmpty() {
         VioletteUserEntity manager = buildAndPersistUser("bk-mgr-4", "bk-mgr-4@test.com", Set.of(UserRole.MANAGER));
         VioletteUserEntity artist = buildAndPersistUser("bk-artist-4", "bk-artist-4@test.com", Set.of(UserRole.ARTIST));
@@ -148,6 +153,7 @@ class ArtistBookingRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("findByShowDateId retourne toutes les réservations d'une même date")
     void givenMultipleBookingsForSameDate_whenFindByShowDateId_thenReturnAll() {
         VioletteUserEntity manager = buildAndPersistUser("bk-mgr-5", "bk-mgr-5@test.com", Set.of(UserRole.MANAGER));
         VioletteUserEntity artist1 = buildAndPersistUser("bk-artist-5a", "bk-artist-5a@test.com", Set.of(UserRole.ARTIST));
@@ -166,6 +172,7 @@ class ArtistBookingRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("findByArtistId retourne les réservations de l'artiste sur toutes les dates")
     void givenArtistBookedOnMultipleDates_whenFindByArtistId_thenReturnAllDates() {
         VioletteUserEntity manager = buildAndPersistUser("bk-mgr-6", "bk-mgr-6@test.com", Set.of(UserRole.MANAGER));
         VioletteUserEntity artist = buildAndPersistUser("bk-artist-6", "bk-artist-6@test.com", Set.of(UserRole.ARTIST));
@@ -188,6 +195,7 @@ class ArtistBookingRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("findByArtistIdAndStatus ne retourne que les réservations au statut demandé")
     void givenArtistWithMixedBookingStatuses_whenFindByArtistIdAndStatus_thenReturnOnlyMatchingStatus() {
         VioletteUserEntity manager = buildAndPersistUser("bk-mgr-7", "bk-mgr-7@test.com", Set.of(UserRole.MANAGER));
         VioletteUserEntity artist = buildAndPersistUser("bk-artist-7", "bk-artist-7@test.com", Set.of(UserRole.ARTIST));
@@ -214,6 +222,7 @@ class ArtistBookingRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("countActiveBookingsForSkillRequirement compte une réservation au statut SELECTED")
     void countActiveBookingsForSkillRequirement_countsSelected() {
         ShowDateSkillRequirementEntity skillReq = buildSkillReqWithDate("bk-cap-1");
         persistBookingForSkillReq(skillReq, "bk-cap-a1", BookingStatus.SELECTED);
@@ -225,6 +234,7 @@ class ArtistBookingRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("countActiveBookingsForSkillRequirement compte une réservation en attente de confirmation")
     void countActiveBookingsForSkillRequirement_countsPendingConfirmation() {
         ShowDateSkillRequirementEntity skillReq = buildSkillReqWithDate("bk-cap-2");
         persistBookingForSkillReq(skillReq, "bk-cap-a2", BookingStatus.PENDING_CONFIRMATION);
@@ -236,6 +246,7 @@ class ArtistBookingRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("countActiveBookingsForSkillRequirement compte une réservation confirmée")
     void countActiveBookingsForSkillRequirement_countsConfirmed() {
         ShowDateSkillRequirementEntity skillReq = buildSkillReqWithDate("bk-cap-3");
         persistBookingForSkillReq(skillReq, "bk-cap-a3", BookingStatus.CONFIRMED);
@@ -247,6 +258,7 @@ class ArtistBookingRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("countActiveBookingsForSkillRequirement n'inclut pas une réservation refusée")
     void countActiveBookingsForSkillRequirement_excludesRefused() {
         ShowDateSkillRequirementEntity skillReq = buildSkillReqWithDate("bk-cap-4");
         persistBookingForSkillReq(skillReq, "bk-cap-a4", BookingStatus.REFUSED);
@@ -258,6 +270,7 @@ class ArtistBookingRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("countActiveBookingsForSkillRequirement n'inclut pas une réservation annulée")
     void countActiveBookingsForSkillRequirement_excludesCancelled() {
         ShowDateSkillRequirementEntity skillReq = buildSkillReqWithDate("bk-cap-5");
         persistBookingForSkillReq(skillReq, "bk-cap-a5", BookingStatus.CANCELLED);
@@ -269,6 +282,7 @@ class ArtistBookingRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("countActiveBookingsForSkillRequirement ne compte que les statuts actifs lorsque plusieurs statuts coexistent")
     void countActiveBookingsForSkillRequirement_withMixedStatuses_countsOnlyActive() {
         ShowDateSkillRequirementEntity skillReq = buildSkillReqWithDate("bk-cap-6");
         persistBookingForSkillReq(skillReq, "bk-cap-a6a", BookingStatus.SELECTED);
@@ -288,6 +302,7 @@ class ArtistBookingRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("findByShowDateIdAndStatus ne retourne que les réservations au statut demandé")
     void givenBookingsWithMixedStatuses_whenFindByShowDateIdAndStatus_thenReturnOnlySelected() {
         VioletteUserEntity manager = buildAndPersistUser("bk-mgr-8", "bk-mgr-8@test.com", Set.of(UserRole.MANAGER));
         VioletteUserEntity artist1 = buildAndPersistUser("bk-artist-8a", "bk-artist-8a@test.com", Set.of(UserRole.ARTIST));
@@ -314,6 +329,7 @@ class ArtistBookingRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("findActiveByShowDateId exclut les réservations refusées et annulées")
     void findActiveByShowDateId_excludesRefusedAndCancelled() {
         VioletteUserEntity manager = buildAndPersistUser("bk-mgr-9", "bk-mgr-9@test.com", Set.of(UserRole.MANAGER));
         VioletteUserEntity a1 = buildAndPersistUser("bk-artist-9a", "bk-artist-9a@test.com", Set.of(UserRole.ARTIST));
@@ -336,6 +352,31 @@ class ArtistBookingRepositoryTest {
         assertEquals(3, active.size());
         assertTrue(active.stream().noneMatch(b -> b.getStatus() == BookingStatus.REFUSED));
         assertTrue(active.stream().noneMatch(b -> b.getStatus() == BookingStatus.CANCELLED));
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("countActiveBookingsByShowDateId ne compte que les réservations sélectionnées, en attente ou confirmées")
+    void countActiveBookingsByShowDateId_whenMixedStatuses_countsOnlySelectedPendingAndConfirmed() {
+        VioletteUserEntity manager = buildAndPersistUser("bk-mgr-10", "bk-mgr-10@test.com", Set.of(UserRole.MANAGER));
+        VioletteUserEntity a1 = buildAndPersistUser("bk-artist-10a", "bk-artist-10a@test.com", Set.of(UserRole.ARTIST));
+        VioletteUserEntity a2 = buildAndPersistUser("bk-artist-10b", "bk-artist-10b@test.com", Set.of(UserRole.ARTIST));
+        VioletteUserEntity a3 = buildAndPersistUser("bk-artist-10c", "bk-artist-10c@test.com", Set.of(UserRole.ARTIST));
+        VioletteUserEntity a4 = buildAndPersistUser("bk-artist-10d", "bk-artist-10d@test.com", Set.of(UserRole.ARTIST));
+        VioletteUserEntity a5 = buildAndPersistUser("bk-artist-10e", "bk-artist-10e@test.com", Set.of(UserRole.ARTIST));
+        CabaretCompanyEntity company = buildAndPersistCompany("Compagnie Booking 10", manager);
+        ShowDateEntity showDate = buildAndPersistShowDate(company, LocalDate.of(2025, 12, 1));
+
+        persistBooking(showDate, a1, null, BookingStatus.SELECTED, null);
+        persistBooking(showDate, a2, null, BookingStatus.PENDING_CONFIRMATION, null);
+        persistBooking(showDate, a3, null, BookingStatus.CONFIRMED, null);
+        persistBooking(showDate, a4, null, BookingStatus.REFUSED, null);
+        persistBooking(showDate, a5, null, BookingStatus.CANCELLED, null);
+        bookingRepository.flush();
+
+        long count = bookingRepository.countActiveBookingsByShowDateId(showDate.getId());
+
+        assertEquals(3, count);
     }
 
     // ------------------------------------------------------------------
@@ -367,7 +408,7 @@ class ArtistBookingRepositoryTest {
         sd.setCompany(company);
         sd.setEventDate(eventDate);
         sd.setMeetingTime(LocalTime.of(10, 0));
-        sd.setAddress("12 rue du Spectacle, 75001 Paris");
+        sd.setLocation("12 rue du Spectacle, 75001 Paris");
         sd.setClientContactName("Client Test");
         sd.setClientContactPhone("0600000000");
         showDateRepository.persistAndFlush(sd);
