@@ -73,6 +73,20 @@ public class ArtistBookingRepository implements PanacheRepository<ArtistBookingE
     }
 
     /**
+     * Compte les bookings actifs d'une date de spectacle.
+     *
+     * <p>Les statuts actifs sont : {@code SELECTED}, {@code PENDING_CONFIRMATION}, {@code CONFIRMED}.
+     * {@code REFUSED} et {@code CANCELLED} ne comptent pas.
+     */
+    public long countActiveBookingsByShowDateId(Long showDateId) {
+        return count(
+                "showDate.id = ?1 and status in ?2",
+                showDateId,
+                List.of(BookingStatus.SELECTED, BookingStatus.PENDING_CONFIRMATION, BookingStatus.CONFIRMED)
+        );
+    }
+
+    /**
      * Retourne tous les bookings actifs d'une date (hors REFUSED et CANCELLED).
      * Utilisé pour la propagation d'annulation de date (future fonctionnalité V1).
      */
