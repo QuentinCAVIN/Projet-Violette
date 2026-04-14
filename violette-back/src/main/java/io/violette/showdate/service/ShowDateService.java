@@ -1,5 +1,6 @@
 package io.violette.showdate.service;
 
+import io.violette.artistbooking.repository.ArtistBookingRepository;
 import io.violette.cabaretcompany.exception.CabaretCompanyNotFoundException;
 import io.violette.cabaretcompany.exception.CabaretShowNotFoundException;
 import io.violette.cabaretcompany.model.CabaretCompanyEntity;
@@ -24,7 +25,9 @@ import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Service du domaine showdate.
@@ -35,11 +38,17 @@ public class ShowDateService {
 
     private static final Logger LOG = LoggerFactory.getLogger(ShowDateService.class);
 
+    private static final DateTimeFormatter DISPLAY_TITLE_DATE_FORMAT =
+            DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.FRENCH);
+
     @Inject
     ShowDateRepository showDateRepository;
 
     @Inject
     ShowDateSkillRequirementRepository skillRequirementRepository;
+
+    @Inject
+    ArtistBookingRepository artistBookingRepository;
 
     @Inject
     CabaretCompanyRepository cabaretCompanyRepository;
@@ -85,7 +94,7 @@ public class ShowDateService {
         entity.setShowDetails(request.showDetails());
         entity.setStatus(ShowDateStatus.PENDING);
 
-        showDateRepository.persist(entity);
+        showDateRepository.persistAndFlush(entity);
 
         LOG.info("Date de spectacle créée id={} pour companyId={}", entity.getId(), request.companyId());
         return mapToDto(entity);
@@ -128,10 +137,30 @@ public class ShowDateService {
     }
 
     /**
-     * Provisoire (commit 5) : titre affiché et agrégats seront calculés au commit suivant.
+     * Construit le DTO avec titre affiché et agrégats calculés (non persistés).
      */
     private ShowDateDto mapToDto(ShowDateEntity entity) {
-        return showDateMapper.toDto(entity, "", 0, 0);
+        Long id = entity.getId();
+        String displayTitle = computeDisplayTitle(entity);
+        int totalRequiredArtists = skillRequirementRepository.sumRequiredCountByShowDateId(id);
+        int selectedCount = (int) artistBookingRepository.countActiveBookingsByShowDateId(id);
+        return showDateMapper.toDto(entity, displayTitle, totalRequiredArtists, selectedCount);
+    }
+
+    /**
+     * Titre affiché : revue (si liée et titre non vide) + lieu + date, en français.
+     */
+    private String computeDisplayTitle(ShowDateEntity entity) {
+        String datePart = DISPLAY_TITLE_DATE_FORMAT.format(entity.getEventDate());
+        String location = entity.getLocation();
+        CabaretShowEntity show = entity.getCabaretShow();
+        if (show != null) {
+            String title = show.getTitle();
+            if (title != null && !title.isBlank()) {
+                return title + " — " + location + " — " + datePart;
+            }
+        }
+        return location + " — " + datePart;
     }
 
     /**
