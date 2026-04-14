@@ -4,8 +4,8 @@ import io.violette.showdate.model.AvailabilityStatus;
 import jakarta.validation.constraints.NotNull;
 
 /**
- * Corps de requête pour la mise à jour de la disponibilité de l'utilisateur courant sur une date de spectacle.
- * Réservé à une utilisation ultérieure côté service / contrôleur (commit suivant).
+ * Corps de requête pour la mise à jour de la disponibilité de l'utilisateur courant sur une date de spectacle
+ * ({@code PUT /api/show-dates/{id}/availabilities/me}).
  */
 public record UpsertAvailabilityRequestDto(
 

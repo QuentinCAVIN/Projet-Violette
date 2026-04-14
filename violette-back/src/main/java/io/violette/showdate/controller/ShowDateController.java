@@ -1,10 +1,14 @@
 package io.violette.showdate.controller;
 
 import io.quarkus.security.Authenticated;
+import io.violette.security.CurrentUserContextProvider;
+import io.violette.showdate.dto.ArtistAvailabilityDto;
 import io.violette.showdate.dto.CreateShowDateRequestDto;
 import io.violette.showdate.dto.CreateSkillRequirementRequestDto;
 import io.violette.showdate.dto.ShowDateDto;
 import io.violette.showdate.dto.ShowDateSkillRequirementDto;
+import io.violette.showdate.dto.UpsertAvailabilityRequestDto;
+import io.violette.showdate.service.ArtistAvailabilityService;
 import io.violette.showdate.service.ShowDateService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
@@ -12,6 +16,7 @@ import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
@@ -36,6 +41,12 @@ public class ShowDateController {
 
     @Inject
     ShowDateService showDateService;
+
+    @Inject
+    ArtistAvailabilityService artistAvailabilityService;
+
+    @Inject
+    CurrentUserContextProvider currentUserContextProvider;
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -114,5 +125,44 @@ public class ShowDateController {
     public Response getSkillRequirements(@PathParam("id") Long id) {
         List<ShowDateSkillRequirementDto> dtos = showDateService.getSkillRequirements(id);
         return Response.ok(dtos).build();
+    }
+
+    @GET
+    @Path("/{id}/availabilities")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed("MANAGER")
+    @Operation(
+            summary = "Lister les disponibilités artistes d'une date",
+            description = "Retourne toutes les disponibilités déclarées pour une date de spectacle. Requiert le rôle MANAGER."
+    )
+    @APIResponse(responseCode = "200", description = "Liste des disponibilités", content = @Content(schema = @Schema(implementation = ArtistAvailabilityDto.class)))
+    @APIResponse(responseCode = "403", description = "Accès refusé (rôle insuffisant)")
+    @APIResponse(responseCode = "404", description = "Date introuvable")
+    public Response getAvailabilitiesForShowDate(@PathParam("id") Long id) {
+        List<ArtistAvailabilityDto> dtos = artistAvailabilityService.getAvailabilitiesForShowDate(id);
+        return Response.ok(dtos).build();
+    }
+
+    @PUT
+    @Path("/{id}/availabilities/me")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed("ARTIST")
+    @Operation(
+            summary = "Déclarer ou mettre à jour ma disponibilité",
+            description = "Crée ou met à jour la disponibilité de l'artiste authentifié pour cette date. Le statut PENDING ne peut pas être envoyé explicitement. Requiert le rôle ARTIST."
+    )
+    @APIResponse(responseCode = "200", description = "Disponibilité enregistrée", content = @Content(schema = @Schema(implementation = ArtistAvailabilityDto.class)))
+    @APIResponse(responseCode = "400", description = "Corps de la requête invalide ou statut PENDING explicite interdit")
+    @APIResponse(responseCode = "401", description = "Principal JWT introuvable")
+    @APIResponse(responseCode = "403", description = "Accès refusé (rôle insuffisant)")
+    @APIResponse(responseCode = "404", description = "Date ou utilisateur introuvable")
+    public Response upsertMyAvailability(@PathParam("id") Long id, @Valid UpsertAvailabilityRequestDto request) {
+        return currentUserContextProvider.getCurrentPrincipal()
+                .map(principal -> {
+                    ArtistAvailabilityDto dto = artistAvailabilityService.upsertMyAvailability(id, principal, request.status());
+                    return Response.ok(dto).build();
+                })
+                .orElse(Response.status(Response.Status.UNAUTHORIZED).build());
     }
 }
