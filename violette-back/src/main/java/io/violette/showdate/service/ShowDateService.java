@@ -79,7 +79,7 @@ public class ShowDateService {
         entity.setCabaretShow(cabaretShow);
         entity.setEventDate(request.eventDate());
         entity.setMeetingTime(request.meetingTime());
-        entity.setLocation(request.address());
+        entity.setLocation(request.location());
         entity.setClientContactName(request.clientContactName());
         entity.setClientContactPhone(request.clientContactPhone());
         entity.setShowDetails(request.showDetails());
@@ -88,7 +88,7 @@ public class ShowDateService {
         showDateRepository.persist(entity);
 
         LOG.info("Date de spectacle créée id={} pour companyId={}", entity.getId(), request.companyId());
-        return showDateMapper.toDto(entity);
+        return mapToDto(entity);
     }
 
     /**
@@ -99,7 +99,7 @@ public class ShowDateService {
     public ShowDateDto getById(Long id) {
         LOG.debug("Récupération de la date de spectacle id={}", id);
         return showDateRepository.findByIdOptional(id)
-                .map(showDateMapper::toDto)
+                .map(this::mapToDto)
                 .orElseThrow(ShowDateNotFoundException::new);
     }
 
@@ -109,7 +109,7 @@ public class ShowDateService {
     public List<ShowDateDto> getAll() {
         LOG.debug("Récupération de toutes les dates de spectacle");
         return showDateRepository.findAllOrderByEventDateAsc().stream()
-                .map(showDateMapper::toDto)
+                .map(this::mapToDto)
                 .toList();
     }
 
@@ -123,8 +123,15 @@ public class ShowDateService {
         cabaretCompanyRepository.findByIdOptional(companyId)
                 .orElseThrow(CabaretCompanyNotFoundException::new);
         return showDateRepository.findByCompanyId(companyId).stream()
-                .map(showDateMapper::toDto)
+                .map(this::mapToDto)
                 .toList();
+    }
+
+    /**
+     * Provisoire (commit 5) : titre affiché et agrégats seront calculés au commit suivant.
+     */
+    private ShowDateDto mapToDto(ShowDateEntity entity) {
+        return showDateMapper.toDto(entity, "", 0, 0);
     }
 
     /**

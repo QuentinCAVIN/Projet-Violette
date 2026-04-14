@@ -24,12 +24,9 @@ public record CreateShowDateRequestDto(
         @NotNull(message = "meetingTime est obligatoire")
         LocalTime meetingTime,
 
-        @Size(max = 255)
-        String venueName,
-
-        @NotBlank(message = "address ne doit pas être vide")
+        @NotBlank(message = "location ne doit pas être vide")
         @Size(max = 500)
-        String address,
+        String location,
 
         @NotBlank(message = "clientContactName ne doit pas être vide")
         @Size(max = 255)
