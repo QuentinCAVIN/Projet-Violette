@@ -214,7 +214,7 @@ class ArtistAvailabilityRepositoryTest {
         sd.setCompany(company);
         sd.setEventDate(eventDate);
         sd.setMeetingTime(LocalTime.of(10, 0));
-        sd.setAddress("12 rue du Spectacle, 69001 Lyon");
+        sd.setLocation("12 rue du Spectacle, 69001 Lyon");
         sd.setClientContactName("Client Test");
         sd.setClientContactPhone("0600000000");
         showDateRepository.persistAndFlush(sd);

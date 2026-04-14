@@ -140,7 +140,7 @@ class ShowDateSkillRequirementRepositoryTest {
         sd.setCompany(company);
         sd.setEventDate(LocalDate.of(2025, 10, 1));
         sd.setMeetingTime(LocalTime.of(9, 0));
-        sd.setAddress("12 avenue de l'Art, Lyon");
+        sd.setLocation("12 avenue de l'Art, Lyon");
         sd.setClientContactName("Marie Dupont");
         sd.setClientContactPhone("0700000001");
         showDateRepository.persistAndFlush(sd);

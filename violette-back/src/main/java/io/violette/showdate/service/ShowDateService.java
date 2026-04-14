@@ -79,8 +79,7 @@ public class ShowDateService {
         entity.setCabaretShow(cabaretShow);
         entity.setEventDate(request.eventDate());
         entity.setMeetingTime(request.meetingTime());
-        entity.setVenueName(request.venueName());
-        entity.setAddress(request.address());
+        entity.setLocation(request.address());
         entity.setClientContactName(request.clientContactName());
         entity.setClientContactPhone(request.clientContactPhone());
         entity.setShowDetails(request.showDetails());
