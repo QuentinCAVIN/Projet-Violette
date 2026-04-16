@@ -50,7 +50,7 @@ test/
 ### AvailabilityStatus (`test/models/enums/availability_status_test.dart`)
 
 **Ce qui est testé :**
-- ✅ Transitions de statut : `pending → available → conditional → unavailable → available`
+- ✅ Transitions de statut : `pending → available → ifNeeded → unavailable → available`
 - ✅ Labels français pour l'UI
 - ✅ Mapping Firestore : `"available"` ↔ `AvailabilityStatus.available`
 - ✅ Serialization : `.name` retourne la bonne string

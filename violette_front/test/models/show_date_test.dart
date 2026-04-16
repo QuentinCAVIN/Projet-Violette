@@ -85,20 +85,19 @@ void main() {
       expect(showDate.getAvailabilityFor(userId), AvailabilityStatus.available);
     });
 
-    test('nextStatus devrait faire passer available → conditional', () {
+    test('nextStatus devrait faire passer available → ifNeeded', () {
       final showDate = _createTestShowDate(
         artistsAvailability: {userId: AvailabilityStatus.available},
       );
 
       showDate.nextStatus(userId);
 
-      expect(
-          showDate.getAvailabilityFor(userId), AvailabilityStatus.conditional);
+      expect(showDate.getAvailabilityFor(userId), AvailabilityStatus.ifNeeded);
     });
 
-    test('nextStatus devrait faire passer conditional → unavailable', () {
+    test('nextStatus devrait faire passer ifNeeded → unavailable', () {
       final showDate = _createTestShowDate(
-        artistsAvailability: {userId: AvailabilityStatus.conditional},
+        artistsAvailability: {userId: AvailabilityStatus.ifNeeded},
       );
 
       showDate.nextStatus(userId);

@@ -40,6 +40,7 @@ void main() {
 
         final cleanDate = DateTime(2025, 10, 10);
         final dummyShowDate = ShowDate(
+          uid: 'show-date-1',
           title: 'Test',
           date: cleanDate,
           artistsAvailability: {'uid-123': AvailabilityStatus.available},

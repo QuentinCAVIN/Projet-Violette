@@ -2,6 +2,7 @@ import 'package:violette_front/app/app.locator.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:violette_front/repositories/booking_repository.dart';
+import 'package:violette_front/repositories/availability_repository.dart';
 import 'package:violette_front/repositories/show_date_repository.dart';
 import 'package:violette_front/repositories/user_repository.dart';
 import 'package:stacked_firebase_auth/stacked_firebase_auth.dart';
@@ -21,6 +22,8 @@ class MockShowDateRepository extends Mock implements ShowDateRepository {}
 class MockUserRepository extends Mock implements UserRepository {}
 
 class MockBookingRepository extends Mock implements BookingRepository {}
+
+class MockAvailabilityRepository extends Mock implements AvailabilityRepository {}
 
 class MockFirebaseAuthenticationService extends Mock
     implements FirebaseAuthenticationService {}
@@ -97,6 +100,13 @@ MockBookingRepository getAndRegisterBookingRepository() {
   return service;
 }
 
+MockAvailabilityRepository getAndRegisterAvailabilityRepository() {
+  _removeRegistrationIfExists<AvailabilityRepository>();
+  final service = MockAvailabilityRepository();
+  locator.registerSingleton<AvailabilityRepository>(service);
+  return service;
+}
+
 MockFirebaseAuthenticationService
     getAndRegisterFirebaseAuthenticationService() {
   _removeRegistrationIfExists<FirebaseAuthenticationService>();
@@ -119,6 +129,7 @@ void registerServices() {
   getAndRegisterShowDateRepository();
   getAndRegisterUserRepository();
   getAndRegisterBookingRepository();
+  getAndRegisterAvailabilityRepository();
   getAndRegisterFirebaseAuthenticationService();
   getAndRegisterSnackbarService();
 }
@@ -130,6 +141,7 @@ void unregisterServices() {
   locator.unregister<ShowDateRepository>();
   locator.unregister<UserRepository>();
   locator.unregister<BookingRepository>();
+  locator.unregister<AvailabilityRepository>();
   locator.unregister<FirebaseAuthenticationService>();
   locator.unregister<SnackbarService>();
 }

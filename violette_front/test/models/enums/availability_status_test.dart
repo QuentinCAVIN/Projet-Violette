@@ -15,14 +15,14 @@ void main() {
       expect(result, AvailabilityStatus.available);
     });
 
-    test('available.next devrait retourner conditional', () {
+    test('available.next devrait retourner ifNeeded', () {
       const status = AvailabilityStatus.available;
       final result = status.next;
-      expect(result, AvailabilityStatus.conditional);
+      expect(result, AvailabilityStatus.ifNeeded);
     });
 
-    test('conditional.next devrait retourner unavailable', () {
-      const status = AvailabilityStatus.conditional;
+    test('ifNeeded.next devrait retourner unavailable', () {
+      const status = AvailabilityStatus.ifNeeded;
       final result = status.next;
       expect(result, AvailabilityStatus.unavailable);
     });
@@ -39,8 +39,8 @@ void main() {
       expect(AvailabilityStatus.available.label, 'Disponible');
     });
 
-    test('conditional devrait avoir le label "Conditionnel"', () {
-      expect(AvailabilityStatus.conditional.label, 'Incertain');
+    test('ifNeeded devrait avoir le label "Si besoin"', () {
+      expect(AvailabilityStatus.ifNeeded.label, 'Si besoin');
     });
 
     test('unavailable devrait avoir le label "Indisponible"', () {
@@ -58,10 +58,10 @@ void main() {
       expect(result, AvailabilityStatus.available);
     });
 
-    test('"conditional" devrait mapper vers AvailabilityStatus.conditional',
+    test('"ifNeeded" devrait mapper vers AvailabilityStatus.ifNeeded',
         () {
-      final result = availabilityStatusFromString('conditional');
-      expect(result, AvailabilityStatus.conditional);
+      final result = availabilityStatusFromString('ifNeeded');
+      expect(result, AvailabilityStatus.ifNeeded);
     });
 
     test('"unavailable" devrait mapper vers AvailabilityStatus.unavailable',
@@ -94,9 +94,9 @@ void main() {
       expect(AvailabilityStatus.available.name, 'available');
     });
 
-    test('AvailabilityStatus.conditional.name devrait retourner "conditional"',
+    test('AvailabilityStatus.ifNeeded.name devrait retourner "ifNeeded"',
         () {
-      expect(AvailabilityStatus.conditional.name, 'conditional');
+      expect(AvailabilityStatus.ifNeeded.name, 'ifNeeded');
     });
 
     test('AvailabilityStatus.unavailable.name devrait retourner "unavailable"',
