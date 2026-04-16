@@ -23,7 +23,6 @@ Ces tests couvrent les règles critiques :
 - Transitions de statut `AvailabilityStatus`
 - Règle métier : durée max 12h
 - Conversions minutes ↔ HH:mm
-- Mapping Firestore
 
 ### Quand ajouter des tests ViewModels ?
 

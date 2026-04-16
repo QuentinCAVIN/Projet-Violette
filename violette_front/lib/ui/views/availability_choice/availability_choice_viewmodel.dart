@@ -5,6 +5,7 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:violette_front/app/app.router.dart';
 
 import 'package:violette_front/models/show_date.dart';
+import 'package:violette_front/models/availability.dart';
 import 'package:violette_front/models/enums/availability_status.dart';
 import 'package:violette_front/repositories/show_date_repository.dart';
 import 'package:violette_front/repositories/availability_repository.dart';
@@ -37,11 +38,38 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
   DateTime? _lastTappedDay;
 
   List<ShowDate> showDates = [];
+  final Map<String, AvailabilityStatus> _myAvailabilityByShowDateId = {};
 
   Future<void> loadShowDates() async {
     // runBusyFuture sert à faire un setBusy true + await + setBusy false.
     showDates = await runBusyFuture(_showDateRepository.getAllShowDates());
+    await _loadMyAvailabilities();
     rebuildUi();
+  }
+
+  Future<void> _loadMyAvailabilities() async {
+    _myAvailabilityByShowDateId.clear();
+
+    final currentUser = _authenticationService.currentUser;
+    if (currentUser == null) return;
+
+    for (final showDate in showDates) {
+      final showDateId = showDate.uid;
+      if (showDateId == null) continue;
+
+      try {
+        final availabilities =
+            await _availabilityRepository.getAvailabilitiesForDate(showDateId);
+        for (final availability in availabilities) {
+          if (availability.artistId == currentUser.uid) {
+            _myAvailabilityByShowDateId[showDateId] = availability.status;
+            break;
+          }
+        }
+      } catch (_) {
+        // Toléré en phase de migration : on garde l'affichage "pending".
+      }
+    }
   }
 
   // Appelé quand l'utilisateur tape un jour.
@@ -88,9 +116,8 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
           throwException: true,
         );
 
-        // Mise à jour locale transitoire pour refléter immédiatement la réponse
-        // utilisateur, sans réécriture Firestore globale.
-        picked.setAvailabilityFor(userId, nextStatus);
+        // Mise à jour locale pour refléter immédiatement la réponse utilisateur.
+        _myAvailabilityByShowDateId[picked.uid!] = nextStatus;
       } catch (_) {
         _snackbarService.showSnackbar(
           message: "Impossible d'enregistrer la disponibilité.",
@@ -134,13 +161,12 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
     if (showDate == null) {
       return null;
     }
-    if (_authenticationService.currentUser == null || showDate.uid == null) {
+    final showDateId = showDate.uid;
+    if (_authenticationService.currentUser == null || showDateId == null) {
       return AvailabilityStatus.pending;
     }
 
-    // Phase transitoire : on lit encore depuis le modèle embarqué Firestore
-    // en attendant la migration complète du domaine availability.
-    return showDate.getAvailabilityFor(_authenticationService.currentUser!.uid);
+    return _myAvailabilityByShowDateId[showDateId] ?? AvailabilityStatus.pending;
   }
 
   // Récupérer la ShowDate pour un jour

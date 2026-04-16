@@ -137,7 +137,6 @@ class CreateShowDateViewModel extends FormViewModel {
         selectedDate!.day,
         12, // Force à midi UTC pour éviter les décalages de fuseaux horaires
       ),
-      artistsAvailability: {},
       startMinutes: _timeOfDayToMinutes(selectedStartTime!),
       endMinutes: _timeOfDayToMinutes(selectedEndTime!),
       address: addressValue!,

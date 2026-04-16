@@ -48,18 +48,3 @@ extension AvailabilityStatusX on AvailabilityStatus {
     }
   }
 }
-
-//Pour faciliter les conversions vers Firestore
-AvailabilityStatus availabilityStatusFromString(String value) {
-  switch (value) {
-    case 'available':
-      return AvailabilityStatus.available;
-    case 'ifNeeded':
-      return AvailabilityStatus.ifNeeded;
-    case 'unavailable':
-      return AvailabilityStatus.unavailable;
-    case 'pending':
-    default:
-      return AvailabilityStatus.pending;
-  }
-}

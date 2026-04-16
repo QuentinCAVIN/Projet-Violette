@@ -53,11 +53,6 @@ void main() {
         final showDate = TestDataBuilders.createTestShowDate(
           uid: 'date-1',
           date: testDate,
-          artistsAvailability: {
-            'artist1': AvailabilityStatus.available,
-            'artist2': AvailabilityStatus.unavailable,
-            'artist3': AvailabilityStatus.pending, // Ne devrait PAS être chargé
-          },
         );
 
         when(() => showDateRepo.getAllShowDates())
@@ -110,9 +105,6 @@ void main() {
         final showDate = TestDataBuilders.createTestShowDate(
           uid: 'date-1',
           date: testDate,
-          artistsAvailability: {
-            'artist1': AvailabilityStatus.available,
-          },
         );
 
         when(() => showDateRepo.getAllShowDates())
@@ -194,9 +186,6 @@ void main() {
         final showDate = TestDataBuilders.createTestShowDate(
           uid: 'date-1',
           date: testDate,
-          artistsAvailability: {
-            'artist1': AvailabilityStatus.available,
-          },
         );
 
         when(() => showDateRepo.getAllShowDates())

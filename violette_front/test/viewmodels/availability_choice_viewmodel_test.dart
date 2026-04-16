@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:violette_front/app/app.locator.dart';
+import 'package:violette_front/models/availability.dart';
 import 'package:violette_front/ui/views/availability_choice/availability_choice_viewmodel.dart';
 import 'package:violette_front/models/show_date.dart';
 import 'package:violette_front/models/enums/availability_status.dart';
@@ -36,6 +37,7 @@ void main() {
       test('When show date exists, should return correct status from ShowDate',
           () async {
         final showDateRepo = getAndRegisterShowDateRepository();
+        final availabilityRepo = getAndRegisterAvailabilityRepository();
         final authService = getAndRegisterFirebaseAuthenticationService();
 
         final cleanDate = DateTime(2025, 10, 10);
@@ -43,7 +45,6 @@ void main() {
           uid: 'show-date-1',
           title: 'Test',
           date: cleanDate,
-          artistsAvailability: {'uid-123': AvailabilityStatus.available},
           startMinutes: 0,
           endMinutes: 0,
           address: 'Paris',
@@ -53,6 +54,16 @@ void main() {
 
         when(() => showDateRepo.getAllShowDates())
             .thenAnswer((_) => Future.value([dummyShowDate]));
+        when(
+          () => availabilityRepo.getAvailabilitiesForDate('show-date-1'),
+        ).thenAnswer(
+          (_) => Future.value([
+            Availability(
+              artistId: 'uid-123',
+              status: AvailabilityStatus.available,
+            ),
+          ]),
+        );
         when(() => authService.currentUser).thenReturn(MockUser(
             uid: 'uid-123')); // besoin d'un utilisateur fictif ou similaire
 

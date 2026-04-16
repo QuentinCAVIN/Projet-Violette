@@ -25,7 +25,6 @@ void main() {
           uid: dateId,
           title: 'Concert Test',
           date: DateTime.now(),
-          artistsAvailability: {},
           startMinutes: 600,
           endMinutes: 720,
           address: 'Test Address',

@@ -25,9 +25,6 @@ void main() {
           startMinutes: 540,
           endMinutes: 600,
           address: 'Adresse test',
-          artistsAvailability: {
-            'artist1': AvailabilityStatus.available,
-          },
           artistsCount: 2,
           fee: 100,
         );
@@ -63,9 +60,6 @@ void main() {
           startMinutes: 540,
           endMinutes: 600,
           address: 'Adresse test',
-          artistsAvailability: {
-            'artist1': AvailabilityStatus.available,
-          },
           artistsCount: 2,
           fee: 100,
         );
@@ -101,9 +95,6 @@ void main() {
           startMinutes: 540,
           endMinutes: 600,
           address: 'Adresse test',
-          artistsAvailability: {
-            'artist1': AvailabilityStatus.unavailable,
-          },
           artistsCount: 2,
           fee: 100,
         );
@@ -133,9 +124,6 @@ void main() {
           startMinutes: 540,
           endMinutes: 600,
           address: 'Adresse test',
-          artistsAvailability: {
-            'artist1': AvailabilityStatus.available,
-          },
           artistsCount: 2,
           fee: 100,
           selectedCount: 2,
