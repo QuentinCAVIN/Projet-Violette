@@ -5,7 +5,6 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:violette_front/app/app.router.dart';
 
 import 'package:violette_front/models/show_date.dart';
-import 'package:violette_front/models/availability.dart';
 import 'package:violette_front/models/enums/availability_status.dart';
 import 'package:violette_front/repositories/show_date_repository.dart';
 import 'package:violette_front/repositories/availability_repository.dart';
@@ -102,7 +101,6 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
 
     // 2e tap sur le même jour : on change le statut côté backend.
     if (_authenticationService.currentUser != null && picked.uid != null) {
-      final userId = _authenticationService.currentUser!.uid;
       final currentStatus =
           getStatusForDay(tappedDay) ?? AvailabilityStatus.pending;
       final nextStatus = currentStatus.next;
