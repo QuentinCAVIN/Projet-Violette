@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:violette_front/app/app.locator.dart';
 import 'package:violette_front/models/artist_booking.dart';
+import 'package:violette_front/models/availability.dart';
 import 'package:violette_front/models/enums/availability_status.dart';
 import 'package:violette_front/models/enums/booking_status.dart';
 import 'package:violette_front/models/show_date.dart';
@@ -32,6 +33,12 @@ void main() {
         );
 
         final viewModel = ManagerDateDetailViewModel(showDate: showDate);
+        viewModel.availabilities = [
+          Availability(
+            artistId: 'artist1',
+            status: AvailabilityStatus.available,
+          ),
+        ];
         viewModel.bookings = [
           ArtistBooking(
             artistId: 'artist1',
@@ -64,6 +71,12 @@ void main() {
         );
 
         final viewModel = ManagerDateDetailViewModel(showDate: showDate);
+        viewModel.availabilities = [
+          Availability(
+            artistId: 'artist1',
+            status: AvailabilityStatus.available,
+          ),
+        ];
         viewModel.bookings = [
           ArtistBooking(
             artistId: 'artist1',
@@ -96,6 +109,12 @@ void main() {
         );
 
         final viewModel = ManagerDateDetailViewModel(showDate: currentShowDate);
+        viewModel.availabilities = [
+          Availability(
+            artistId: 'artist1',
+            status: AvailabilityStatus.unavailable,
+          ),
+        ];
         viewModel.bookings = [];
 
         final canSelect =
@@ -123,6 +142,12 @@ void main() {
         );
 
         final viewModel = ManagerDateDetailViewModel(showDate: currentShowDate);
+        viewModel.availabilities = [
+          Availability(
+            artistId: 'artist1',
+            status: AvailabilityStatus.available,
+          ),
+        ];
         viewModel.bookings = [];
 
         final canSelect =
