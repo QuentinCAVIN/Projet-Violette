@@ -7,12 +7,14 @@ import 'package:stacked_services/stacked_services.dart';
 import 'package:violette_front/models/enums/availability_status.dart';
 import 'package:violette_front/models/show_date.dart';
 import 'package:violette_front/models/violette_user.dart';
+import 'package:violette_front/repositories/availability_repository.dart';
 import 'package:violette_front/repositories/show_date_repository.dart';
 import 'package:violette_front/repositories/user_repository.dart';
 
 class ManagerPlanningViewModel extends BaseViewModel {
   final _showDateRepository = locator<ShowDateRepository>();
   final _userRepository = locator<UserRepository>();
+  final _availabilityRepository = locator<AvailabilityRepository>();
 
   DateTime focusedDay = DateTime.now();
   DateTime? selectedDay;
@@ -61,9 +63,15 @@ class ManagerPlanningViewModel extends BaseViewModel {
       () async {
         artists.clear();
 
-        final artistIds = date.artistsAvailability.entries
-            .where((entry) => entry.value != AvailabilityStatus.pending)
-            .map((entry) => entry.key)
+        final dateId = date.uid;
+        if (dateId == null) return;
+
+        final availabilities =
+            await _availabilityRepository.getAvailabilitiesForDate(dateId);
+
+        final artistIds = availabilities
+            .where((availability) => availability.status != AvailabilityStatus.pending)
+            .map((availability) => availability.artistId)
             .toList();
 
         for (final uid in artistIds) {

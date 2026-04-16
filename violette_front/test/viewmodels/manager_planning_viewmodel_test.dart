@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:violette_front/app/app.locator.dart';
+import 'package:violette_front/models/availability.dart';
 import 'package:violette_front/ui/views/manager_planning/manager_planning_viewmodel.dart';
 import 'package:violette_front/models/enums/availability_status.dart';
 import 'package:mocktail/mocktail.dart';
@@ -35,6 +36,7 @@ void main() {
           () async {
         final showDateRepo = getAndRegisterShowDateRepository();
         final userRepo = getAndRegisterUserRepository();
+        final availabilityRepo = getAndRegisterAvailabilityRepository();
 
         final testDate = DateTime(2026, 2, 15);
         final artist1 = TestDataBuilders.createTestUser(
@@ -49,6 +51,7 @@ void main() {
         );
 
         final showDate = TestDataBuilders.createTestShowDate(
+          uid: 'date-1',
           date: testDate,
           artistsAvailability: {
             'artist1': AvailabilityStatus.available,
@@ -59,6 +62,21 @@ void main() {
 
         when(() => showDateRepo.getAllShowDates())
             .thenAnswer((_) => Future.value([showDate]));
+        when(() => availabilityRepo.getAvailabilitiesForDate(showDate.uid!))
+            .thenAnswer((_) => Future.value([
+                  Availability(
+                    artistId: 'artist1',
+                    status: AvailabilityStatus.available,
+                  ),
+                  Availability(
+                    artistId: 'artist2',
+                    status: AvailabilityStatus.unavailable,
+                  ),
+                  Availability(
+                    artistId: 'artist3',
+                    status: AvailabilityStatus.pending,
+                  ),
+                ]));
         when(() => userRepo.getUser('artist1'))
             .thenAnswer((_) => Future.value(artist1));
         when(() => userRepo.getUser('artist2'))
@@ -86,9 +104,11 @@ void main() {
       test('devrait gérer le cas où getUser retourne null', () async {
         final showDateRepo = getAndRegisterShowDateRepository();
         final userRepo = getAndRegisterUserRepository();
+        final availabilityRepo = getAndRegisterAvailabilityRepository();
 
         final testDate = DateTime(2026, 2, 15);
         final showDate = TestDataBuilders.createTestShowDate(
+          uid: 'date-1',
           date: testDate,
           artistsAvailability: {
             'artist1': AvailabilityStatus.available,
@@ -97,6 +117,13 @@ void main() {
 
         when(() => showDateRepo.getAllShowDates())
             .thenAnswer((_) => Future.value([showDate]));
+        when(() => availabilityRepo.getAvailabilitiesForDate(showDate.uid!))
+            .thenAnswer((_) => Future.value([
+                  Availability(
+                    artistId: 'artist1',
+                    status: AvailabilityStatus.available,
+                  ),
+                ]));
         when(() => userRepo.getUser('artist1'))
             .thenAnswer((_) => Future.value(null));
 
@@ -161,6 +188,7 @@ void main() {
           () async {
         final showDateRepo = getAndRegisterShowDateRepository();
         final userRepo = getAndRegisterUserRepository();
+        final availabilityRepo = getAndRegisterAvailabilityRepository();
 
         final testDate = DateTime(2026, 2, 15);
         final showDate = TestDataBuilders.createTestShowDate(
@@ -173,6 +201,13 @@ void main() {
 
         when(() => showDateRepo.getAllShowDates())
             .thenAnswer((_) => Future.value([showDate]));
+        when(() => availabilityRepo.getAvailabilitiesForDate(showDate.uid!))
+            .thenAnswer((_) => Future.value([
+                  Availability(
+                    artistId: 'artist1',
+                    status: AvailabilityStatus.available,
+                  ),
+                ]));
         when(() => userRepo.getUser('artist1')).thenAnswer(
           (_) => Future.value(
             TestDataBuilders.createTestUser(uid: 'artist1'),
