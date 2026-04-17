@@ -40,7 +40,6 @@ class ManagerDateDetailViewModel extends BaseViewModel {
   int get selectedCount =>
       currentShowDate?.selectedCount ?? showDate.selectedCount;
 
-  final _showDateController = StreamController<ShowDate>.broadcast();
   StreamSubscription<List<ArtistBooking>>? _bookingSubscription;
 
   bool get canSendConfirmation =>
@@ -48,9 +47,8 @@ class ManagerDateDetailViewModel extends BaseViewModel {
 
   @override
   void dispose() {
-    // Nettoyage des subscriptions/streams pour éviter toute fuite mémoire.
+    // Nettoyage des subscriptions pour éviter toute fuite mémoire.
     _bookingSubscription?.cancel();
-    _showDateController.close();
     super.dispose();
   }
 
@@ -61,7 +59,6 @@ class ManagerDateDetailViewModel extends BaseViewModel {
     final dateId = showDate.uid;
     if (dateId == null || dateId.isEmpty) {
       currentShowDate = showDate;
-      _showDateController.add(showDate);
       availabilities = [];
       availableArtists = [];
       bookings = [];
@@ -70,7 +67,6 @@ class ManagerDateDetailViewModel extends BaseViewModel {
     }
 
     currentShowDate = showDate;
-    _showDateController.add(showDate);
 
     _bookingSubscription =
         _bookingRepository.watchBookingsForDate(dateId).listen((bookingsData) {
@@ -78,7 +74,7 @@ class ManagerDateDetailViewModel extends BaseViewModel {
       rebuildUi();
     });
 
-    await _loadShowDateDetail(dateId);
+    await refreshShowDateDetail();
 
     await _loadAvailabilities();
     await _loadAllArtists();
@@ -86,7 +82,20 @@ class ManagerDateDetailViewModel extends BaseViewModel {
     setBusy(false);
   }
 
-  Stream<ShowDate> get showDateStream => _showDateController.stream;
+  ShowDate get displayedShowDate => currentShowDate ?? showDate;
+
+  /// Recharge manuellement le détail de la date via REST.
+  Future<void> refreshShowDateDetail() async {
+    final dateId = showDate.uid;
+    if (dateId == null || dateId.isEmpty) {
+      currentShowDate = showDate;
+      rebuildUi();
+      return;
+    }
+
+    await _loadShowDateDetail(dateId);
+    rebuildUi();
+  }
 
   Future<void> _loadShowDateDetail(String dateId) async {
     try {
@@ -95,11 +104,9 @@ class ManagerDateDetailViewModel extends BaseViewModel {
         return;
       }
       currentShowDate = loaded;
-      _showDateController.add(loaded);
     } catch (_) {
       // On conserve le fallback sur la date de navigation pour éviter un crash UI.
       currentShowDate = currentShowDate ?? showDate;
-      _showDateController.add(currentShowDate!);
       _snackbarService.showSnackbar(
         message: "Impossible de charger le détail de la date.",
         duration: const Duration(seconds: 3),

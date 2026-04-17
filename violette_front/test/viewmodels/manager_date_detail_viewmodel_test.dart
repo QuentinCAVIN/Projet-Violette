@@ -87,6 +87,94 @@ void main() {
         verifyNever(() => showDateRepository.getShowDateById(any()));
         verifyNever(() => bookingRepository.watchBookingsForDate(any()));
       });
+
+      test(
+          'devrait conserver la showDate initiale quand le backend retourne null',
+          () async {
+        final showDateRepository =
+            locator<ShowDateRepository>() as MockShowDateRepository;
+        final bookingRepository =
+            locator<BookingRepository>() as MockBookingRepository;
+        final availabilityRepository =
+            locator<AvailabilityRepository>() as MockAvailabilityRepository;
+
+        final initialShowDate = ShowDate(
+          uid: 'date-1',
+          title: 'Date initiale',
+          date: DateTime(2026, 1, 1),
+          startMinutes: 540,
+          endMinutes: 600,
+          address: 'Adresse initiale',
+          artistsCount: 2,
+          fee: 100,
+        );
+
+        when(() => bookingRepository.watchBookingsForDate('date-1'))
+            .thenAnswer((_) => Stream.value([]));
+        when(() => showDateRepository.getShowDateById('date-1'))
+            .thenAnswer((_) async => null);
+        when(() => availabilityRepository.getAvailabilitiesForDate('date-1'))
+            .thenAnswer((_) async => []);
+
+        final viewModel = ManagerDateDetailViewModel(showDate: initialShowDate);
+
+        await viewModel.initialize();
+
+        expect(viewModel.displayedShowDate.title, 'Date initiale');
+        verify(() => showDateRepository.getShowDateById('date-1')).called(1);
+      });
+    });
+
+    group('refreshShowDateDetail -', () {
+      test('devrait recharger le détail via getShowDateById', () async {
+        final showDateRepository =
+            locator<ShowDateRepository>() as MockShowDateRepository;
+        final bookingRepository =
+            locator<BookingRepository>() as MockBookingRepository;
+        final availabilityRepository =
+            locator<AvailabilityRepository>() as MockAvailabilityRepository;
+
+        final initialShowDate = ShowDate(
+          uid: 'date-1',
+          title: 'Date initiale',
+          date: DateTime(2026, 1, 1),
+          startMinutes: 540,
+          endMinutes: 600,
+          address: 'Adresse initiale',
+          artistsCount: 2,
+          fee: 100,
+        );
+
+        final refreshedShowDate = ShowDate(
+          uid: 'date-1',
+          title: 'Date rechargée',
+          date: DateTime(2026, 1, 2),
+          startMinutes: 600,
+          endMinutes: 600,
+          address: 'Adresse rechargée',
+          artistsCount: 3,
+          fee: 0,
+          selectedCount: 1,
+        );
+
+        when(() => bookingRepository.watchBookingsForDate('date-1'))
+            .thenAnswer((_) => Stream.value([]));
+        when(() => availabilityRepository.getAvailabilitiesForDate('date-1'))
+            .thenAnswer((_) async => []);
+        when(() => showDateRepository.getShowDateById('date-1'))
+            .thenAnswer((_) async => initialShowDate);
+
+        final viewModel = ManagerDateDetailViewModel(showDate: initialShowDate);
+        await viewModel.initialize();
+
+        when(() => showDateRepository.getShowDateById('date-1'))
+            .thenAnswer((_) async => refreshedShowDate);
+
+        await viewModel.refreshShowDateDetail();
+
+        expect(viewModel.displayedShowDate.title, 'Date rechargée');
+        verify(() => showDateRepository.getShowDateById('date-1')).called(2);
+      });
     });
 
     group('isSelectionEnabled -', () {
