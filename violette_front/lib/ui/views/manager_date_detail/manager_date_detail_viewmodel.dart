@@ -115,14 +115,15 @@ class ManagerDateDetailViewModel extends BaseViewModel {
   }
 
   Future<void> _loadAvailabilities() async {
-    if (showDate.uid == null) {
+    final dateId = displayedShowDate.uid ?? showDate.uid;
+    if (dateId == null || dateId.isEmpty) {
       availabilities = [];
       return;
     }
 
     try {
       availabilities = await _availabilityRepository.getAvailabilitiesForDate(
-        showDate.uid!,
+        dateId,
       );
     } catch (_) {
       availabilities = [];
@@ -202,10 +203,18 @@ class ManagerDateDetailViewModel extends BaseViewModel {
   /// Sélectionne ou désélectionne un artiste.
   Future<void> toggleSelection(String artistId, bool? value) async {
     if (value == null) return;
+    final dateId = displayedShowDate.uid ?? showDate.uid;
+    if (dateId == null || dateId.isEmpty) {
+      _snackbarService.showSnackbar(
+        message: "Identifiant de date manquant.",
+        duration: const Duration(seconds: 2),
+      );
+      return;
+    }
 
     try {
       await _bookingRepository.toggleSelection(
-        showDate.uid!,
+        dateId,
         artistId,
         value,
       );
@@ -219,8 +228,17 @@ class ManagerDateDetailViewModel extends BaseViewModel {
 
   /// Envoie les demandes de confirmation aux artistes sélectionnés.
   Future<void> sendConfirmation() async {
+    final dateId = displayedShowDate.uid ?? showDate.uid;
+    if (dateId == null || dateId.isEmpty) {
+      _snackbarService.showSnackbar(
+        message: "Identifiant de date manquant.",
+        duration: const Duration(seconds: 2),
+      );
+      return;
+    }
+
     try {
-      await _bookingRepository.sendConfirmationRequests(showDate.uid!);
+      await _bookingRepository.sendConfirmationRequests(dateId);
 
       _snackbarService.showSnackbar(
         message: "Demandes envoyées !",
