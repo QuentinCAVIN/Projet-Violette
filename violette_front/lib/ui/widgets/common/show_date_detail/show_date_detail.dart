@@ -41,7 +41,7 @@ class ShowDateDetail extends StatelessWidget {
         Card(
           child: ListTile(
             title: Text(
-              "Adresse : ${showDate.description}",
+              "Adresse : ${showDate.address}",
             ),
           ),
         ),

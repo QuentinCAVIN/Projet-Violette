@@ -108,23 +108,24 @@ class HomeViewModel extends BaseViewModel {
 
   /// Charge les ShowDates manquants associés aux bookings en attente.
   ///
-  /// Note : pour un MVP, on récupère chaque ShowDate via getShowDateStream(...).first
-  /// afin d'obtenir une lecture "one-shot" sans avoir à implémenter tout de suite un getById.
-  /// On stocke le résultat dans un cache (requestsShowDates) pour éviter les rechargements.
+  /// Lecture one-shot via repository.getShowDateById(dateId),
+  /// désormais branchée sur la couche REST (avec fallback transitoire géré dans le repository).
+  /// Le cache requestsShowDates évite les rechargements inutiles.
   Future<void> _loadShowDatesForRequests() async {
     for (final booking in pendingRequests) {
       final dateId = booking.dateId;
 
       // On ignore les bookings incomplets
-      if (dateId == null) continue;
+      if (dateId == null || dateId.isEmpty) continue;
 
       // Si la date est déjà en cache, pas besoin de la recharger
       if (requestsShowDates.containsKey(dateId)) continue;
 
       try {
-        // Récupération "one-shot" de la date via le stream
-        final showDate = await _showDateRepository.watchShowDate(dateId).first;
-        requestsShowDates[dateId] = showDate;
+        final showDate = await _showDateRepository.getShowDateById(dateId);
+        if (showDate != null) {
+          requestsShowDates[dateId] = showDate;
+        }
       } catch (_) {
         // Cas possible : la date a été supprimée ou inaccessible (droits / réseau)
         // On n'affiche simplement pas les détails de cette date.
