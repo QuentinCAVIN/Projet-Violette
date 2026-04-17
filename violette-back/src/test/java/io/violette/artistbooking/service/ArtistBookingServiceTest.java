@@ -189,10 +189,10 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("createBooking — échoue si la date est LOCKED")
-    void createBooking_whenShowDateLocked_throwsShowDateNotModifiableException() {
+    @DisplayName("createBooking — échoue si la date est STAFFED")
+    void createBooking_whenShowDateStaffed_throwsShowDateNotModifiableException() {
         Context ctx = buildContext("svc-locked-1");
-        ctx.showDate.setStatus(ShowDateStatus.LOCKED);
+        ctx.showDate.setStatus(ShowDateStatus.STAFFED);
         showDateRepository.flush();
 
         assertThrows(ShowDateNotModifiableException.class, () ->
@@ -219,11 +219,11 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("createBooking — échoue si la date est PENDING (workflow V1 : la sélection nécessite CONFIRMED)")
-    void createBooking_whenShowDatePending_throwsShowDateNotModifiableException() {
+    @DisplayName("createBooking — échoue si la date est INQUIRY (workflow V1 : la sélection nécessite OPTION ou CONFIRMED)")
+    void createBooking_whenShowDateInquiry_throwsShowDateNotModifiableException() {
         Context ctx = buildContext("svc-sdpend-1");
-        // Repasse en PENDING pour simuler une date non encore confirmée par le client
-        ctx.showDate.setStatus(ShowDateStatus.PENDING);
+        // Repasse en INQUIRY pour simuler une demande non encore confirmée par le client
+        ctx.showDate.setStatus(ShowDateStatus.INQUIRY);
         showDateRepository.flush();
 
         assertThrows(ShowDateNotModifiableException.class, () ->
@@ -235,10 +235,25 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("createBooking — échoue si la date est OPTIONAL (workflow V1 : la sélection nécessite CONFIRMED)")
-    void createBooking_whenShowDateOptional_throwsShowDateNotModifiableException() {
+    @DisplayName("createBooking — autorisé si la date est OPTION")
+    void createBooking_whenShowDateOption_returnsSelectedBooking() {
         Context ctx = buildContext("svc-sdopt-1");
-        ctx.showDate.setStatus(ShowDateStatus.OPTIONAL);
+        ctx.showDate.setStatus(ShowDateStatus.OPTION);
+        showDateRepository.flush();
+
+        ArtistBookingDto dto = artistBookingService.createBooking(
+                new CreateBookingRequestDto(ctx.showDate.getId(), ctx.artist.getId(), null)
+        );
+
+        assertEquals(BookingStatus.SELECTED, dto.status());
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("createBooking — échoue si la date est ARCHIVED")
+    void createBooking_whenShowDateArchived_throwsShowDateNotModifiableException() {
+        Context ctx = buildContext("svc-sdarch-1");
+        ctx.showDate.setStatus(ShowDateStatus.ARCHIVED);
         showDateRepository.flush();
 
         assertThrows(ShowDateNotModifiableException.class, () ->
@@ -328,11 +343,11 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("deleteBooking — échoue si la date est LOCKED")
-    void deleteBooking_whenShowDateLocked_throwsShowDateNotModifiableException() {
+    @DisplayName("deleteBooking — échoue si la date est STAFFED")
+    void deleteBooking_whenShowDateStaffed_throwsShowDateNotModifiableException() {
         Context ctx = buildContext("svc-del-4");
         ArtistBookingEntity booking = persistBookingDirectly(ctx, BookingStatus.SELECTED);
-        ctx.showDate.setStatus(ShowDateStatus.LOCKED);
+        ctx.showDate.setStatus(ShowDateStatus.STAFFED);
         showDateRepository.flush();
 
         assertThrows(ShowDateNotModifiableException.class,
@@ -405,10 +420,27 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("sendConfirmationRequests — échoue si la date est LOCKED")
-    void sendConfirmationRequests_whenShowDateLocked_throwsShowDateNotModifiableException() {
+    @DisplayName("sendConfirmationRequests — échoue si la date est OPTION (les demandes fermes nécessitent CONFIRMED)")
+    void sendConfirmationRequests_whenShowDateOption_throwsShowDateNotModifiableException() {
+        Context ctx = buildContext("svc-send-opt-1");
+        ctx.showDate.setStatus(ShowDateStatus.OPTION);
+        showDateRepository.flush();
+
+        // La présélection SELECTED est autorisée en OPTION, mais l'envoi de demande ferme non
+        artistBookingService.createBooking(
+                new CreateBookingRequestDto(ctx.showDate.getId(), ctx.artist.getId(), null)
+        );
+
+        assertThrows(ShowDateNotModifiableException.class,
+                () -> artistBookingService.sendConfirmationRequests(ctx.showDate.getId()));
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("sendConfirmationRequests — échoue si la date est STAFFED")
+    void sendConfirmationRequests_whenShowDateStaffed_throwsShowDateNotModifiableException() {
         Context ctx = buildContext("svc-send-3");
-        ctx.showDate.setStatus(ShowDateStatus.LOCKED);
+        ctx.showDate.setStatus(ShowDateStatus.STAFFED);
         showDateRepository.flush();
 
         assertThrows(ShowDateNotModifiableException.class,
@@ -495,11 +527,25 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("respondToRequest — échoue si la date est LOCKED")
-    void respondToRequest_whenShowDateLocked_throwsShowDateNotModifiableException() {
+    @DisplayName("respondToRequest — échoue si la date est STAFFED")
+    void respondToRequest_whenShowDateStaffed_throwsShowDateNotModifiableException() {
         Context ctx = buildContext("svc-resp-sdlock");
         ArtistBookingEntity booking = persistBookingDirectly(ctx, BookingStatus.PENDING_CONFIRMATION);
-        ctx.showDate.setStatus(ShowDateStatus.LOCKED);
+        ctx.showDate.setStatus(ShowDateStatus.STAFFED);
+        showDateRepository.flush();
+        JwtPrincipalInfo principal = new JwtPrincipalInfo(ctx.artist.getFirebaseUid(), ctx.artist.getEmail(), "");
+
+        assertThrows(ShowDateNotModifiableException.class,
+                () -> artistBookingService.respondToRequest(booking.getId(), true, principal));
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("respondToRequest — échoue si la date est ARCHIVED")
+    void respondToRequest_whenShowDateArchived_throwsShowDateNotModifiableException() {
+        Context ctx = buildContext("svc-resp-sdarch");
+        ArtistBookingEntity booking = persistBookingDirectly(ctx, BookingStatus.PENDING_CONFIRMATION);
+        ctx.showDate.setStatus(ShowDateStatus.ARCHIVED);
         showDateRepository.flush();
         JwtPrincipalInfo principal = new JwtPrincipalInfo(ctx.artist.getFirebaseUid(), ctx.artist.getEmail(), "");
 
@@ -609,9 +655,9 @@ class ArtistBookingServiceTest {
      * Contexte de test minimal : manager + artiste + compagnie + showDate (CONFIRMED) +
      * skillRequirement (DANCE, requiredCount=1) + availability (AVAILABLE).
      *
-     * <p>La date est créée en statut {@code CONFIRMED} — statut requis par le workflow V1
-     * pour la sélection et l'envoi de confirmations. Les tests qui vérifient les blocages
-     * sur d'autres statuts (PENDING, OPTIONAL, LOCKED, CANCELLED) modifient ce statut
+     * <p>La date est créée en statut {@code CONFIRMED} — statut compatible avec la sélection
+     * et l'envoi de confirmations dans le workflow V1 (comme {@code OPTION}). Les tests qui
+     * vérifient les blocages sur d'autres statuts (INQUIRY, STAFFED, CANCELLED, ARCHIVED) modifient ce statut
      * explicitement après construction du contexte.
      */
     private Context buildContext(String seed) {

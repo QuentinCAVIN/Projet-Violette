@@ -43,19 +43,27 @@ import java.util.List;
  * <p>Orchestre le cycle de vie des réservations artistes :
  * sélection, envoi de confirmation, réponse artiste.
  *
- * <p><b>Workflow V1 :</b> la sélection et l'envoi de confirmations ne sont autorisés
- * que lorsque la date est en statut {@code CONFIRMED}. Le statut {@code OPTIONAL}
- * est réservé à la collecte des disponibilités, pas à la réservation.
+ * <p><b>Workflow V1 — deux phases de booking distinctes :</b>
+ * <ul>
+ *   <li>{@code OPTION} : le gérant peut <b>présélectionner</b> des artistes ({@code SELECTED}).
+ *       Ce n'est pas encore un engagement ferme — l'artiste reste libre d'accepter
+ *       une autre date d'une autre compagnie. Les demandes de confirmation ferme
+ *       ne peuvent pas être envoyées tant que la date n'est pas {@code CONFIRMED}.</li>
+ *   <li>{@code CONFIRMED} : le client a validé la date. Le gérant peut envoyer
+ *       les <b>vraies demandes de booking ferme</b> ({@code PENDING_CONFIRMATION}).
+ *       L'engagement réel de l'artiste n'intervient qu'après son acceptation.</li>
+ * </ul>
+ * Le statut {@code INQUIRY} est une phase de prospection : aucune sélection ni présélection.
  *
  * <p><b>Règles métier appliquées ici :</b>
  * <ol>
- *   <li>Création / envoi de confirmations : la date doit être {@code CONFIRMED}</li>
- *   <li>Toute mutation : interdite si la date est {@code LOCKED} ou {@code CANCELLED}</li>
+ *   <li>Présélection/sélection ({@code createBooking}) : la date doit être {@code OPTION} ou {@code CONFIRMED}</li>
+ *   <li>Envoi des demandes fermes ({@code sendConfirmationRequests}) : la date doit être {@code CONFIRMED}</li>
+ *   <li>Toute mutation : interdite si la date est {@code STAFFED}, {@code CANCELLED} ou {@code ARCHIVED}</li>
  *   <li>L'artiste doit avoir la disponibilité {@code AVAILABLE} pour être sélectionné</li>
  *   <li>La capacité par compétence ne doit pas être dépassée</li>
  *   <li>Un artiste ne peut être réservé qu'une seule fois par date</li>
- *   <li>Seul un booking {@code SELECTED} peut être supprimé</li>
- *   <li>Réponse artiste : date non LOCKED/CANCELLED, booking en PENDING_CONFIRMATION, ownership vérifié</li>
+ *   <li>Réponse artiste : date non STAFFED/CANCELLED/ARCHIVED, booking en PENDING_CONFIRMATION, ownership vérifié</li>
  * </ol>
  */
 @ApplicationScoped
@@ -90,22 +98,31 @@ public class ArtistBookingService {
     // ------------------------------------------------------------------
 
     /**
-     * Sélectionne un artiste pour une date — crée un booking en statut {@code SELECTED}.
+     * Présélectionne ou sélectionne un artiste pour une date — crée un booking en statut {@code SELECTED}.
+     *
+     * <p>Le statut {@code SELECTED} a une sémantique différente selon le statut de la date :
+     * <ul>
+     *   <li><b>Date {@code OPTION}</b> : il s'agit d'une <b>présélection</b>. L'artiste est identifié
+     *       comme pertinent mais n'a reçu aucune demande ferme. Il reste libre pour d'autres compagnies.</li>
+     *   <li><b>Date {@code CONFIRMED}</b> : il s'agit d'une <b>sélection ferme</b>, précédant l'envoi
+     *       d'une demande de confirmation ({@link #sendConfirmationRequests}).</li>
+     * </ul>
      *
      * <p><b>Règles vérifiées :</b>
      * <ol>
      *   <li>La date existe</li>
-     *   <li>La date est {@code CONFIRMED} (workflow V1 — PENDING et OPTIONAL sont des phases
-     *       préparatoires sans réservation ; LOCKED et CANCELLED bloquent toute mutation)</li>
+     *   <li>La date est {@code OPTION} ou {@code CONFIRMED} (INQUIRY bloque ; STAFFED, CANCELLED,
+     *       ARCHIVED bloquent)</li>
      *   <li>L'artiste existe</li>
      *   <li>L'artiste n'a pas déjà un booking sur cette date (quel que soit le statut)</li>
      *   <li>L'artiste a déclaré sa disponibilité {@code AVAILABLE} pour cette date</li>
      *   <li>Si un besoin artistique est spécifié : la capacité n'est pas atteinte
-     *       et le cachet est figé au moment de la sélection</li>
+     *       et le cachet est capturé à titre d'estimation (estimation de planification en {@code OPTION},
+     *       montant de référence contractuel en {@code CONFIRMED})</li>
      * </ol>
      *
      * @throws ShowDateNotFoundException         si la date est introuvable
-     * @throws ShowDateNotModifiableException    si la date n'est pas {@code CONFIRMED}
+     * @throws ShowDateNotModifiableException    si la date n'est ni {@code OPTION}, ni {@code CONFIRMED}
      * @throws UserNotFoundException             si l'artiste est introuvable
      * @throws BookingAlreadyExistsException     si un booking existe déjà pour cet artiste sur cette date
      * @throws ArtistNotAvailableException       si l'artiste n'est pas AVAILABLE
@@ -119,7 +136,7 @@ public class ArtistBookingService {
                 .findByIdOptional(request.showDateId())
                 .orElseThrow(ShowDateNotFoundException::new);
 
-        validerDateConfirmee(showDate);
+        validerDateBookable(showDate);
 
         VioletteUserEntity artist = violetteUserRepository
                 .findByIdOptional(request.artistId())
@@ -157,8 +174,8 @@ public class ArtistBookingService {
 
         artistBookingRepository.persist(booking);
 
-        LOG.info("Artiste id={} sélectionné — bookingId={} pour showDateId={}",
-                artist.getId(), booking.getId(), showDate.getId());
+        LOG.info("Artiste id={} présélectionné/sélectionné (statut date={}) — bookingId={} pour showDateId={}",
+                artist.getId(), showDate.getStatus(), booking.getId(), showDate.getId());
         return artistBookingMapper.toDto(booking);
     }
 
@@ -167,12 +184,12 @@ public class ArtistBookingService {
     // ------------------------------------------------------------------
 
     /**
-     * Désélectionne un artiste — supprime le booking.
+     * Désélectionne ou dépresélectionne un artiste — supprime le booking.
      * Uniquement autorisé si le booking est en statut {@code SELECTED}
-     * et si la date n'est pas {@code LOCKED} ou {@code CANCELLED}.
+     * et si la date n'est pas {@code STAFFED}, {@code CANCELLED} ou {@code ARCHIVED}.
      *
      * @throws ArtistBookingNotFoundException    si le booking est introuvable
-     * @throws ShowDateNotModifiableException    si la date est LOCKED ou CANCELLED
+     * @throws ShowDateNotModifiableException    si la date est STAFFED, CANCELLED ou ARCHIVED
      * @throws InvalidBookingTransitionException si le statut n'est pas SELECTED
      */
     @Transactional
@@ -200,12 +217,17 @@ public class ArtistBookingService {
     // ------------------------------------------------------------------
 
     /**
-     * Envoie les demandes de confirmation pour tous les artistes {@code SELECTED} d'une date.
+     * Envoie les demandes de confirmation ferme pour tous les artistes {@code SELECTED} d'une date.
      * Passe tous les bookings {@code SELECTED} en {@code PENDING_CONFIRMATION}
      * et renseigne {@code requestedAt}.
      *
+     * <p>Cette opération représente l'<b>engagement ferme</b> du gérant vis-à-vis des artistes.
+     * Elle n'est autorisée qu'une fois la date {@code CONFIRMED} par le client.
+     * Les présélections réalisées pendant la phase {@code OPTION} ne peuvent pas encore
+     * être transformées en demandes fermes : attendre la confirmation client d'abord.
+     *
      * @throws ShowDateNotFoundException      si la date est introuvable
-     * @throws ShowDateNotModifiableException si la date n'est pas CONFIRMED (workflow V1)
+     * @throws ShowDateNotModifiableException si la date n'est pas {@code CONFIRMED} (workflow V1)
      * @return liste des bookings mis à jour
      */
     @Transactional
@@ -249,9 +271,10 @@ public class ArtistBookingService {
      * Enregistre la réponse d'un artiste à une demande de confirmation.
      * Vérifie que l'artiste qui répond est bien le destinataire du booking.
      *
-     * <p>La date ne doit pas être {@code LOCKED} ou {@code CANCELLED}. Dans le workflow V1,
-     * les réponses artistes interviennent pendant la phase {@code CONFIRMED}, avant le verrouillage.
-     * Si la date est déjà verrouillée ou annulée, aucune mutation n'est acceptée.
+     * <p>La date ne doit pas être {@code STAFFED}, {@code CANCELLED} ou {@code ARCHIVED}.
+     * Dans le workflow V1, les réponses artistes interviennent pendant les phases
+     * {@code OPTION} ou {@code CONFIRMED}, avant verrouillage de staffing. Si la date est déjà
+     * staffée, annulée ou archivée, aucune mutation n'est acceptée.
      *
      * <p>Transitions :
      * <ul>
@@ -263,7 +286,7 @@ public class ArtistBookingService {
      * @param accept    {@code true} pour accepter, {@code false} pour refuser
      * @param principal principal JWT de l'artiste qui répond
      * @throws ArtistBookingNotFoundException    si le booking est introuvable
-     * @throws ShowDateNotModifiableException    si la date est LOCKED ou CANCELLED
+     * @throws ShowDateNotModifiableException    si la date est STAFFED, CANCELLED ou ARCHIVED
      * @throws UserNotFoundException             si le principal n'a pas de profil backend
      * @throws InvalidBookingTransitionException si le booking n'est pas en PENDING_CONFIRMATION
      *                                           ou si l'artiste ne correspond pas
@@ -361,30 +384,48 @@ public class ArtistBookingService {
     // ------------------------------------------------------------------
 
     /**
-     * Vérifie que la date est en statut {@code CONFIRMED}.
+     * Vérifie que la date est en statut {@code OPTION} ou {@code CONFIRMED}.
+     * Utilisé pour la présélection/sélection d'artistes ({@code createBooking}).
      *
-     * <p>Workflow V1 : la sélection d'artistes et l'envoi de confirmations
-     * ne sont autorisés qu'une fois la date confirmée par le client.
-     * Les statuts {@code PENDING} et {@code OPTIONAL} sont des phases préparatoires
-     * sans réservation ; {@code LOCKED} et {@code CANCELLED} bloquent toute mutation.
+     * <p>Les statuts {@code INQUIRY}, {@code STAFFED}, {@code CANCELLED} et {@code ARCHIVED}
+     * bloquent toute sélection.
+     */
+    private void validerDateBookable(ShowDateEntity showDate) {
+        ShowDateStatus status = showDate.getStatus();
+        if (status != ShowDateStatus.OPTION && status != ShowDateStatus.CONFIRMED) {
+            throw new ShowDateNotModifiableException(
+                    "La présélection/sélection est autorisée uniquement sur une date OPTION ou CONFIRMED. Statut actuel : "
+                            + status
+            );
+        }
+    }
+
+    /**
+     * Vérifie que la date est en statut {@code CONFIRMED}.
+     * Utilisé pour l'envoi des demandes de booking ferme ({@code sendConfirmationRequests}).
+     *
+     * <p>Les présélections réalisées en phase {@code OPTION} ne peuvent pas encore
+     * être transformées en demandes fermes — il faut attendre la confirmation client.
+     * Les statuts {@code STAFFED}, {@code CANCELLED} et {@code ARCHIVED} bloquent également.
      */
     private void validerDateConfirmee(ShowDateEntity showDate) {
         if (showDate.getStatus() != ShowDateStatus.CONFIRMED) {
             throw new ShowDateNotModifiableException(
-                    "La réservation n'est autorisée que sur une date CONFIRMED. Statut actuel : "
+                    "L'envoi de demandes de booking ferme n'est autorisé que sur une date CONFIRMED. Statut actuel : "
                             + showDate.getStatus()
             );
         }
     }
 
     /**
-     * Vérifie que la date n'est pas {@code LOCKED} ou {@code CANCELLED}.
+     * Vérifie que la date n'est pas {@code STAFFED}, {@code CANCELLED} ou {@code ARCHIVED}.
      * Utilisé pour les opérations de modification qui restent acceptables
-     * pendant les phases préparatoires (ex. : désélection).
+     * pendant les phases autorisées (ex. : désélection, réponse artiste).
      */
     private void validerDateModifiable(ShowDateEntity showDate) {
-        if (showDate.getStatus() == ShowDateStatus.LOCKED
-                || showDate.getStatus() == ShowDateStatus.CANCELLED) {
+        if (showDate.getStatus() == ShowDateStatus.STAFFED
+                || showDate.getStatus() == ShowDateStatus.CANCELLED
+                || showDate.getStatus() == ShowDateStatus.ARCHIVED) {
             throw new ShowDateNotModifiableException();
         }
     }

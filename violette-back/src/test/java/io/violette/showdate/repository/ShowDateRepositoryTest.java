@@ -58,7 +58,7 @@ class ShowDateRepositoryTest {
                 () -> assertEquals("Jean Client", found.getClientContactName()),
                 () -> assertEquals("0600000001", found.getClientContactPhone()),
                 () -> assertEquals("Grande revue d'été — décor baroque", found.getShowDetails()),
-                () -> assertEquals(ShowDateStatus.PENDING, found.getStatus()),
+                () -> assertEquals(ShowDateStatus.INQUIRY, found.getStatus()),
                 () -> assertNotNull(found.getCreatedAt()),
                 () -> assertNotNull(found.getUpdatedAt()),
                 () -> assertNotNull(found.getCompany()),

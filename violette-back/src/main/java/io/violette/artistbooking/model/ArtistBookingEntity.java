@@ -27,16 +27,22 @@ import java.time.Instant;
 /**
  * Aggregate root du domaine artistbooking.
  *
- * <p>Représente un artiste retenu pour une date de spectacle afin de couvrir
- * un besoin artistique spécifique ({@link ShowDateSkillRequirementEntity}).
+ * <p>Représente un artiste présélectionné ou réservé pour une date de spectacle.
+ * Le statut {@link BookingStatus} précise le niveau d'engagement :
+ * <ul>
+ *   <li>{@code SELECTED} sur date {@code OPTION} → présélection, pas d'engagement ferme.</li>
+ *   <li>{@code SELECTED} sur date {@code CONFIRMED} → sélection ferme avant envoi de la demande.</li>
+ *   <li>{@code PENDING_CONFIRMATION} → demande ferme envoyée, en attente de réponse artiste.</li>
+ *   <li>{@code CONFIRMED} → artiste engagé, présence sur la date acquise.</li>
+ * </ul>
  *
- * <p>Source de vérité des artistes effectivement présents sur une {@link ShowDateEntity}.
+ * <p>Source de vérité des artistes retenus ou réservés pour une {@link ShowDateEntity}.
  * Aligne la responsabilité qui appartenait à {@code selectedCount} / {@code artistBookings}
  * dans le modèle Firestore frontend.
  *
  * <p>Alignée sur la table SQL {@code artist_booking} (Flyway V5).
  *
- * <p><b>Contrainte :</b> un artiste ne peut être réservé qu'une seule fois par date
+ * <p><b>Contrainte :</b> un artiste ne peut être présélectionné/réservé qu'une seule fois par date
  * ({@code UNIQUE(show_date_id, artist_id)}).
  */
 @Entity
@@ -67,7 +73,8 @@ public class ArtistBookingEntity {
     private ShowDateEntity showDate;
 
     /**
-     * Artiste réservé (FK artist_id → violette_user).
+     * Artiste présélectionné ou réservé (FK artist_id → violette_user).
+     * Le niveau d'engagement réel est déterminé par {@link #status}.
      */
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -100,9 +107,17 @@ public class ArtistBookingEntity {
     private BookingStatus status = BookingStatus.SELECTED;
 
     /**
-     * Snapshot du cachet net au moment de la sélection (en euros).
+     * Cachet net capturé au moment de la présélection/sélection (en euros).
      * Copié depuis {@link ShowDateSkillRequirementEntity#getNetFee()} lors de la création.
-     * Figé pour garantir la traçabilité même si le barème est modifié ultérieurement.
+     * Conservé pour garantir la traçabilité même si le barème est modifié ultérieurement.
+     *
+     * <p><b>Sémantique selon la phase :</b>
+     * <ul>
+     *   <li>Date {@code OPTION} → <b>estimation de planification</b> : pas d'engagement contractuel ;
+     *       la présélection est non bloquante.</li>
+     *   <li>Date {@code CONFIRMED} → <b>montant de référence</b> : le cachet sera engagé lors
+     *       de l'envoi de la demande ferme ({@code sendConfirmationRequests}).</li>
+     * </ul>
      * Null si aucun besoin artistique n'est associé.
      */
     @Column(name = "agreed_net_fee", precision = 10, scale = 2)

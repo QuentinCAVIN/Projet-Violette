@@ -86,7 +86,7 @@ public class ShowDateEntity {
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private ShowDateStatus status = ShowDateStatus.PENDING;
+    private ShowDateStatus status = ShowDateStatus.INQUIRY;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;

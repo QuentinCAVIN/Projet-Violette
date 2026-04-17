@@ -92,7 +92,7 @@ public class ShowDateService {
         entity.setClientContactName(request.clientContactName());
         entity.setClientContactPhone(request.clientContactPhone());
         entity.setShowDetails(request.showDetails());
-        entity.setStatus(ShowDateStatus.PENDING);
+        entity.setStatus(ShowDateStatus.INQUIRY);
 
         showDateRepository.persistAndFlush(entity);
 
