@@ -7,6 +7,7 @@ import 'package:violette_front/app/app.router.dart';
 import 'package:violette_front/models/show_date.dart';
 import 'package:violette_front/models/enums/availability_status.dart';
 import 'package:violette_front/repositories/show_date_repository.dart';
+import 'package:violette_front/repositories/availability_repository.dart';
 import '../../../app/app.locator.dart';
 
 // TODO: Refactoriser la classe quand des tests unitaires seront en place
@@ -19,6 +20,8 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
   final SnackbarService _snackbarService = locator<SnackbarService>();
   final FirebaseAuthenticationService _authenticationService =
       locator<FirebaseAuthenticationService>();
+  final AvailabilityRepository _availabilityRepository =
+      locator<AvailabilityRepository>();
 
   final CalendarFormat calendarFormat = CalendarFormat.month;
   // Le mois/la page actuellement affichée dans le calendrier
@@ -34,16 +37,44 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
   DateTime? _lastTappedDay;
 
   List<ShowDate> showDates = [];
+  final Map<String, AvailabilityStatus> _myAvailabilityByShowDateId = {};
 
   Future<void> loadShowDates() async {
-    //runBusyFuture sert a fair un setBusy true + await + setBusyFalse
+    // runBusyFuture sert à faire un setBusy true + await + setBusy false.
     showDates = await runBusyFuture(_showDateRepository.getAllShowDates());
+    await _loadMyAvailabilities();
+    rebuildUi();
+  }
+
+  Future<void> _loadMyAvailabilities() async {
+    _myAvailabilityByShowDateId.clear();
+
+    final currentUser = _authenticationService.currentUser;
+    if (currentUser == null) return;
+
+    for (final showDate in showDates) {
+      final showDateId = showDate.uid;
+      if (showDateId == null) continue;
+
+      try {
+        final availabilities =
+            await _availabilityRepository.getAvailabilitiesForDate(showDateId);
+        for (final availability in availabilities) {
+          if (availability.artistId == currentUser.uid) {
+            _myAvailabilityByShowDateId[showDateId] = availability.status;
+            break;
+          }
+        }
+      } catch (_) {
+        // Toléré en phase de migration : on garde l'affichage "pending".
+      }
+    }
   }
 
   // Appelé quand l'utilisateur tape un jour.
   // - tappedDay : le jour tapé (événement)
   // - newFocusedDay : la page/mois à afficher
-  void onDaySelected(DateTime tappedDay, DateTime newFocusedDay) {
+  Future<void> onDaySelected(DateTime tappedDay, DateTime newFocusedDay) async {
     // Remplacer par
     // void onShowDateTapped(ShowDate tappedShowDate) -> nouveau nom
     focusedDay = newFocusedDay;
@@ -68,9 +99,30 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
       return;
     }
 
-    // 2e tap sur le même jour : on change le statut
-    if (_authenticationService.currentUser != null) {
-      picked.nextStatus(_authenticationService.currentUser!.uid);
+    // 2e tap sur le même jour : on change le statut côté backend.
+    if (_authenticationService.currentUser != null && picked.uid != null) {
+      final currentStatus =
+          getStatusForDay(tappedDay) ?? AvailabilityStatus.pending;
+      final nextStatus = currentStatus.next;
+
+      try {
+        await runBusyFuture(
+          _availabilityRepository.upsertMyAvailability(
+            showDateId: picked.uid!,
+            status: nextStatus,
+          ),
+          throwException: true,
+        );
+
+        // Mise à jour locale pour refléter immédiatement la réponse utilisateur.
+        _myAvailabilityByShowDateId[picked.uid!] = nextStatus;
+      } catch (_) {
+        _snackbarService.showSnackbar(
+          message: "Impossible d'enregistrer la disponibilité.",
+          duration: const Duration(seconds: 3),
+        );
+      }
+
       rebuildUi();
     }
   }
@@ -91,11 +143,9 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
   }
 
   Future<void> onValidatePressed() async {
-    await runBusyFuture(_showDateRepository.updateAllShowDates(showDates));
     _navigationService.replaceWithHomeView();
-    // Affiche le message une fois sur HomeView
     _snackbarService.showSnackbar(
-      message: "Disponibilités enregistrées !",
+      message: "Disponibilités enregistrées.",
       duration: const Duration(seconds: 3),
     );
   }
@@ -109,10 +159,12 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
     if (showDate == null) {
       return null;
     }
-    if (_authenticationService.currentUser == null) {
+    final showDateId = showDate.uid;
+    if (_authenticationService.currentUser == null || showDateId == null) {
       return AvailabilityStatus.pending;
     }
-    return showDate.getAvailabilityFor(_authenticationService.currentUser!.uid);
+
+    return _myAvailabilityByShowDateId[showDateId] ?? AvailabilityStatus.pending;
   }
 
   // Récupérer la ShowDate pour un jour

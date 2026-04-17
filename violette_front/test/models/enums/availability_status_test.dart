@@ -15,14 +15,14 @@ void main() {
       expect(result, AvailabilityStatus.available);
     });
 
-    test('available.next devrait retourner conditional', () {
+    test('available.next devrait retourner ifNeeded', () {
       const status = AvailabilityStatus.available;
       final result = status.next;
-      expect(result, AvailabilityStatus.conditional);
+      expect(result, AvailabilityStatus.ifNeeded);
     });
 
-    test('conditional.next devrait retourner unavailable', () {
-      const status = AvailabilityStatus.conditional;
+    test('ifNeeded.next devrait retourner unavailable', () {
+      const status = AvailabilityStatus.ifNeeded;
       final result = status.next;
       expect(result, AvailabilityStatus.unavailable);
     });
@@ -39,8 +39,8 @@ void main() {
       expect(AvailabilityStatus.available.label, 'Disponible');
     });
 
-    test('conditional devrait avoir le label "Conditionnel"', () {
-      expect(AvailabilityStatus.conditional.label, 'Incertain');
+    test('ifNeeded devrait avoir le label "Si besoin"', () {
+      expect(AvailabilityStatus.ifNeeded.label, 'Si besoin');
     });
 
     test('unavailable devrait avoir le label "Indisponible"', () {
@@ -52,51 +52,14 @@ void main() {
     });
   });
 
-  group('AvailabilityStatus - Mapping Firestore (string → enum)', () {
-    test('"available" devrait mapper vers AvailabilityStatus.available', () {
-      final result = availabilityStatusFromString('available');
-      expect(result, AvailabilityStatus.available);
-    });
-
-    test('"conditional" devrait mapper vers AvailabilityStatus.conditional',
-        () {
-      final result = availabilityStatusFromString('conditional');
-      expect(result, AvailabilityStatus.conditional);
-    });
-
-    test('"unavailable" devrait mapper vers AvailabilityStatus.unavailable',
-        () {
-      final result = availabilityStatusFromString('unavailable');
-      expect(result, AvailabilityStatus.unavailable);
-    });
-
-    test('"pending" devrait mapper vers AvailabilityStatus.pending', () {
-      final result = availabilityStatusFromString('pending');
-      expect(result, AvailabilityStatus.pending);
-    });
-
-    test(
-        'valeur invalide devrait retourner AvailabilityStatus.pending (default)',
-        () {
-      final result = availabilityStatusFromString('invalid');
-      expect(result, AvailabilityStatus.pending);
-    });
-
-    test('chaîne vide devrait retourner AvailabilityStatus.pending (default)',
-        () {
-      final result = availabilityStatusFromString('');
-      expect(result, AvailabilityStatus.pending);
-    });
-  });
-
   group('AvailabilityStatus - Serialization (enum → string)', () {
     test('AvailabilityStatus.available.name devrait retourner "available"', () {
       expect(AvailabilityStatus.available.name, 'available');
     });
 
-    test('AvailabilityStatus.conditional.name devrait retourner "conditional"',
+    test('AvailabilityStatus.ifNeeded.name devrait retourner "ifNeeded"',
         () {
-      expect(AvailabilityStatus.conditional.name, 'conditional');
+      expect(AvailabilityStatus.ifNeeded.name, 'ifNeeded');
     });
 
     test('AvailabilityStatus.unavailable.name devrait retourner "unavailable"',

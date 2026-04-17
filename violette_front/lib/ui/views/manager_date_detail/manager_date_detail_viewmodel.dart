@@ -3,10 +3,12 @@ import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:violette_front/app/app.locator.dart';
 import 'package:violette_front/models/artist_booking.dart';
+import 'package:violette_front/models/availability.dart';
 import 'package:violette_front/models/enums/availability_status.dart';
 import 'package:violette_front/models/enums/booking_status.dart';
 import 'package:violette_front/models/show_date.dart';
 import 'package:violette_front/models/violette_user.dart';
+import 'package:violette_front/repositories/availability_repository.dart';
 import 'package:violette_front/repositories/booking_repository.dart';
 import 'package:violette_front/repositories/show_date_repository.dart';
 import 'package:violette_front/repositories/user_repository.dart';
@@ -16,6 +18,7 @@ class ManagerDateDetailViewModel extends BaseViewModel {
   // Services injectés via le locator Stacked
   final _bookingRepository = locator<BookingRepository>();
   final _userRepository = locator<UserRepository>();
+  final _availabilityRepository = locator<AvailabilityRepository>();
   final _showDateRepository = locator<ShowDateRepository>();
   final _dialogService = locator<DialogService>();
   final _snackbarService = locator<SnackbarService>();
@@ -27,6 +30,7 @@ class ManagerDateDetailViewModel extends BaseViewModel {
   List<VioletteUser> availableArtists = [];
 
   List<ArtistBooking> bookings = [];
+  List<Availability> availabilities = [];
 
   ShowDate? currentShowDate;
 
@@ -58,6 +62,7 @@ class ManagerDateDetailViewModel extends BaseViewModel {
       rebuildUi();
     });
 
+    await _loadAvailabilities();
     await _loadAllArtists();
 
     setBusy(false);
@@ -66,8 +71,27 @@ class ManagerDateDetailViewModel extends BaseViewModel {
   Stream<ShowDate> get showDateStream =>
       _showDateRepository.watchShowDate(showDate.uid!);
 
+  Future<void> _loadAvailabilities() async {
+    if (showDate.uid == null) {
+      availabilities = [];
+      return;
+    }
+
+    try {
+      availabilities = await _availabilityRepository.getAvailabilitiesForDate(
+        showDate.uid!,
+      );
+    } catch (_) {
+      availabilities = [];
+      _snackbarService.showSnackbar(
+        message: "Impossible de charger les disponibilités.",
+        duration: const Duration(seconds: 3),
+      );
+    }
+  }
+
   Future<void> _loadAllArtists() async {
-    final artistIds = showDate.artistsAvailability.keys.toList();
+    final artistIds = availabilities.map((availability) => availability.artistId);
 
     availableArtists = [];
 
@@ -108,7 +132,7 @@ class ManagerDateDetailViewModel extends BaseViewModel {
     }
 
     // Cas 2 : tentative de nouvelle sélection
-    final availability = currentShowDate.artistsAvailability[artistId];
+    final availability = getAvailabilityForArtist(artistId);
 
     // Sélection autorisée uniquement pour les artistes disponibles
     if (availability != AvailabilityStatus.available) {
@@ -121,6 +145,15 @@ class ManagerDateDetailViewModel extends BaseViewModel {
     }
 
     return true;
+  }
+
+  AvailabilityStatus? getAvailabilityForArtist(String artistId) {
+    for (final availability in availabilities) {
+      if (availability.artistId == artistId) {
+        return availability.status;
+      }
+    }
+    return null;
   }
 
   /// Sélectionne ou désélectionne un artiste.

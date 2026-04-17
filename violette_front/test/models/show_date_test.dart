@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:violette_front/models/enums/availability_status.dart';
 import 'package:violette_front/models/show_date.dart';
 // Généré par IA
 
@@ -72,52 +71,6 @@ void main() {
     });
   });
 
-  group('ShowDate - Extension nextStatus', () {
-    const userId = 'user1';
-
-    test('nextStatus devrait faire passer pending → available', () {
-      final showDate = _createTestShowDate(
-        artistsAvailability: {userId: AvailabilityStatus.pending},
-      );
-
-      showDate.nextStatus(userId);
-
-      expect(showDate.getAvailabilityFor(userId), AvailabilityStatus.available);
-    });
-
-    test('nextStatus devrait faire passer available → conditional', () {
-      final showDate = _createTestShowDate(
-        artistsAvailability: {userId: AvailabilityStatus.available},
-      );
-
-      showDate.nextStatus(userId);
-
-      expect(
-          showDate.getAvailabilityFor(userId), AvailabilityStatus.conditional);
-    });
-
-    test('nextStatus devrait faire passer conditional → unavailable', () {
-      final showDate = _createTestShowDate(
-        artistsAvailability: {userId: AvailabilityStatus.conditional},
-      );
-
-      showDate.nextStatus(userId);
-
-      expect(
-          showDate.getAvailabilityFor(userId), AvailabilityStatus.unavailable);
-    });
-
-    test('nextStatus devrait faire passer unavailable → available (cycle)', () {
-      final showDate = _createTestShowDate(
-        artistsAvailability: {userId: AvailabilityStatus.unavailable},
-      );
-
-      showDate.nextStatus(userId);
-
-      expect(showDate.getAvailabilityFor(userId), AvailabilityStatus.available);
-    });
-  });
-
   group('ShowDate - Règle métier : Durée max 12h (720 minutes)', () {
     test('Durée de 12h exactement (720 min) devrait être valide', () {
       final showDate = _createTestShowDate(
@@ -171,7 +124,6 @@ ShowDate _createTestShowDate({
   DateTime? date,
   int startMinutes = 540,
   int endMinutes = 720,
-  Map<String, AvailabilityStatus>? artistsAvailability,
   String address = 'Test Address',
   int artistsCount = 1,
   double fee = 100.0,
@@ -181,7 +133,6 @@ ShowDate _createTestShowDate({
     date: date ?? DateTime(2025, 1, 1),
     startMinutes: startMinutes,
     endMinutes: endMinutes,
-    artistsAvailability: artistsAvailability ?? {},
     address: address,
     artistsCount: artistsCount,
     fee: fee,

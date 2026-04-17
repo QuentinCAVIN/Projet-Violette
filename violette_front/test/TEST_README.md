@@ -32,7 +32,7 @@ flutter test --reporter=expanded
 test/
 ├── models/                          # Tests de logique métier pure (priorité 1)
 │   ├── enums/
-│   │   ├── availability_status_test.dart   # Transitions, mapping Firestore
+│   │   ├── availability_status_test.dart   # Transitions et labels
 │   │   └── role_test.dart                  # Mapping string ↔ enum
 │   └── show_date_test.dart                 # Conversions, règle 12h
 │
@@ -50,15 +50,13 @@ test/
 ### AvailabilityStatus (`test/models/enums/availability_status_test.dart`)
 
 **Ce qui est testé :**
-- ✅ Transitions de statut : `pending → available → conditional → unavailable → available`
+- ✅ Transitions de statut : `pending → available → ifNeeded → unavailable → available`
 - ✅ Labels français pour l'UI
-- ✅ Mapping Firestore : `"available"` ↔ `AvailabilityStatus.available`
 - ✅ Serialization : `.name` retourne la bonne string
 
 **Pourquoi c'est important :**
 - Règle métier critique pour le calendrier
 - Utilisé partout dans l'app
-- Mapping Firestore doit être fiable
 
 ### ShowDate (`test/models/show_date_test.dart`)
 
@@ -66,7 +64,7 @@ test/
 - ✅ Conversion minutes ↔ HH:mm (ex: 125 → "02:05")
 - ✅ Formatage de dates
 - ✅ **Règle métier : Durée max 12h pour un cachet**
-- ✅ Extension `nextStatus()` pour changer le statut
+- ✅ Formatage et helpers de `ShowDate` (date, heures, règles de durée)
 
 **Pourquoi c'est important :**
 - Contrainte légale : un cachet d'intermittent ≤ 12h

@@ -37,8 +37,7 @@ class ManagerDateDetailBody extends ViewModelWidget<ManagerDateDetailViewModel> 
             final isEnabled =
                 viewModel.isSelectionEnabled(currentShowDate, artist.uid);
 
-            final availability =
-                currentShowDate.artistsAvailability[artist.uid];
+            final availability = viewModel.getAvailabilityForArtist(artist.uid);
 
             return Card(
               margin: const EdgeInsets.symmetric(

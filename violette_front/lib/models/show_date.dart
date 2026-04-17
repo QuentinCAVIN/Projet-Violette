@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:violette_front/models/enums/availability_status.dart';
 import 'package:violette_front/models/enums/show_date_status.dart';
 
 //TODO Définir avec Agathe les champs qui doivent être obligatoire
@@ -13,7 +12,6 @@ class ShowDate {
   final int artistsCount;
   final double fee;
   final String? description;
-  final Map<String, AvailabilityStatus> artistsAvailability;
   final ShowDateStatus status;
   final int selectedCount;
 
@@ -21,7 +19,6 @@ class ShowDate {
     this.uid,
     required this.title,
     required this.date,
-    required this.artistsAvailability,
     required this.startMinutes,
     required this.endMinutes,
     required this.address,
@@ -38,20 +35,12 @@ class ShowDate {
     SnapshotOptions?
         options, // Option trouvé dans la doc que je ne comprends pas, voir pour la supprimer
   ) {
-    final data = snapshot.data();
-    Map<String, AvailabilityStatus> availabilityMap = {};
-    if (data!.containsKey('artistsAvailability')) {
-      final mapData = data['artistsAvailability'] as Map<String, dynamic>;
-      mapData.forEach((key, value) {
-        availabilityMap[key] = availabilityStatusFromString(value);
-      });
-    }
+    final data = snapshot.data()!;
 
     return ShowDate(
       uid: snapshot.id,
       title: data['title'],
       date: data['date'].toDate().toLocal(),
-      artistsAvailability: availabilityMap,
       startMinutes: data['startTime'],
       endMinutes: data['endTime'],
       address: data['address'],
@@ -67,8 +56,6 @@ class ShowDate {
     return {
       "title": title,
       "date": date,
-      "artistsAvailability":
-          artistsAvailability.map((key, value) => MapEntry(key, value.name)),
       "startTime": startMinutes,
       "endTime": endMinutes,
       "address": address,
@@ -79,14 +66,6 @@ class ShowDate {
       if (description != null) "description": description,
     };
   }
-
-  AvailabilityStatus getAvailabilityFor(String userId) {
-    return artistsAvailability[userId] ?? AvailabilityStatus.pending;
-  }
-
-  void setAvailabilityFor(String userId, AvailabilityStatus status) {
-    artistsAvailability[userId] = status;
-  }
 }
 
 extension ShowDateX on ShowDate {
@@ -94,11 +73,6 @@ extension ShowDateX on ShowDate {
 
   String get formattedStartTime => _minutesToHHmm(startMinutes);
   String get formattedEndTime => _minutesToHHmm(endMinutes);
-
-  void nextStatus(String userId) {
-    final currentStatus = getAvailabilityFor(userId);
-    setAvailabilityFor(userId, currentStatus.next);
-  }
 }
 
 //TODO Reflechir si on laisse ici ou si on met dans un Helper a coté
