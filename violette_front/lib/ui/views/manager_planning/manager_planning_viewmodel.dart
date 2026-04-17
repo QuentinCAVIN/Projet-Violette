@@ -64,7 +64,7 @@ class ManagerPlanningViewModel extends BaseViewModel {
         artists.clear();
 
         final dateId = date.uid;
-        if (dateId == null) return;
+        if (dateId == null || dateId.isEmpty) return;
 
         final availabilities =
             await _availabilityRepository.getAvailabilitiesForDate(dateId);
@@ -114,13 +114,13 @@ class ManagerPlanningViewModel extends BaseViewModel {
   }
 
   bool isExpanded(ShowDate date) {
-    if (date.uid == null) return false;
+    if (date.uid == null || date.uid!.isEmpty) return false;
     return expandedShowDateId == date.uid;
   }
 
   void toggleExpanded(ShowDate date) {
     final id = date.uid;
-    if (id == null) return;
+    if (id == null || id.isEmpty) return;
 
     if (expandedShowDateId == id) {
       expandedShowDateId = null;

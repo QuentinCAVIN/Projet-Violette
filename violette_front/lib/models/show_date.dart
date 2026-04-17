@@ -25,8 +25,7 @@ class ShowDate {
     required this.artistsCount,
     required this.fee,
     this.description,
-    this.status = ShowDateStatus
-        .optional, // Par défaut une date nouvellement créée
+    this.status = ShowDateStatus.option, // Par défaut une date nouvellement créée
     this.selectedCount = 0,
   });
 
