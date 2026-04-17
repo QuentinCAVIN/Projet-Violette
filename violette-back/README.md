@@ -16,8 +16,9 @@ Backend REST de la plateforme **Violette**, conçu avec Java 21 et Quarkus.
 8. [Migrations Flyway](#8-migrations-flyway)
 9. [Documentation API — Swagger](#9-documentation-api--swagger)
 10. [Exécuter les tests](#10-exécuter-les-tests)
-11. [Prochaines phases](#11-prochaines-phases)
-12. [Manuel utilisateur](#12-manuel-utilisateur)
+11. [Historique des phases et prochaines étapes](#11-historique-des-phases-et-prochaines-étapes)
+12. [Cycle de vie des entités métier](#12-cycle-de-vie-des-entités-métier)
+13. [Manuel utilisateur](#13-manuel-utilisateur)
 
 ---
 
@@ -312,7 +313,7 @@ io.violette
 │   │   ├── ShowDateSkillRequirementEntity.java  ← @Entity (besoin par compétence)
 │   │   ├── ArtistAvailabilityEntity.java        ← @Entity (disponibilité artiste)
 │   │   ├── ArtistAvailabilityId.java            ← @Embeddable, clé composite (showDateId, artistId)
-│   │   ├── ShowDateStatus.java                  ← Enum : PENDING, OPTIONAL, CONFIRMED, LOCKED, CANCELLED
+│   │   ├── ShowDateStatus.java                  ← Enum : INQUIRY, OPTION, CONFIRMED, STAFFED, CANCELLED, ARCHIVED
 │   │   └── AvailabilityStatus.java              ← Enum : PENDING, AVAILABLE, CONDITIONAL, UNAVAILABLE
 │   ├── dto/
 │   │   ├── ShowDateDto.java
@@ -717,9 +718,58 @@ Les tests utilisent le profil `test` défini dans `src/test/resources/applicatio
 - Règles métier : capacité par compétence, disponibilité artiste, unicité de réservation
 - Controller REST : sélection, déselection, envoi des confirmations, réponse artiste, consultation
 
+### Phase 7 — Renommage enum `ShowDateStatus` ✓ (implémenté)
+
+- Alignement du cycle de vie métier : `PENDING → INQUIRY`, `OPTIONAL → OPTION`, `LOCKED → STAFFED`, ajout `ARCHIVED`
+- Migration Flyway V7 : `ALTER TABLE show_date` (renommage des valeurs ENUM + migration des données)
+- Distinction documentée entre présélection (`OPTION`) et booking ferme (`CONFIRMED`)
+
 ---
 
-## 12. Manuel utilisateur
+## 12. Cycle de vie des entités métier
+
+### Statuts d'une date de spectacle (`ShowDateStatus`)
+
+| Statut | Sens métier | Booking autorisé |
+|---|---|---|
+| `INQUIRY` | Demande client reçue, besoin en cours de qualification. La date peut être incomplète (pas de date calendrier, pas d'artistes définis). | Non |
+| `OPTION` | Devis envoyé, option posée. Le gérant peut **présélectionner** des artistes (`SELECTED`). Pas d'engagement ferme : l'artiste n'est pas notifié et reste libre pour d'autres compagnies. | Présélection uniquement |
+| `CONFIRMED` | Le client a validé la date. Le gérant peut envoyer les **demandes de booking ferme** (`sendConfirmationRequests`). | Oui — booking ferme |
+| `STAFFED` | L'effectif artistique nécessaire est complet et sécurisé. Aucune nouvelle sélection possible. | Non |
+| `CANCELLED` | Date annulée (demande abandonnée, devis refusé, annulation client). | Non |
+| `ARCHIVED` | Prestation passée, conservée dans l'historique. | Non |
+
+### Distinction disponibilité / présélection / booking ferme
+
+```
+Disponibilité (ArtistAvailability)
+  └── L'artiste déclare s'il peut venir (AVAILABLE / CONDITIONAL / UNAVAILABLE).
+      Aucun engagement. Aucun lien contractuel. Possible dès OPTION.
+
+Présélection (ArtistBooking en SELECTED, date en OPTION)
+  └── Le gérant identifie les artistes pertinents pour la date.
+      Pas d'engagement ferme. L'artiste n'est pas encore notifié (TODO V2).
+      L'artiste reste libre d'accepter d'autres dates.
+
+Booking ferme (ArtistBooking en PENDING_CONFIRMATION+, date en CONFIRMED)
+  └── Le gérant envoie une demande officielle à l'artiste.
+      L'artiste répond (accepte ou refuse).
+      L'engagement réel de l'artiste est acquis à son acceptation (CONFIRMED).
+```
+
+### Statuts d'une réservation artiste (`BookingStatus`)
+
+| Statut | Sens | Condition sur la date |
+|---|---|---|
+| `SELECTED` | Présélection (date `OPTION`) ou sélection ferme (date `CONFIRMED`). | `OPTION` ou `CONFIRMED` |
+| `PENDING_CONFIRMATION` | Demande ferme envoyée à l'artiste, en attente de réponse. | `CONFIRMED` uniquement |
+| `CONFIRMED` | Artiste engagé — présence sur la date acquise. | — |
+| `REFUSED` | Artiste a décliné la demande. | — |
+| `CANCELLED` | Booking annulé suite à l'annulation de la date. | — |
+
+---
+
+## 13. Manuel utilisateur
 
 ### Description fonctionnelle
 
@@ -749,9 +799,9 @@ Violette permet à des compagnies de cabaret de gérer leurs spectacles de bout 
 | -------------------------- | ---------------------------------------------------------------------------------------------- |
 | Unicité de disponibilité   | Un artiste ne peut déclarer qu'une seule disponibilité par date (clé composite show_date/artist) |
 | Unicité de la réservation  | Un artiste ne peut être réservé qu'une fois par date de spectacle (domaine `artistbooking`)    |
-| Statuts d'une date         | `PENDING` → `OPTIONAL` → `CONFIRMED` → `LOCKED` ou `CANCELLED`                                |
+| Statuts d'une date         | `INQUIRY` → `OPTION` → `CONFIRMED` → `STAFFED` ou `CANCELLED` ou `ARCHIVED`                   |
 | Statuts d'une disponibilité| `PENDING` → `AVAILABLE` ou `CONDITIONAL` ou `UNAVAILABLE`                                     |
-| Statuts d'une réservation  | `SELECTED` → `PENDING_CONFIRMATION` → `CONFIRMED` ou `REFUSED` (domaine `artistbooking`)      |
+| Statuts d'une réservation  | `SELECTED` → `PENDING_CONFIRMATION` → `CONFIRMED` ou `REFUSED` ou `CANCELLED`                 |
 | Compagnie                  | Doit avoir au moins un gérant                                                                  |
 
 

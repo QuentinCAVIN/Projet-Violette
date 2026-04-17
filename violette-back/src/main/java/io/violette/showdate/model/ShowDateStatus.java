@@ -5,23 +5,30 @@ package io.violette.showdate.model;
  *
  * <p>Transitions autorisées :
  * <pre>
- * PENDING → OPTIONAL   (devis envoyé, date ouverte aux artistes)
- * OPTIONAL → CONFIRMED (client confirme la date)
- * OPTIONAL → CANCELLED (client refuse / annulation avant confirmation)
- * CONFIRMED → LOCKED   (effectif artistique complet et confirmé)
+ * INQUIRY  → OPTION    (besoins qualifiés, devis envoyé, option posée)
+ * INQUIRY  → CANCELLED (demande abandonnée en phase de qualification)
+ * OPTION   → CONFIRMED (client valide le devis / la prestation)
+ * OPTION   → CANCELLED (client refuse / annulation avant confirmation)
+ * CONFIRMED → STAFFED  (effectif artistique complet et confirmé)
  * CONFIRMED → CANCELLED
- * LOCKED → CANCELLED   (annulation exceptionnelle d'une date verrouillée)
+ * STAFFED  → CANCELLED (annulation exceptionnelle d'une date verrouillée)
+ * CONFIRMED | STAFFED → ARCHIVED (prestation passée, historisée)
  * </pre>
+ *
+ * <p>Remarque : une {@code ShowDate} en {@code INQUIRY} peut être incomplète
+ * (date calendrier, type de spectacle, nombre d'artistes non encore définis).
  */
 public enum ShowDateStatus {
-    /** Créée, en attente d'envoi de devis. */
-    PENDING,
-    /** Devis envoyé, date ouverte aux déclarations de disponibilité artistes. */
-    OPTIONAL,
+    /** Demande client reçue — besoin en cours de qualification ; la date peut être incomplète. */
+    INQUIRY,
+    /** Besoins cadrés, devis envoyé — date ouverte à la sélection/réservation d'artistes. */
+    OPTION,
     /** Devis confirmé par le client. */
     CONFIRMED,
-    /** Effectif artistique complet et confirmé — aucune modification possible. */
-    LOCKED,
-    /** Date annulée. */
-    CANCELLED
+    /** Effectif artistique complet et sécurisé — aucune modification de l'équipe possible. */
+    STAFFED,
+    /** Date annulée (demande abandonnée, devis refusé, annulation client, etc.). */
+    CANCELLED,
+    /** Prestation passée, conservée dans l'historique. */
+    ARCHIVED
 }

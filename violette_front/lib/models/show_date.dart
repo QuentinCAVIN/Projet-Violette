@@ -26,7 +26,7 @@ class ShowDate {
     required this.fee,
     this.description,
     this.status = ShowDateStatus
-        .optional, //TODO Voir avec Elodie quel statu à une date nouvellement créé
+        .optional, // Par défaut une date nouvellement créée
     this.selectedCount = 0,
   });
 
