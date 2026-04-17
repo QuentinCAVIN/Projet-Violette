@@ -177,6 +177,61 @@ void main() {
       });
     });
 
+    group('toggleSelection -', () {
+      test(
+          'toggleSelection_whenDateIdIsNull_doesNotCallRepository',
+          () async {
+        // Identifiant absent : la garde doit bloquer l'appel au repository de réservation.
+        final bookingRepository =
+            locator<BookingRepository>() as MockBookingRepository;
+
+        final showDateSansId = ShowDate(
+          uid: null,
+          title: 'Date sans id',
+          date: DateTime(2026, 1, 1),
+          startMinutes: 540,
+          endMinutes: 600,
+          address: 'Adresse test',
+          artistsCount: 2,
+          fee: 0,
+        );
+
+        final viewModel = ManagerDateDetailViewModel(showDate: showDateSansId);
+
+        await viewModel.toggleSelection('artist1', true);
+
+        verifyNever(
+            () => bookingRepository.toggleSelection(any(), any(), any()));
+      });
+    });
+
+    group('sendConfirmation -', () {
+      test(
+          'sendConfirmation_whenDateIdIsNull_doesNotCallRepository',
+          () async {
+        // Identifiant absent : la garde doit bloquer l'envoi des demandes de confirmation.
+        final bookingRepository =
+            locator<BookingRepository>() as MockBookingRepository;
+
+        final showDateSansId = ShowDate(
+          uid: null,
+          title: 'Date sans id',
+          date: DateTime(2026, 1, 1),
+          startMinutes: 540,
+          endMinutes: 600,
+          address: 'Adresse test',
+          artistsCount: 2,
+          fee: 0,
+        );
+
+        final viewModel = ManagerDateDetailViewModel(showDate: showDateSansId);
+
+        await viewModel.sendConfirmation();
+
+        verifyNever(() => bookingRepository.sendConfirmationRequests(any()));
+      });
+    });
+
     group('isSelectionEnabled -', () {
       test(
           'devrait autoriser la désélection quand un booking existe avec status selected',

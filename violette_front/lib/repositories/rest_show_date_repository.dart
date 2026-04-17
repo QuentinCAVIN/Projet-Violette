@@ -70,7 +70,11 @@ class RestShowDateRepository implements ShowDateRepository {
     return _legacyRepository.updateShowDate(updated);
   }
 
+  /// @deprecated : délègue au repository Firestore legacy.
+  /// Ne pas introduire de nouveaux usages de cette méthode.
+  /// Utiliser [getShowDateById] à la place dans tout nouveau code (migration booking incluse).
   @override
+  // ignore: deprecated_member_use_from_same_package
   Stream<ShowDate> watchShowDate(String dateId) {
     return _legacyRepository.watchShowDate(dateId);
   }
