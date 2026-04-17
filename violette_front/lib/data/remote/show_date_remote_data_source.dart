@@ -45,20 +45,29 @@ class ShowDateRemoteDataSource {
 
   /// Récupère une date de spectacle par son identifiant backend.
   Future<ShowDate?> getShowDateById(String showDateId) async {
-    final response = await _dio.get('/api/show-dates/$showDateId');
-    final data = response.data;
+    try {
+      final response = await _dio.get('/api/show-dates/$showDateId');
+      final data = response.data;
 
-    if (data is Map<String, dynamic>) {
-      return ShowDateMapper.fromJson(data);
-    }
-
-    if (data is String) {
-      final decoded = jsonDecode(data);
-      if (decoded is Map<String, dynamic>) {
-        return ShowDateMapper.fromJson(decoded);
+      if (data is Map<String, dynamic>) {
+        return ShowDateMapper.fromJson(data);
       }
-    }
 
-    return null;
+      if (data is String) {
+        final decoded = jsonDecode(data);
+        if (decoded is Map<String, dynamic>) {
+          return ShowDateMapper.fromJson(decoded);
+        }
+      }
+
+      return null;
+    } on DioException catch (e) {
+      // 404 = date absente : retourne null pour laisser le ViewModel gérer le fallback UI.
+      if (e.response?.statusCode == 404) {
+        return null;
+      }
+      // 401/403 et autres erreurs réseau/backend : remontées au repository.
+      rethrow;
+    }
   }
 }

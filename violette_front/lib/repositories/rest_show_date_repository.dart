@@ -31,6 +31,26 @@ class RestShowDateRepository implements ShowDateRepository {
   }
 
   @override
+  Future<ShowDate?> getShowDateById(String dateId) async {
+    if (dateId.isEmpty) return null;
+
+    try {
+      final remoteShowDate = await _remoteDataSource.getShowDateById(dateId);
+      if (remoteShowDate != null) {
+        return remoteShowDate;
+      }
+      // Compatibilité transitoire : fallback legacy si la date n'existe pas côté REST.
+      return _legacyRepository.getShowDateById(dateId);
+    } on DioException catch (e) {
+      // 401/403/5xx : fallback défensif pour conserver l'écran fonctionnel durant la migration.
+      if (e.response?.statusCode != 404) {
+        return _legacyRepository.getShowDateById(dateId);
+      }
+      return null;
+    }
+  }
+
+  @override
   Future<void> addShowDate(ShowDate showDate) {
     return _legacyRepository.addShowDate(showDate);
   }

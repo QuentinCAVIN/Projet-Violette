@@ -31,6 +31,19 @@ class FirestoreShowDateRepository implements ShowDateRepository {
   }
 
   @override
+  Future<ShowDate?> getShowDateById(String dateId) async {
+    if (dateId.isEmpty) return null;
+
+    final allShowDates = await getAllShowDates();
+    for (final showDate in allShowDates) {
+      if (showDate.uid == dateId) {
+        return showDate;
+      }
+    }
+    return null;
+  }
+
+  @override
   Future<void> updateAllShowDates(List<ShowDate> updatedList) async {
     final batch = _db.batch(); // Write Batch = panier d'opération Firestore
 

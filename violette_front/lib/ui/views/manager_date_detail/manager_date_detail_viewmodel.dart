@@ -40,27 +40,45 @@ class ManagerDateDetailViewModel extends BaseViewModel {
   int get selectedCount =>
       currentShowDate?.selectedCount ?? showDate.selectedCount;
 
-  StreamSubscription<ShowDate>? _showDateSubscription;
+  final _showDateController = StreamController<ShowDate>.broadcast();
+  StreamSubscription<List<ArtistBooking>>? _bookingSubscription;
 
   bool get canSendConfirmation =>
       bookings.any((b) => b.status == BookingStatus.selected);
 
   @override
   void dispose() {
-    // Nettoyage de la subscription pour éviter toute fuite mémoire
-    _showDateSubscription?.cancel();
+    // Nettoyage des subscriptions/streams pour éviter toute fuite mémoire.
+    _bookingSubscription?.cancel();
+    _showDateController.close();
     super.dispose();
   }
 
   /// Méthode d’initialisation appelée à l’ouverture de la vue.
   Future<void> initialize() async {
     setBusy(true);
-    _bookingRepository
-        .watchBookingsForDate(showDate.uid!)
-        .listen((bookingsData) {
+
+    final dateId = showDate.uid;
+    if (dateId == null || dateId.isEmpty) {
+      currentShowDate = showDate;
+      _showDateController.add(showDate);
+      availabilities = [];
+      availableArtists = [];
+      bookings = [];
+      setBusy(false);
+      return;
+    }
+
+    currentShowDate = showDate;
+    _showDateController.add(showDate);
+
+    _bookingSubscription =
+        _bookingRepository.watchBookingsForDate(dateId).listen((bookingsData) {
       bookings = bookingsData;
       rebuildUi();
     });
+
+    await _loadShowDateDetail(dateId);
 
     await _loadAvailabilities();
     await _loadAllArtists();
@@ -68,8 +86,26 @@ class ManagerDateDetailViewModel extends BaseViewModel {
     setBusy(false);
   }
 
-  Stream<ShowDate> get showDateStream =>
-      _showDateRepository.watchShowDate(showDate.uid!);
+  Stream<ShowDate> get showDateStream => _showDateController.stream;
+
+  Future<void> _loadShowDateDetail(String dateId) async {
+    try {
+      final loaded = await _showDateRepository.getShowDateById(dateId);
+      if (loaded == null) {
+        return;
+      }
+      currentShowDate = loaded;
+      _showDateController.add(loaded);
+    } catch (_) {
+      // On conserve le fallback sur la date de navigation pour éviter un crash UI.
+      currentShowDate = currentShowDate ?? showDate;
+      _showDateController.add(currentShowDate!);
+      _snackbarService.showSnackbar(
+        message: "Impossible de charger le détail de la date.",
+        duration: const Duration(seconds: 3),
+      );
+    }
+  }
 
   Future<void> _loadAvailabilities() async {
     if (showDate.uid == null) {
