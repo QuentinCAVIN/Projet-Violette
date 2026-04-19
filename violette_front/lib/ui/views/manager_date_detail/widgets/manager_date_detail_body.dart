@@ -20,16 +20,18 @@ class ManagerDateDetailBody extends ViewModelWidget<ManagerDateDetailViewModel> 
     final listView = ListView.builder(
       shrinkWrap: isInline,
       physics: isInline ? const NeverScrollableScrollPhysics() : null,
-      itemCount: viewModel.availableArtists.length,
+      itemCount: viewModel.artistLines.length,
       itemBuilder: (context, index) {
-        final artist = viewModel.availableArtists[index];
+        final line = viewModel.artistLines[index];
+        final artist = line.user;
+        final apiArtistId = line.apiArtistId;
 
-        final booking = viewModel.getBookingForArtist(artist.uid);
+        final booking = viewModel.getBookingForArtist(apiArtistId);
 
         final isEnabled =
-            viewModel.isSelectionEnabled(currentShowDate, artist.uid);
+            viewModel.isSelectionEnabled(currentShowDate, apiArtistId);
 
-        final availability = viewModel.getAvailabilityForArtist(artist.uid);
+        final availability = viewModel.getAvailabilityForArtist(apiArtistId);
 
         return Card(
           margin: const EdgeInsets.symmetric(
@@ -45,7 +47,7 @@ class ManagerDateDetailBody extends ViewModelWidget<ManagerDateDetailViewModel> 
                 value: viewModel.isBookingCheckboxChecked(booking),
                 onChanged: isEnabled
                     ? (val) => viewModel.toggleSelection(
-                          artist.uid,
+                          apiArtistId,
                           val ?? false,
                         )
                     : null,

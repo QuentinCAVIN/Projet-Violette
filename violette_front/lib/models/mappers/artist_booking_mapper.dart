@@ -69,4 +69,23 @@ class ArtistBookingMapper {
     if (raw is num) return raw.toInt();
     return int.tryParse(raw?.toString() ?? '');
   }
+
+  /// Trouve l’id du booking pour un [artistId] backend (GET liste des bookings d’une date).
+  static int? findBookingIdForArtistId(
+    List<Map<String, dynamic>> items,
+    int artistId,
+  ) {
+    for (final item in items) {
+      if (_sameNumericId(item['artistId'], artistId)) {
+        return _toBookingId(item['id']);
+      }
+    }
+    return null;
+  }
+
+  static bool _sameNumericId(dynamic raw, int expected) {
+    if (raw == null) return false;
+    final n = raw is num ? raw.toInt() : int.tryParse(raw.toString());
+    return n == expected;
+  }
 }

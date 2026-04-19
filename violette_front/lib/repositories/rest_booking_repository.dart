@@ -6,8 +6,8 @@ import 'booking_repository.dart';
 
 /// Implémentation hybride : REST pour les actions migrées, Firestore pour le reste.
 ///
-/// REST : [respondToRequest], [sendConfirmationRequests].
-/// Firestore : flux temps réel, [toggleSelection] (legacy).
+/// REST : [respondToRequest], [sendConfirmationRequests], [toggleSelection].
+/// Firestore : flux temps réel uniquement.
 class RestBookingRepository implements BookingRepository {
   RestBookingRepository({
     FirestoreBookingRepository? legacyRepository,
@@ -32,7 +32,7 @@ class RestBookingRepository implements BookingRepository {
     String artistId,
     bool select,
   ) =>
-      _legacy.toggleSelection(dateId, artistId, select);
+      _remote.toggleSelection(dateId, artistId, select);
 
   @override
   Future<void> sendConfirmationRequests(String dateId) =>

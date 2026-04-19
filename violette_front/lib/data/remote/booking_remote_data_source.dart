@@ -8,7 +8,8 @@ import 'package:violette_front/models/mappers/artist_booking_mapper.dart';
 /// Source de données distante pour le domaine réservations artistes (REST).
 ///
 /// Incréments : réponse artiste (`respondToRequest`), envoi des demandes de
-/// confirmation gérant (`sendConfirmationRequests`).
+/// confirmation gérant (`sendConfirmationRequests`), sélection / désélection
+/// gérant (`toggleSelection`).
 class BookingRemoteDataSource {
   late final Dio _dio;
 
@@ -63,6 +64,68 @@ class BookingRemoteDataSource {
   /// Envoie les demandes de confirmation pour la date [showDateId] (rôle MANAGER).
   ///
   /// POST `/api/artist-bookings/show-dates/{showDateId}/send-confirmations`
+  /// Sélectionne ou désélectionne un artiste (rôle MANAGER).
+  ///
+  /// Sélection : `POST /api/artist-bookings` avec `showDateId` et `artistId`
+  /// (identifiants backend numériques).
+  ///
+  /// Désélection : `GET /api/artist-bookings/show-dates/{showDateId}` puis
+  /// `DELETE /api/artist-bookings/{id}` pour le booking en statut SELECTED.
+  Future<void> toggleSelection(
+    String showDateId,
+    String artistId,
+    bool select,
+  ) async {
+    final showDateIdNum = int.tryParse(showDateId.trim());
+    final artistIdNum = int.tryParse(artistId.trim());
+    if (showDateIdNum == null || artistIdNum == null) {
+      throw Exception(
+        'Identifiant de date ou d’artiste invalide pour l’API (attendu : entiers).',
+      );
+    }
+
+    if (select) {
+      try {
+        await _dio.post<void>(
+          '/api/artist-bookings',
+          data: <String, dynamic>{
+            'showDateId': showDateIdNum,
+            'artistId': artistIdNum,
+          },
+        );
+      } on DioException catch (e) {
+        throw Exception(_messageFromDio(e));
+      }
+      return;
+    }
+
+    late final List<Map<String, dynamic>> items;
+    try {
+      final listResponse =
+          await _dio.get('/api/artist-bookings/show-dates/$showDateId');
+      items = ArtistBookingMapper.parseBookingList(listResponse.data);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        throw Exception('Date de spectacle introuvable côté serveur.');
+      }
+      throw Exception(_messageFromDio(e));
+    }
+
+    final bookingId =
+        ArtistBookingMapper.findBookingIdForArtistId(items, artistIdNum);
+    if (bookingId == null) {
+      throw Exception(
+        'Aucune présélection à retirer pour cet artiste sur le serveur.',
+      );
+    }
+
+    try {
+      await _dio.delete<void>('/api/artist-bookings/$bookingId');
+    } on DioException catch (e) {
+      throw Exception(_messageFromDio(e));
+    }
+  }
+
   Future<void> sendConfirmationRequests(String showDateId) async {
     try {
       await _dio.post<void>(

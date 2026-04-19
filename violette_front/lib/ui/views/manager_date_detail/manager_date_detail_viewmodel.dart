@@ -7,6 +7,7 @@ import 'package:violette_front/models/availability.dart';
 import 'package:violette_front/models/enums/availability_status.dart';
 import 'package:violette_front/models/enums/booking_status.dart';
 import 'package:violette_front/models/enums/show_date_status.dart';
+import 'package:violette_front/models/manager_artist_line.dart';
 import 'package:violette_front/models/show_date.dart';
 import 'package:violette_front/models/violette_user.dart';
 import 'package:violette_front/repositories/availability_repository.dart';
@@ -28,7 +29,8 @@ class ManagerDateDetailViewModel extends BaseViewModel {
 
   ManagerDateDetailViewModel({required this.showDate});
 
-  List<VioletteUser> availableArtists = [];
+  /// Lignes affichées : profil + identifiant artiste backend (aligné API booking).
+  List<ManagerArtistLine> artistLines = [];
 
   List<ArtistBooking> bookings = [];
   List<Availability> availabilities = [];
@@ -61,7 +63,7 @@ class ManagerDateDetailViewModel extends BaseViewModel {
     if (dateId == null || dateId.isEmpty) {
       currentShowDate = showDate;
       availabilities = [];
-      availableArtists = [];
+      artistLines = [];
       bookings = [];
       setBusy(false);
       return;
@@ -136,23 +138,41 @@ class ManagerDateDetailViewModel extends BaseViewModel {
   }
 
   Future<void> _loadAllArtists() async {
-    final artistIds = availabilities.map((availability) => availability.artistId);
+    artistLines = [];
 
-    availableArtists = [];
-
-    for (final id in artistIds) {
-      final user = await _userRepository.getUser(id);
+    for (final availability in availabilities) {
+      final user = await _userRepository.getUser(availability.artistId);
       if (user != null) {
-        availableArtists.add(user);
+        artistLines.add(
+          ManagerArtistLine(
+            user: user,
+            apiArtistId: availability.artistId,
+          ),
+        );
       }
     }
   }
 
   /// Retourne le booking associé à un artiste pour cette date,
   /// ou null s’il n’existe pas.
-  ArtistBooking? getBookingForArtist(String artistId) {
+  ///
+  /// [apiArtistId] est l’identifiant backend (disponibilités). Les documents
+  /// Firestore legacy peuvent encore référencer le `firebaseUid` : on teste
+  /// les deux lorsque la ligne est connue.
+  ArtistBooking? getBookingForArtist(String apiArtistId) {
+    String? firebaseUid;
+    for (final line in artistLines) {
+      if (line.apiArtistId == apiArtistId) {
+        firebaseUid = line.user.uid;
+        break;
+      }
+    }
     try {
-      return bookings.firstWhere((b) => b.artistId == artistId);
+      return bookings.firstWhere(
+        (b) =>
+            b.artistId == apiArtistId ||
+            (firebaseUid != null && b.artistId == firebaseUid),
+      );
     } catch (_) {
       return null;
     }

@@ -4,6 +4,8 @@ abstract class BookingRepository {
   Stream<List<ArtistBooking>> watchBookingsForDate(String dateId);
   Stream<List<ArtistBooking>> watchPendingRequestsForArtist(String artistId);
 
+  /// Présélection / désélection d’un artiste (gérant).
+  /// Implémentation : REST (`POST /api/artist-bookings`, `DELETE ...`).
   Future<void> toggleSelection(String dateId, String artistId, bool select);
 
   /// Passe les réservations sélectionnées en attente de confirmation (gérant).

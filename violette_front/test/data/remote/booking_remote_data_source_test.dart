@@ -297,4 +297,111 @@ void main() {
       },
     );
   });
+
+  group('BookingRemoteDataSource.toggleSelection', () {
+    test(
+      'sélection : POST /api/artist-bookings avec showDateId et artistId',
+      () async {
+        final dio = Dio(BaseOptions(baseUrl: 'http://test'));
+        Object? posted;
+
+        dio.interceptors.add(
+          InterceptorsWrapper(
+            onRequest: (options, handler) {
+              if (options.method == 'POST' &&
+                  options.path == '/api/artist-bookings') {
+                posted = options.data;
+                return handler.resolve(
+                  Response(
+                    requestOptions: options,
+                    statusCode: 201,
+                    data: <String, dynamic>{'id': 1},
+                  ),
+                );
+              }
+              fail('Requête inattendue : ${options.method} ${options.path}');
+            },
+          ),
+        );
+
+        final ds = BookingRemoteDataSource(dio: dio);
+        await ds.toggleSelection('10', '2', true);
+
+        expect(posted, <String, dynamic>{'showDateId': 10, 'artistId': 2});
+      },
+    );
+
+    test(
+      'désélection : GET show-dates puis DELETE le booking SELECTED',
+      () async {
+        final dio = Dio(BaseOptions(baseUrl: 'http://test'));
+        String? deletedPath;
+
+        dio.interceptors.add(
+          InterceptorsWrapper(
+            onRequest: (options, handler) {
+              if (options.method == 'GET' &&
+                  options.path == '/api/artist-bookings/show-dates/10') {
+                return handler.resolve(
+                  Response(
+                    requestOptions: options,
+                    statusCode: 200,
+                    data: <Map<String, dynamic>>[
+                      {
+                        'id': 77,
+                        'artistId': 2,
+                        'status': 'SELECTED',
+                      },
+                    ],
+                  ),
+                );
+              }
+              if (options.method == 'DELETE' &&
+                  options.path == '/api/artist-bookings/77') {
+                deletedPath = options.path;
+                return handler.resolve(
+                  Response(
+                    requestOptions: options,
+                    statusCode: 204,
+                  ),
+                );
+              }
+              fail('Requête inattendue : ${options.method} ${options.path}');
+            },
+          ),
+        );
+
+        final ds = BookingRemoteDataSource(dio: dio);
+        await ds.toggleSelection('10', '2', false);
+
+        expect(deletedPath, '/api/artist-bookings/77');
+      },
+    );
+
+    test(
+      'lève une exception si aucun booking serveur pour la désélection',
+      () async {
+        final dio = Dio(BaseOptions(baseUrl: 'http://test'));
+        dio.interceptors.add(
+          InterceptorsWrapper(
+            onRequest: (options, handler) {
+              return handler.resolve(
+                Response(
+                  requestOptions: options,
+                  statusCode: 200,
+                  data: <Map<String, dynamic>>[],
+                ),
+              );
+            },
+          ),
+        );
+
+        final ds = BookingRemoteDataSource(dio: dio);
+        expect(
+          () => ds.toggleSelection('10', '2', false),
+          throwsA(isA<Exception>()),
+        );
+      },
+    );
+  });
 }

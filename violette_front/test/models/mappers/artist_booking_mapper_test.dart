@@ -122,6 +122,23 @@ void main() {
       });
     });
 
+    group('findBookingIdForArtistId', () {
+      test('retourne l’id du booking pour un artistId backend', () {
+        final items = <Map<String, dynamic>>[
+          {'id': 100, 'artistId': 2, 'status': 'SELECTED'},
+          {'id': 55, 'artistId': 3, 'status': 'SELECTED'},
+        ];
+        expect(ArtistBookingMapper.findBookingIdForArtistId(items, 3), 55);
+      });
+
+      test('accepte artistId numérique ou chaîne dans le JSON', () {
+        final items = <Map<String, dynamic>>[
+          {'id': 1, 'artistId': '9'},
+        ];
+        expect(ArtistBookingMapper.findBookingIdForArtistId(items, 9), 1);
+      });
+    });
+
     group('parseBookingList', () {
       test('parse une liste directe', () {
         final data = [
