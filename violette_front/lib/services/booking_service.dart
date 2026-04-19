@@ -1,18 +1,46 @@
+// ignore_for_file: deprecated_member_use_from_same_package
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:violette_front/models/artist_booking.dart';
 import 'package:violette_front/models/enums/booking_status.dart';
 import 'package:violette_front/models/show_date.dart';
 import 'package:violette_front/repositories/booking_repository.dart';
 
-/// Implémentation Firestore du BookingRepository.
+/// Implémentation Firestore du [BookingRepository].
+///
+/// ## État de la migration
+///
+/// Cette classe est le **fallback Firestore** utilisé par [RestBookingRepository]
+/// pour les méthodes dépréciées. Elle n'est PAS le repository actif en production.
+///
+/// En production, le locator injecte [RestBookingRepository] qui délègue
+/// uniquement aux méthodes REST de [BookingRemoteDataSource].
+///
+/// | Méthode                        | Statut dans cette classe           |
+/// |--------------------------------|------------------------------------|
+/// | `watchBookingsForDate`         | ⚠ déprécié — Firestore stream       |
+/// | `watchPendingRequestsForArtist`| ⚠ déprécié — Firestore stream       |
+/// | `getPendingRequestsForArtist`  | ⚠ fallback Firestore one-shot       |
+/// | `getBookingsForDate`           | ⚠ fallback Firestore one-shot       |
+/// | `toggleSelection`              | ⚠ legacy Firestore transaction      |
+/// | `sendConfirmationRequests`     | ⚠ legacy Firestore batch            |
+/// | `respondToRequest`             | ⚠ legacy Firestore transaction      |
+///
+/// Conservé uniquement pour :
+/// 1. les tests Firestore directs (`booking_service_test`)
+/// 2. satisfaire le contrat d'interface dans [RestBookingRepository]
 class FirestoreBookingRepository implements BookingRepository {
   final FirebaseFirestore _firestore;
 
   FirestoreBookingRepository({FirebaseFirestore? firestore})
       : _firestore = firestore ?? FirebaseFirestore.instance;
 
-  //TODO:ralentissement?
+  /// @deprecated — stream Firestore, non utilisé en production.
+  /// Remplacé par [getBookingsForDate] via REST.
   @override
+  @Deprecated(
+    'Stream Firestore. Utiliser getBookingsForDate (REST) à la place.',
+  )
   Stream<List<ArtistBooking>> watchBookingsForDate(String dateId) {
     return _firestore
         .collection('showDates')
@@ -26,7 +54,12 @@ class FirestoreBookingRepository implements BookingRepository {
     });
   }
 
+  /// @deprecated — stream Firestore, non utilisé en production.
+  /// Remplacé par [getPendingRequestsForArtist] via REST.
   @override
+  @Deprecated(
+    'Stream Firestore. Utiliser getPendingRequestsForArtist (REST) à la place.',
+  )
   Stream<List<ArtistBooking>> watchPendingRequestsForArtist(String artistId) {
     return _firestore
         .collectionGroup('artistBookings')
@@ -40,7 +73,39 @@ class FirestoreBookingRepository implements BookingRepository {
     });
   }
 
-  /// Sélectionne ou désélectionne un artiste pour une date.
+  /// Fallback Firestore one-shot pour [getPendingRequestsForArtist].
+  ///
+  /// En production, [RestBookingRepository] surcharge cette méthode avec
+  /// `GET /api/artist-bookings/me/pending`.
+  @override
+  Future<List<ArtistBooking>> getPendingRequestsForArtist(String artistId) async {
+    final snapshot = await _firestore
+        .collectionGroup('artistBookings')
+        .where('artistId', isEqualTo: artistId)
+        .where('status', isEqualTo: BookingStatus.pendingConfirmation.name)
+        .get();
+    return snapshot.docs
+        .map((doc) => ArtistBooking.fromFirestore(doc, null))
+        .toList();
+  }
+
+  /// Fallback Firestore one-shot pour [getBookingsForDate].
+  ///
+  /// En production, [RestBookingRepository] surcharge cette méthode avec
+  /// `GET /api/artist-bookings/show-dates/{dateId}`.
+  @override
+  Future<List<ArtistBooking>> getBookingsForDate(String dateId) async {
+    final snapshot = await _firestore
+        .collection('showDates')
+        .doc(dateId)
+        .collection('artistBookings')
+        .get();
+    return snapshot.docs
+        .map((doc) => ArtistBooking.fromFirestore(doc, null))
+        .toList();
+  }
+
+  /// @deprecated — legacy Firestore. En production : REST via [RestBookingRepository].
   @override
   Future<void> toggleSelection(
     String dateId,
@@ -61,12 +126,10 @@ class FirestoreBookingRepository implements BookingRepository {
       final bookingSnapshot = await transaction.get(bookingRef);
 
       if (select) {
-        // Tentative de sélection
         if (showDate.selectedCount >= showDate.artistsCount) {
-          throw Exception("Limite d’artistes atteinte");
+          throw Exception("Limite d'artistes atteinte");
         }
 
-        // Idempotence : déjà sélectionné → aucune action
         if (bookingSnapshot.exists) return;
 
         transaction.update(dateRef, {
@@ -83,7 +146,6 @@ class FirestoreBookingRepository implements BookingRepository {
           ).toFirestore(),
         );
       } else {
-        // Tentative de désélection
         if (!bookingSnapshot.exists) return;
 
         transaction.update(dateRef, {
@@ -95,7 +157,7 @@ class FirestoreBookingRepository implements BookingRepository {
     });
   }
 
-  /// Envoie les demandes de confirmation aux artistes sélectionnés.
+  /// @deprecated — legacy Firestore. En production : REST via [RestBookingRepository].
   @override
   Future<void> sendConfirmationRequests(String dateId) async {
     final bookingsRef = _firestore
@@ -123,7 +185,7 @@ class FirestoreBookingRepository implements BookingRepository {
     await batch.commit();
   }
 
-  /// Traite la réponse d’un artiste à une demande de confirmation.
+  /// @deprecated — legacy Firestore. En production : REST via [RestBookingRepository].
   @override
   Future<void> respondToRequest(
     String dateId,
@@ -142,7 +204,6 @@ class FirestoreBookingRepository implements BookingRepository {
 
       final booking = ArtistBooking.fromFirestore(bookingSnapshot, null);
 
-      // on ne traite que les demandes réellement en attente
       if (booking.status != BookingStatus.pendingConfirmation) {
         return;
       }
@@ -162,7 +223,6 @@ class FirestoreBookingRepository implements BookingRepository {
           'updatedAt': now,
         });
 
-        // Libération d’une place dans l’équipe
         transaction.update(dateRef, {
           'selectedCount': FieldValue.increment(-1),
         });

@@ -12,9 +12,15 @@ class AvailabilityMapper {
   /// Convertit une entrée JSON brute `{ "artistId": "...", "status": "AVAILABLE" }`
   /// vers le modèle domaine [Availability].
   static Availability fromJson(Map<String, dynamic> json) {
+    final rawArtist = json['artistId'];
+    final artistId = rawArtist == null
+        ? ''
+        : (rawArtist is String ? rawArtist : rawArtist.toString());
+    final rawStatus = json['status'];
+    final statusStr = rawStatus == null ? '' : rawStatus.toString();
     return Availability(
-      artistId: json['artistId'] as String,
-      status: fromApiStatus(json['status'] as String),
+      artistId: artistId,
+      status: fromApiStatus(statusStr),
     );
   }
 

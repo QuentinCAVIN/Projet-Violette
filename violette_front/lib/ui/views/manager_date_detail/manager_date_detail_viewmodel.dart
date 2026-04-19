@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:violette_front/app/app.locator.dart';
@@ -6,16 +5,16 @@ import 'package:violette_front/models/artist_booking.dart';
 import 'package:violette_front/models/availability.dart';
 import 'package:violette_front/models/enums/availability_status.dart';
 import 'package:violette_front/models/enums/booking_status.dart';
+import 'package:violette_front/models/enums/show_date_status.dart';
+import 'package:violette_front/models/manager_artist_line.dart';
 import 'package:violette_front/models/show_date.dart';
-import 'package:violette_front/models/violette_user.dart';
 import 'package:violette_front/repositories/availability_repository.dart';
 import 'package:violette_front/repositories/booking_repository.dart';
 import 'package:violette_front/repositories/show_date_repository.dart';
 import 'package:violette_front/repositories/user_repository.dart';
 
-/// ViewModel de l’écran "Détail d’une date" côté gérant.
+/// ViewModel de l'écran "Détail d'une date" côté gérant.
 class ManagerDateDetailViewModel extends BaseViewModel {
-  // Services injectés via le locator Stacked
   final _bookingRepository = locator<BookingRepository>();
   final _userRepository = locator<UserRepository>();
   final _availabilityRepository = locator<AvailabilityRepository>();
@@ -27,7 +26,8 @@ class ManagerDateDetailViewModel extends BaseViewModel {
 
   ManagerDateDetailViewModel({required this.showDate});
 
-  List<VioletteUser> availableArtists = [];
+  /// Lignes affichées : profil + identifiant artiste backend (aligné API booking).
+  List<ManagerArtistLine> artistLines = [];
 
   List<ArtistBooking> bookings = [];
   List<Availability> availabilities = [];
@@ -40,19 +40,10 @@ class ManagerDateDetailViewModel extends BaseViewModel {
   int get selectedCount =>
       currentShowDate?.selectedCount ?? showDate.selectedCount;
 
-  StreamSubscription<List<ArtistBooking>>? _bookingSubscription;
-
   bool get canSendConfirmation =>
       bookings.any((b) => b.status == BookingStatus.selected);
 
-  @override
-  void dispose() {
-    // Nettoyage des subscriptions pour éviter toute fuite mémoire.
-    _bookingSubscription?.cancel();
-    super.dispose();
-  }
-
-  /// Méthode d’initialisation appelée à l’ouverture de la vue.
+  /// Méthode d'initialisation appelée à l'ouverture de la vue.
   Future<void> initialize() async {
     setBusy(true);
 
@@ -60,7 +51,7 @@ class ManagerDateDetailViewModel extends BaseViewModel {
     if (dateId == null || dateId.isEmpty) {
       currentShowDate = showDate;
       availabilities = [];
-      availableArtists = [];
+      artistLines = [];
       bookings = [];
       setBusy(false);
       return;
@@ -68,16 +59,10 @@ class ManagerDateDetailViewModel extends BaseViewModel {
 
     currentShowDate = showDate;
 
-    _bookingSubscription =
-        _bookingRepository.watchBookingsForDate(dateId).listen((bookingsData) {
-      bookings = bookingsData;
-      rebuildUi();
-    });
-
     await refreshShowDateDetail();
-
     await _loadAvailabilities();
     await _loadAllArtists();
+    await _loadBookings(dateId);
 
     setBusy(false);
   }
@@ -114,6 +99,22 @@ class ManagerDateDetailViewModel extends BaseViewModel {
     }
   }
 
+  /// Charge les bookings depuis le backend (one-shot REST).
+  ///
+  /// Remplace la précédente subscription Firestore (`watchBookingsForDate`).
+  /// Appelé à l'initialisation et après chaque mutation réussie.
+  Future<void> _loadBookings(String dateId) async {
+    try {
+      bookings = await _bookingRepository.getBookingsForDate(dateId);
+    } catch (_) {
+      bookings = [];
+      _snackbarService.showSnackbar(
+        message: "Impossible de charger les réservations.",
+        duration: const Duration(seconds: 3),
+      );
+    }
+  }
+
   Future<void> _loadAvailabilities() async {
     final dateId = displayedShowDate.uid ?? showDate.uid;
     if (dateId == null || dateId.isEmpty) {
@@ -135,60 +136,106 @@ class ManagerDateDetailViewModel extends BaseViewModel {
   }
 
   Future<void> _loadAllArtists() async {
-    final artistIds = availabilities.map((availability) => availability.artistId);
+    artistLines = [];
 
-    availableArtists = [];
-
-    for (final id in artistIds) {
-      final user = await _userRepository.getUser(id);
+    for (final availability in availabilities) {
+      final user = await _userRepository.getUser(availability.artistId);
       if (user != null) {
-        availableArtists.add(user);
+        artistLines.add(
+          ManagerArtistLine(
+            user: user,
+            apiArtistId: availability.artistId,
+          ),
+        );
       }
     }
   }
 
+  /// Rafraîchit l'état de l'écran après une mutation booking REST.
+  ///
+  /// Recharge les bookings et le détail de la date (selectedCount) puis
+  /// reconstruit le widget.
+  Future<void> _refreshAfterAction() async {
+    final dateId = displayedShowDate.uid ?? showDate.uid;
+    if (dateId == null || dateId.isEmpty) return;
+
+    await Future.wait([
+      _loadBookings(dateId),
+      _loadShowDateDetail(dateId),
+    ]);
+    rebuildUi();
+  }
+
   /// Retourne le booking associé à un artiste pour cette date,
-  /// ou null s’il n’existe pas.
-  ArtistBooking? getBookingForArtist(String artistId) {
+  /// ou null s'il n'existe pas.
+  ///
+  /// [apiArtistId] est l'identifiant backend (disponibilités). Les documents
+  /// Firestore legacy peuvent encore référencer le `firebaseUid` : on teste
+  /// les deux lorsque la ligne est connue.
+  ArtistBooking? getBookingForArtist(String apiArtistId) {
+    String? firebaseUid;
+    for (final line in artistLines) {
+      if (line.apiArtistId == apiArtistId) {
+        firebaseUid = line.user.uid;
+        break;
+      }
+    }
     try {
-      return bookings.firstWhere((b) => b.artistId == artistId);
+      return bookings.firstWhere(
+        (b) =>
+            b.artistId == apiArtistId ||
+            (firebaseUid != null && b.artistId == firebaseUid),
+      );
     } catch (_) {
       return null;
     }
+  }
+
+  /// État visuel de la case à cocher (cohérent avec le statut de réservation).
+  ///
+  /// Refus : décochée. Sinon (sélectionné, en attente de réponse, confirmé) : cochée.
+  bool isBookingCheckboxChecked(ArtistBooking? booking) {
+    if (booking == null) return false;
+    return booking.status != BookingStatus.refused;
   }
 
   /// Détermine si la checkbox de sélection est activée pour un artiste donné.
   ///
   /// Règles métier :
   /// 1. Si un booking existe :
-  ///    - selectable uniquement si status == selected (pour permettre la désélection)
+  ///    - activée uniquement si status == selected (pour permettre la désélection)
   ///    - bloqué si pending / confirmed / refused
-  /// 2. Si aucun booking n’existe :
-  ///    - l’artiste doit être "available"
+  /// 2. Si aucun booking n'existe :
+  ///    - la date doit être en [ShowDateStatus.option] ou [ShowDateStatus.confirmed]
+  ///      (pas inquiry / staffed / cancelled / archived)
+  ///    - l'artiste doit être "available"
   ///    - le plafond artistsCount ne doit pas être atteint
   bool isSelectionEnabled(ShowDate currentShowDate, String artistId) {
     final booking = getBookingForArtist(artistId);
 
-    // Cas 1 : un booking existe déjà
     if (booking != null) {
-      // Autorise uniquement la désélection
       return booking.status == BookingStatus.selected;
     }
 
-    // Cas 2 : tentative de nouvelle sélection
+    if (!_allowsNewArtistSelectionForShowDateStatus(currentShowDate.status)) {
+      return false;
+    }
+
     final availability = getAvailabilityForArtist(artistId);
 
-    // Sélection autorisée uniquement pour les artistes disponibles
     if (availability != AvailabilityStatus.available) {
       return false;
     }
 
-    // Vérification du plafond
     if (currentShowDate.selectedCount >= currentShowDate.artistsCount) {
       return false;
     }
 
     return true;
+  }
+
+  static bool _allowsNewArtistSelectionForShowDateStatus(ShowDateStatus status) {
+    return status == ShowDateStatus.option || status == ShowDateStatus.confirmed;
   }
 
   AvailabilityStatus? getAvailabilityForArtist(String artistId) {
@@ -201,6 +248,8 @@ class ManagerDateDetailViewModel extends BaseViewModel {
   }
 
   /// Sélectionne ou désélectionne un artiste.
+  ///
+  /// Après la mutation REST, l'écran est rechargé via [_refreshAfterAction].
   Future<void> toggleSelection(String artistId, bool? value) async {
     if (value == null) return;
     final dateId = displayedShowDate.uid ?? showDate.uid;
@@ -218,6 +267,7 @@ class ManagerDateDetailViewModel extends BaseViewModel {
         artistId,
         value,
       );
+      await _refreshAfterAction();
     } catch (e) {
       _dialogService.showDialog(
         title: 'Erreur',
@@ -227,6 +277,8 @@ class ManagerDateDetailViewModel extends BaseViewModel {
   }
 
   /// Envoie les demandes de confirmation aux artistes sélectionnés.
+  ///
+  /// Après l'envoi REST, l'écran est rechargé via [_refreshAfterAction].
   Future<void> sendConfirmation() async {
     final dateId = displayedShowDate.uid ?? showDate.uid;
     if (dateId == null || dateId.isEmpty) {
@@ -239,6 +291,7 @@ class ManagerDateDetailViewModel extends BaseViewModel {
 
     try {
       await _bookingRepository.sendConfirmationRequests(dateId);
+      await _refreshAfterAction();
 
       _snackbarService.showSnackbar(
         message: "Demandes envoyées !",
