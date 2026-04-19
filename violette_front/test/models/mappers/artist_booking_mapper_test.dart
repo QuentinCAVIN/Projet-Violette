@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:violette_front/models/enums/booking_status.dart';
 import 'package:violette_front/models/mappers/artist_booking_mapper.dart';
 
 void main() {
@@ -152,6 +153,106 @@ void main() {
         final list = ArtistBookingMapper.parseBookingList(data);
         expect(list.length, 1);
         expect(list.first['id'], 1);
+      });
+    });
+
+    group('toArtistBooking', () {
+      test('convertit un item SELECTED en ArtistBooking', () {
+        final json = <String, dynamic>{
+          'id': 42,
+          'artistId': 5,
+          'showDateId': 7,
+          'status': 'SELECTED',
+        };
+        final booking = ArtistBookingMapper.toArtistBooking(json);
+        expect(booking, isNotNull);
+        expect(booking!.artistId, '5');
+        expect(booking.dateId, '7');
+        expect(booking.status, BookingStatus.selected);
+      });
+
+      test('convertit PENDING_CONFIRMATION correctement', () {
+        final json = <String, dynamic>{
+          'id': 1,
+          'artistId': 3,
+          'showDateId': 2,
+          'status': 'PENDING_CONFIRMATION',
+        };
+        final booking = ArtistBookingMapper.toArtistBooking(json);
+        expect(booking!.status, BookingStatus.pendingConfirmation);
+      });
+
+      test('convertit CONFIRMED correctement', () {
+        final json = <String, dynamic>{
+          'id': 1,
+          'artistId': 3,
+          'showDateId': 2,
+          'status': 'CONFIRMED',
+        };
+        expect(
+          ArtistBookingMapper.toArtistBooking(json)!.status,
+          BookingStatus.confirmed,
+        );
+      });
+
+      test('convertit REFUSED correctement', () {
+        final json = <String, dynamic>{
+          'id': 1,
+          'artistId': 3,
+          'showDateId': 2,
+          'status': 'REFUSED',
+        };
+        expect(
+          ArtistBookingMapper.toArtistBooking(json)!.status,
+          BookingStatus.refused,
+        );
+      });
+
+      test('retourne null si le statut est absent', () {
+        final json = <String, dynamic>{
+          'id': 1,
+          'artistId': 3,
+          'showDateId': 2,
+        };
+        expect(ArtistBookingMapper.toArtistBooking(json), isNull);
+      });
+
+      test('retourne null si le statut est inconnu', () {
+        final json = <String, dynamic>{
+          'id': 1,
+          'artistId': 3,
+          'showDateId': 2,
+          'status': 'UNKNOWN_STATUS',
+        };
+        expect(ArtistBookingMapper.toArtistBooking(json), isNull);
+      });
+
+      test('accepte artistId en String JSON', () {
+        final json = <String, dynamic>{
+          'id': 1,
+          'artistId': '9',
+          'showDateId': 4,
+          'status': 'SELECTED',
+        };
+        final booking = ArtistBookingMapper.toArtistBooking(json);
+        expect(booking!.artistId, '9');
+      });
+    });
+
+    group('toArtistBookingList', () {
+      test('convertit une liste en ignorant les entrées sans statut valide', () {
+        final items = <Map<String, dynamic>>[
+          {'id': 1, 'artistId': 1, 'showDateId': 7, 'status': 'SELECTED'},
+          {'id': 2, 'artistId': 2, 'showDateId': 7},
+          {'id': 3, 'artistId': 3, 'showDateId': 7, 'status': 'CONFIRMED'},
+        ];
+        final list = ArtistBookingMapper.toArtistBookingList(items);
+        expect(list.length, 2);
+        expect(list.map((b) => b.artistId), containsAll(['1', '3']));
+      });
+
+      test('retourne une liste vide pour une entrée vide', () {
+        expect(ArtistBookingMapper.toArtistBookingList([]), isEmpty);
       });
     });
   });

@@ -27,6 +27,10 @@ class RestBookingRepository implements BookingRepository {
       _legacy.watchPendingRequestsForArtist(artistId);
 
   @override
+  Future<List<ArtistBooking>> getBookingsForDate(String dateId) =>
+      _remote.getBookingsForDate(dateId);
+
+  @override
   Future<void> toggleSelection(
     String dateId,
     String artistId,

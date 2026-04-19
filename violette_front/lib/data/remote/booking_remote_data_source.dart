@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 
 import 'package:violette_front/core/network/dio_client.dart';
+import 'package:violette_front/models/artist_booking.dart';
 import 'package:violette_front/models/mappers/artist_booking_mapper.dart';
 
 /// Source de données distante pour le domaine réservations artistes (REST).
@@ -122,6 +123,24 @@ class BookingRemoteDataSource {
     try {
       await _dio.delete<void>('/api/artist-bookings/$bookingId');
     } on DioException catch (e) {
+      throw Exception(_messageFromDio(e));
+    }
+  }
+
+  /// Retourne la liste des bookings actifs pour la date [showDateId] (rôle MANAGER).
+  ///
+  /// `GET /api/artist-bookings/show-dates/{showDateId}`
+  ///
+  /// Retourne une liste vide si la date n'a aucun booking ou si le serveur
+  /// répond 404 (date inconnue côté backend).
+  Future<List<ArtistBooking>> getBookingsForDate(String showDateId) async {
+    try {
+      final response =
+          await _dio.get('/api/artist-bookings/show-dates/$showDateId');
+      final items = ArtistBookingMapper.parseBookingList(response.data);
+      return ArtistBookingMapper.toArtistBookingList(items);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) return [];
       throw Exception(_messageFromDio(e));
     }
   }

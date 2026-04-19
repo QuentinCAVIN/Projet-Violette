@@ -49,8 +49,8 @@ void main() {
           selectedCount: 1,
         );
 
-        when(() => bookingRepository.watchBookingsForDate('date-1'))
-            .thenAnswer((_) => Stream.value([]));
+        when(() => bookingRepository.getBookingsForDate('date-1'))
+            .thenAnswer((_) async => []);
         when(() => showDateRepository.getShowDateById('date-1'))
             .thenAnswer((_) async => restShowDate);
         when(() => availabilityRepository.getAvailabilitiesForDate('date-1'))
@@ -63,6 +63,7 @@ void main() {
         expect(viewModel.currentShowDate?.title, 'Date REST');
         expect(viewModel.currentShowDate?.selectedCount, 1);
         verify(() => showDateRepository.getShowDateById('date-1')).called(1);
+        verify(() => bookingRepository.getBookingsForDate('date-1')).called(1);
       });
 
       test('devrait ignorer le chargement distant si uid est null', () async {
@@ -86,7 +87,7 @@ void main() {
 
         expect(viewModel.currentShowDate?.title, 'Date sans id');
         verifyNever(() => showDateRepository.getShowDateById(any()));
-        verifyNever(() => bookingRepository.watchBookingsForDate(any()));
+        verifyNever(() => bookingRepository.getBookingsForDate(any()));
       });
 
       test(
@@ -110,8 +111,8 @@ void main() {
           fee: 100,
         );
 
-        when(() => bookingRepository.watchBookingsForDate('date-1'))
-            .thenAnswer((_) => Stream.value([]));
+        when(() => bookingRepository.getBookingsForDate('date-1'))
+            .thenAnswer((_) async => []);
         when(() => showDateRepository.getShowDateById('date-1'))
             .thenAnswer((_) async => null);
         when(() => availabilityRepository.getAvailabilitiesForDate('date-1'))
@@ -123,6 +124,46 @@ void main() {
 
         expect(viewModel.displayedShowDate.title, 'Date initiale');
         verify(() => showDateRepository.getShowDateById('date-1')).called(1);
+      });
+
+      test("devrait charger les bookings REST à l'initialisation", () async {
+        final showDateRepository =
+            locator<ShowDateRepository>() as MockShowDateRepository;
+        final bookingRepository =
+            locator<BookingRepository>() as MockBookingRepository;
+        final availabilityRepository =
+            locator<AvailabilityRepository>() as MockAvailabilityRepository;
+
+        final showDate = ShowDate(
+          uid: 'date-1',
+          title: 'Test',
+          date: DateTime(2026, 1, 1),
+          startMinutes: 540,
+          endMinutes: 600,
+          address: 'Adresse',
+          artistsCount: 2,
+          fee: 0,
+        );
+
+        final existingBooking = ArtistBooking(
+          artistId: '5',
+          dateId: 'date-1',
+          status: BookingStatus.selected,
+        );
+
+        when(() => bookingRepository.getBookingsForDate('date-1'))
+            .thenAnswer((_) async => [existingBooking]);
+        when(() => showDateRepository.getShowDateById('date-1'))
+            .thenAnswer((_) async => showDate);
+        when(() => availabilityRepository.getAvailabilitiesForDate('date-1'))
+            .thenAnswer((_) async => []);
+
+        final viewModel = ManagerDateDetailViewModel(showDate: showDate);
+        await viewModel.initialize();
+
+        expect(viewModel.bookings.length, 1);
+        expect(viewModel.bookings.first.artistId, '5');
+        expect(viewModel.canSendConfirmation, isTrue);
       });
     });
 
@@ -158,8 +199,8 @@ void main() {
           selectedCount: 1,
         );
 
-        when(() => bookingRepository.watchBookingsForDate('date-1'))
-            .thenAnswer((_) => Stream.value([]));
+        when(() => bookingRepository.getBookingsForDate('date-1'))
+            .thenAnswer((_) async => []);
         when(() => availabilityRepository.getAvailabilitiesForDate('date-1'))
             .thenAnswer((_) async => []);
         when(() => showDateRepository.getShowDateById('date-1'))
@@ -182,7 +223,6 @@ void main() {
       test(
           'toggleSelection_whenDateIdIsNull_doesNotCallRepository',
           () async {
-        // Identifiant absent : la garde doit bloquer l'appel au repository de réservation.
         final bookingRepository =
             locator<BookingRepository>() as MockBookingRepository;
 
@@ -204,13 +244,63 @@ void main() {
         verifyNever(
             () => bookingRepository.toggleSelection(any(), any(), any()));
       });
+
+      test(
+          'toggleSelection_afterSuccess_rechargeBookingsEtShowDate',
+          () async {
+        final bookingRepository =
+            locator<BookingRepository>() as MockBookingRepository;
+        final showDateRepository =
+            locator<ShowDateRepository>() as MockShowDateRepository;
+        final availabilityRepository =
+            locator<AvailabilityRepository>() as MockAvailabilityRepository;
+
+        final showDate = ShowDate(
+          uid: '7',
+          title: 'Test',
+          date: DateTime(2026, 1, 1),
+          startMinutes: 540,
+          endMinutes: 600,
+          address: 'Adresse',
+          artistsCount: 2,
+          fee: 0,
+        );
+
+        final bookingApresSelection = ArtistBooking(
+          artistId: '5',
+          dateId: '7',
+          status: BookingStatus.selected,
+        );
+
+        when(() => bookingRepository.getBookingsForDate('7'))
+            .thenAnswer((_) async => []);
+        when(() => showDateRepository.getShowDateById('7'))
+            .thenAnswer((_) async => showDate);
+        when(() => availabilityRepository.getAvailabilitiesForDate('7'))
+            .thenAnswer((_) async => []);
+
+        final viewModel = ManagerDateDetailViewModel(showDate: showDate);
+        await viewModel.initialize();
+
+        when(() => bookingRepository.toggleSelection('7', '5', true))
+            .thenAnswer((_) async {});
+        when(() => bookingRepository.getBookingsForDate('7'))
+            .thenAnswer((_) async => [bookingApresSelection]);
+
+        await viewModel.toggleSelection('5', true);
+
+        expect(viewModel.bookings.length, 1);
+        expect(viewModel.bookings.first.status, BookingStatus.selected);
+        verify(() => bookingRepository.toggleSelection('7', '5', true))
+            .called(1);
+        verify(() => showDateRepository.getShowDateById('7')).called(2);
+      });
     });
 
     group('sendConfirmation -', () {
       test(
           'sendConfirmation_whenDateIdIsNull_doesNotCallRepository',
           () async {
-        // Identifiant absent : la garde doit bloquer l'envoi des demandes de confirmation.
         final bookingRepository =
             locator<BookingRepository>() as MockBookingRepository;
 
@@ -230,6 +320,63 @@ void main() {
         await viewModel.sendConfirmation();
 
         verifyNever(() => bookingRepository.sendConfirmationRequests(any()));
+      });
+
+      test(
+          'sendConfirmation_afterSuccess_rechargeBookingsEtShowDate',
+          () async {
+        final bookingRepository =
+            locator<BookingRepository>() as MockBookingRepository;
+        final showDateRepository =
+            locator<ShowDateRepository>() as MockShowDateRepository;
+        final availabilityRepository =
+            locator<AvailabilityRepository>() as MockAvailabilityRepository;
+
+        final showDate = ShowDate(
+          uid: '7',
+          title: 'Test',
+          date: DateTime(2026, 1, 1),
+          startMinutes: 540,
+          endMinutes: 600,
+          address: 'Adresse',
+          artistsCount: 2,
+          fee: 0,
+        );
+
+        final bookingApresEnvoi = ArtistBooking(
+          artistId: '5',
+          dateId: '7',
+          status: BookingStatus.pendingConfirmation,
+        );
+
+        when(() => bookingRepository.getBookingsForDate('7'))
+            .thenAnswer((_) async => [
+                  ArtistBooking(
+                    artistId: '5',
+                    dateId: '7',
+                    status: BookingStatus.selected,
+                  ),
+                ]);
+        when(() => showDateRepository.getShowDateById('7'))
+            .thenAnswer((_) async => showDate);
+        when(() => availabilityRepository.getAvailabilitiesForDate('7'))
+            .thenAnswer((_) async => []);
+
+        final viewModel = ManagerDateDetailViewModel(showDate: showDate);
+        await viewModel.initialize();
+
+        when(() => bookingRepository.sendConfirmationRequests('7'))
+            .thenAnswer((_) async {});
+        when(() => bookingRepository.getBookingsForDate('7'))
+            .thenAnswer((_) async => [bookingApresEnvoi]);
+
+        await viewModel.sendConfirmation();
+
+        expect(viewModel.bookings.length, 1);
+        expect(
+            viewModel.bookings.first.status, BookingStatus.pendingConfirmation);
+        verify(() => bookingRepository.sendConfirmationRequests('7')).called(1);
+        verify(() => showDateRepository.getShowDateById('7')).called(2);
       });
     });
 
@@ -306,7 +453,7 @@ void main() {
       });
 
       test(
-          'devrait refuser la sélection si l’artiste n’est pas available',
+          "devrait refuser la sélection si l'artiste n'est pas available",
           () {
         final currentShowDate = ShowDate(
           uid: 'date-1',

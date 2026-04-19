@@ -1,10 +1,16 @@
 import 'package:violette_front/models/artist_booking.dart';
 
 abstract class BookingRepository {
+  /// Stream Firestore — utilisé uniquement là où le temps réel est indispensable.
+  /// L'écran manager détail n'écoute plus ce stream depuis la migration REST.
   Stream<List<ArtistBooking>> watchBookingsForDate(String dateId);
   Stream<List<ArtistBooking>> watchPendingRequestsForArtist(String artistId);
 
-  /// Présélection / désélection d’un artiste (gérant).
+  /// Charge la liste des bookings pour une date (one-shot REST).
+  /// Implémentation : `GET /api/artist-bookings/show-dates/{dateId}`.
+  Future<List<ArtistBooking>> getBookingsForDate(String dateId);
+
+  /// Présélection / désélection d'un artiste (gérant).
   /// Implémentation : REST (`POST /api/artist-bookings`, `DELETE ...`).
   Future<void> toggleSelection(String dateId, String artistId, bool select);
 
@@ -12,7 +18,7 @@ abstract class BookingRepository {
   /// Implémentation : REST (`POST .../send-confirmations`).
   Future<void> sendConfirmationRequests(String dateId);
 
-  /// Réponse de l’artiste à une demande de confirmation (accepter / refuser).
+  /// Réponse de l'artiste à une demande de confirmation (accepter / refuser).
   /// Implémentation : REST (`PATCH /api/artist-bookings/{id}/respond`).
   Future<void> respondToRequest(String dateId, String artistId, bool accept);
 }

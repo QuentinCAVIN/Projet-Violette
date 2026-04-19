@@ -40,6 +40,22 @@ class FirestoreBookingRepository implements BookingRepository {
     });
   }
 
+  /// One-shot Firestore : charge la liste des bookings pour une date.
+  ///
+  /// Utilisé en fallback si le repository REST n'est pas disponible.
+  /// Dans `RestBookingRepository`, cette méthode est surchargée par REST.
+  @override
+  Future<List<ArtistBooking>> getBookingsForDate(String dateId) async {
+    final snapshot = await _firestore
+        .collection('showDates')
+        .doc(dateId)
+        .collection('artistBookings')
+        .get();
+    return snapshot.docs
+        .map((doc) => ArtistBooking.fromFirestore(doc, null))
+        .toList();
+  }
+
   /// Sélectionne ou désélectionne un artiste pour une date.
   @override
   Future<void> toggleSelection(

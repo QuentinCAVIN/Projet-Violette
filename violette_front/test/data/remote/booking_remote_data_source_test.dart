@@ -404,4 +404,109 @@ void main() {
       },
     );
   });
+
+  group('BookingRemoteDataSource.getBookingsForDate', () {
+    test(
+      'retourne la liste des ArtistBooking pour une date',
+      () async {
+        final dio = Dio(BaseOptions(baseUrl: 'http://test'));
+        dio.interceptors.add(
+          InterceptorsWrapper(
+            onRequest: (options, handler) {
+              expect(
+                options.path,
+                '/api/artist-bookings/show-dates/7',
+              );
+              expect(options.method, 'GET');
+              return handler.resolve(
+                Response(
+                  requestOptions: options,
+                  statusCode: 200,
+                  data: <Map<String, dynamic>>[
+                    {
+                      'id': 1,
+                      'artistId': 5,
+                      'showDateId': 7,
+                      'status': 'SELECTED',
+                    },
+                    {
+                      'id': 2,
+                      'artistId': 8,
+                      'showDateId': 7,
+                      'status': 'PENDING_CONFIRMATION',
+                    },
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+
+        final ds = BookingRemoteDataSource(dio: dio);
+        final bookings = await ds.getBookingsForDate('7');
+
+        expect(bookings.length, 2);
+        expect(bookings[0].artistId, '5');
+        expect(bookings[1].artistId, '8');
+      },
+    );
+
+    test(
+      'retourne une liste vide si le serveur répond 404',
+      () async {
+        final dio = Dio(BaseOptions(baseUrl: 'http://test'));
+        dio.interceptors.add(
+          InterceptorsWrapper(
+            onRequest: (options, handler) {
+              return handler.reject(
+                DioException(
+                  requestOptions: options,
+                  response: Response(
+                    requestOptions: options,
+                    statusCode: 404,
+                  ),
+                  type: DioExceptionType.badResponse,
+                ),
+              );
+            },
+          ),
+        );
+
+        final ds = BookingRemoteDataSource(dio: dio);
+        final bookings = await ds.getBookingsForDate('999');
+
+        expect(bookings, isEmpty);
+      },
+    );
+
+    test(
+      'lève une exception pour une erreur serveur autre que 404',
+      () async {
+        final dio = Dio(BaseOptions(baseUrl: 'http://test'));
+        dio.interceptors.add(
+          InterceptorsWrapper(
+            onRequest: (options, handler) {
+              return handler.reject(
+                DioException(
+                  requestOptions: options,
+                  response: Response(
+                    requestOptions: options,
+                    statusCode: 500,
+                    data: 'Internal Server Error',
+                  ),
+                  type: DioExceptionType.badResponse,
+                ),
+              );
+            },
+          ),
+        );
+
+        final ds = BookingRemoteDataSource(dio: dio);
+        expect(
+          () => ds.getBookingsForDate('7'),
+          throwsA(isA<Exception>()),
+        );
+      },
+    );
+  });
 }
