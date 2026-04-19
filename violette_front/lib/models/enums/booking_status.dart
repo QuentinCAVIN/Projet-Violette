@@ -1,15 +1,23 @@
 import 'package:flutter/material.dart';
 
+/// Statut d’une réservation artiste (cycle de vie aligné sur le backend).
 enum BookingStatus {
+  /// Présélection par le gérant, sans engagement ferme pour l’artiste.
   selected,
+
+  /// Demande envoyée à l’artiste, en attente de réponse.
   pendingConfirmation,
+
+  /// Demande acceptée par l’artiste, engagement confirmé.
   confirmed,
+
+  /// Demande refusée par l’artiste.
   refused;
 
   String get displayName {
     switch (this) {
       case BookingStatus.selected:
-        return 'Sélectionné';
+        return 'Présélectionné';
       case BookingStatus.pendingConfirmation:
         return 'En attente';
       case BookingStatus.confirmed:
