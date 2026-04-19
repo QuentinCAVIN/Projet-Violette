@@ -6,6 +6,7 @@ import 'package:violette_front/models/artist_booking.dart';
 import 'package:violette_front/models/availability.dart';
 import 'package:violette_front/models/enums/availability_status.dart';
 import 'package:violette_front/models/enums/booking_status.dart';
+import 'package:violette_front/models/enums/show_date_status.dart';
 import 'package:violette_front/models/show_date.dart';
 import 'package:violette_front/models/violette_user.dart';
 import 'package:violette_front/repositories/availability_repository.dart';
@@ -157,13 +158,23 @@ class ManagerDateDetailViewModel extends BaseViewModel {
     }
   }
 
+  /// État visuel de la case à cocher (cohérent avec le statut de réservation).
+  ///
+  /// Refus : décochée. Sinon (sélectionné, en attente de réponse, confirmé) : cochée.
+  bool isBookingCheckboxChecked(ArtistBooking? booking) {
+    if (booking == null) return false;
+    return booking.status != BookingStatus.refused;
+  }
+
   /// Détermine si la checkbox de sélection est activée pour un artiste donné.
   ///
   /// Règles métier :
   /// 1. Si un booking existe :
-  ///    - selectable uniquement si status == selected (pour permettre la désélection)
+  ///    - activée uniquement si status == selected (pour permettre la désélection)
   ///    - bloqué si pending / confirmed / refused
   /// 2. Si aucun booking n’existe :
+  ///    - la date doit être en [ShowDateStatus.option] ou [ShowDateStatus.confirmed]
+  ///      (pas inquiry / staffed / cancelled / archived)
   ///    - l’artiste doit être "available"
   ///    - le plafond artistsCount ne doit pas être atteint
   bool isSelectionEnabled(ShowDate currentShowDate, String artistId) {
@@ -175,7 +186,11 @@ class ManagerDateDetailViewModel extends BaseViewModel {
       return booking.status == BookingStatus.selected;
     }
 
-    // Cas 2 : tentative de nouvelle sélection
+    // Cas 2 : tentative de nouvelle sélection — garde sur le cycle de vie de la date
+    if (!_allowsNewArtistSelectionForShowDateStatus(currentShowDate.status)) {
+      return false;
+    }
+
     final availability = getAvailabilityForArtist(artistId);
 
     // Sélection autorisée uniquement pour les artistes disponibles
@@ -189,6 +204,12 @@ class ManagerDateDetailViewModel extends BaseViewModel {
     }
 
     return true;
+  }
+
+  /// Nouvelle présélection / réservation : uniquement tant que la date est ouverte
+  /// côté commercial (option ou confirmée client).
+  static bool _allowsNewArtistSelectionForShowDateStatus(ShowDateStatus status) {
+    return status == ShowDateStatus.option || status == ShowDateStatus.confirmed;
   }
 
   AvailabilityStatus? getAvailabilityForArtist(String artistId) {

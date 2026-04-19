@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
-import 'package:violette_front/models/enums/booking_status.dart';
 import 'package:violette_front/ui/views/manager_date_detail/widgets/booking_status_pill.dart';
 import 'package:violette_front/ui/views/manager_date_detail/manager_date_detail_viewmodel.dart';
 import 'package:violette_front/ui/widgets/common/availability_status_pill.dart';
@@ -27,8 +26,6 @@ class ManagerDateDetailBody extends ViewModelWidget<ManagerDateDetailViewModel> 
 
         final booking = viewModel.getBookingForArtist(artist.uid);
 
-        final isSelected = booking?.status == BookingStatus.selected;
-
         final isEnabled =
             viewModel.isSelectionEnabled(currentShowDate, artist.uid);
 
@@ -45,7 +42,7 @@ class ManagerDateDetailBody extends ViewModelWidget<ManagerDateDetailViewModel> 
               width: 24,
               height: 24,
               child: Checkbox(
-                value: isSelected || booking != null,
+                value: viewModel.isBookingCheckboxChecked(booking),
                 onChanged: isEnabled
                     ? (val) => viewModel.toggleSelection(
                           artist.uid,

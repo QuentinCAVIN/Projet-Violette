@@ -5,6 +5,7 @@ import 'package:violette_front/models/artist_booking.dart';
 import 'package:violette_front/models/availability.dart';
 import 'package:violette_front/models/enums/availability_status.dart';
 import 'package:violette_front/models/enums/booking_status.dart';
+import 'package:violette_front/models/enums/show_date_status.dart';
 import 'package:violette_front/models/show_date.dart';
 import 'package:violette_front/repositories/availability_repository.dart';
 import 'package:violette_front/repositories/booking_repository.dart';
@@ -245,6 +246,7 @@ void main() {
           address: 'Adresse test',
           artistsCount: 2,
           fee: 100,
+          status: ShowDateStatus.inquiry,
         );
 
         final viewModel = ManagerDateDetailViewModel(showDate: showDate);
@@ -315,6 +317,7 @@ void main() {
           address: 'Adresse test',
           artistsCount: 2,
           fee: 100,
+          status: ShowDateStatus.option,
         );
 
         final viewModel = ManagerDateDetailViewModel(showDate: currentShowDate);
@@ -345,6 +348,7 @@ void main() {
           artistsCount: 2,
           fee: 100,
           selectedCount: 2,
+          status: ShowDateStatus.option,
         );
 
         final viewModel = ManagerDateDetailViewModel(showDate: currentShowDate);
@@ -360,6 +364,175 @@ void main() {
             viewModel.isSelectionEnabled(currentShowDate, 'artist1');
 
         expect(canSelect, isFalse);
+      });
+
+      test(
+        'devrait refuser une nouvelle sélection si le statut de date est inquiry',
+        () {
+          final currentShowDate = ShowDate(
+            uid: 'date-1',
+            title: 'Test',
+            date: DateTime(2026, 1, 1),
+            startMinutes: 540,
+            endMinutes: 600,
+            address: 'Adresse test',
+            artistsCount: 2,
+            fee: 100,
+            selectedCount: 0,
+            status: ShowDateStatus.inquiry,
+          );
+
+          final viewModel =
+              ManagerDateDetailViewModel(showDate: currentShowDate);
+          viewModel.availabilities = [
+            Availability(
+              artistId: 'artist1',
+              status: AvailabilityStatus.available,
+            ),
+          ];
+          viewModel.bookings = [];
+
+          expect(
+            viewModel.isSelectionEnabled(currentShowDate, 'artist1'),
+            isFalse,
+          );
+        },
+      );
+
+      test(
+        'devrait refuser une nouvelle sélection pour staffed, cancelled ou archived',
+        () {
+          for (final status in [
+            ShowDateStatus.staffed,
+            ShowDateStatus.cancelled,
+            ShowDateStatus.archived,
+          ]) {
+            final currentShowDate = ShowDate(
+              uid: 'date-1',
+              title: 'Test',
+              date: DateTime(2026, 1, 1),
+              startMinutes: 540,
+              endMinutes: 600,
+              address: 'Adresse test',
+              artistsCount: 2,
+              fee: 100,
+              selectedCount: 0,
+              status: status,
+            );
+
+            final viewModel =
+                ManagerDateDetailViewModel(showDate: currentShowDate);
+            viewModel.availabilities = [
+              Availability(
+                artistId: 'artist1',
+                status: AvailabilityStatus.available,
+              ),
+            ];
+            viewModel.bookings = [];
+
+            expect(
+              viewModel.isSelectionEnabled(currentShowDate, 'artist1'),
+              isFalse,
+              reason: 'statut ${status.name}',
+            );
+          }
+        },
+      );
+
+      test(
+        'devrait autoriser une nouvelle sélection en option ou confirmée si dispo et plafond OK',
+        () {
+          for (final status in [
+            ShowDateStatus.option,
+            ShowDateStatus.confirmed,
+          ]) {
+            final currentShowDate = ShowDate(
+              uid: 'date-1',
+              title: 'Test',
+              date: DateTime(2026, 1, 1),
+              startMinutes: 540,
+              endMinutes: 600,
+              address: 'Adresse test',
+              artistsCount: 2,
+              fee: 100,
+              selectedCount: 0,
+              status: status,
+            );
+
+            final viewModel =
+                ManagerDateDetailViewModel(showDate: currentShowDate);
+            viewModel.availabilities = [
+              Availability(
+                artistId: 'artist1',
+                status: AvailabilityStatus.available,
+              ),
+            ];
+            viewModel.bookings = [];
+
+            expect(
+              viewModel.isSelectionEnabled(currentShowDate, 'artist1'),
+              isTrue,
+              reason: 'statut ${status.name}',
+            );
+          }
+        },
+      );
+    });
+
+    group('isBookingCheckboxChecked -', () {
+      test('retourne false sans booking ou si refused', () {
+        final viewModel = ManagerDateDetailViewModel(
+          showDate: ShowDate(
+            uid: 'date-1',
+            title: 'Test',
+            date: DateTime(2026, 1, 1),
+            startMinutes: 540,
+            endMinutes: 600,
+            address: 'Adresse test',
+            artistsCount: 2,
+            fee: 100,
+          ),
+        );
+
+        expect(viewModel.isBookingCheckboxChecked(null), isFalse);
+        expect(
+          viewModel.isBookingCheckboxChecked(
+            ArtistBooking(
+              artistId: 'a',
+              status: BookingStatus.refused,
+            ),
+          ),
+          isFalse,
+        );
+      });
+
+      test('retourne true pour selected, pendingConfirmation ou confirmed', () {
+        final viewModel = ManagerDateDetailViewModel(
+          showDate: ShowDate(
+            uid: 'date-1',
+            title: 'Test',
+            date: DateTime(2026, 1, 1),
+            startMinutes: 540,
+            endMinutes: 600,
+            address: 'Adresse test',
+            artistsCount: 2,
+            fee: 100,
+          ),
+        );
+
+        for (final status in [
+          BookingStatus.selected,
+          BookingStatus.pendingConfirmation,
+          BookingStatus.confirmed,
+        ]) {
+          expect(
+            viewModel.isBookingCheckboxChecked(
+              ArtistBooking(artistId: 'a', status: status),
+            ),
+            isTrue,
+            reason: status.name,
+          );
+        }
       });
     });
   });
