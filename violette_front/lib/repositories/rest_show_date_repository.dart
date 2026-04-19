@@ -50,21 +50,71 @@ class RestShowDateRepository implements ShowDateRepository {
     }
   }
 
+  /// Crée une date de spectacle via REST, avec fallback Firestore.
+  ///
+  /// ## Stratégie transitoire
+  ///
+  /// Le backend requiert un `companyId` que le frontend ne connaît pas
+  /// directement (pas d'endpoint "ma compagnie" côté REST).
+  /// On résout le `companyId` depuis la liste des dates existantes.
+  ///
+  /// Fallbacks Firestore déclenchés :
+  /// - si `resolveFirstCompanyId()` retourne null (aucune date existante)
+  /// - si la requête REST échoue (erreur réseau, 4xx, 5xx)
+  ///
+  /// TODO : supprimer le fallback Firestore dès qu'un endpoint
+  /// `GET /api/users/me/company` (ou équivalent) existe côté backend.
   @override
-  Future<void> addShowDate(ShowDate showDate) {
-    return _legacyRepository.addShowDate(showDate);
+  Future<void> addShowDate(ShowDate showDate) async {
+    String? companyId;
+    try {
+      companyId = await _remoteDataSource.resolveFirstCompanyId();
+    } catch (_) {
+      companyId = null;
+    }
+
+    if (companyId == null) {
+      // Fallback Firestore : companyId non résolvable (pas encore de dates REST).
+      return _legacyRepository.addShowDate(showDate);
+    }
+
+    try {
+      await _remoteDataSource.createShowDate(
+        companyId: companyId,
+        eventDate: showDate.date,
+        meetingTimeMinutes: showDate.startMinutes,
+        location: showDate.address,
+        clientContactName: showDate.clientContactName?.trim().isNotEmpty == true
+            ? showDate.clientContactName!
+            : 'À compléter',
+        clientContactPhone:
+            showDate.clientContactPhone?.trim().isNotEmpty == true
+                ? showDate.clientContactPhone!
+                : '0000000000',
+        showDetails: showDate.description,
+      );
+    } on DioException {
+      // Fallback défensif : toute erreur HTTP bascule sur Firestore.
+      return _legacyRepository.addShowDate(showDate);
+    }
   }
 
+  /// @deprecated : endpoint `DELETE /api/show-dates/{id}` absent du backend.
+  /// Délègue au repository Firestore legacy jusqu'à implémentation backend.
   @override
   Future<void> deleteShowDate(String uid) {
     return _legacyRepository.deleteShowDate(uid);
   }
 
+  /// @deprecated : endpoint `PUT /api/show-dates/{id}` absent du backend.
+  /// Délègue au repository Firestore legacy jusqu'à implémentation backend.
   @override
   Future<void> updateAllShowDates(List<ShowDate> updatedList) {
     return _legacyRepository.updateAllShowDates(updatedList);
   }
 
+  /// @deprecated : endpoint `PUT /api/show-dates/{id}` absent du backend.
+  /// Délègue au repository Firestore legacy jusqu'à implémentation backend.
   @override
   Future<void> updateShowDate(ShowDate updated) {
     return _legacyRepository.updateShowDate(updated);

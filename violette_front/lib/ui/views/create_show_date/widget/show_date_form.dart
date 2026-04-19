@@ -106,13 +106,38 @@ class ShowDateForm extends ViewModelWidget<CreateShowDateViewModel> {
         ),
         const SizedBox(height: 16),
 
-        // Adresse
+        // Adresse / lieu
         TextFormField(
           controller: addressController,
           decoration: InputDecoration(
-            labelText: 'Adresse',
+            labelText: 'Adresse / lieu',
             errorText: viewModel.addressValidationMessage,
           ),
+          textInputAction: TextInputAction.next,
+        ),
+        const SizedBox(height: 16),
+
+        // Contact client — nom
+        TextFormField(
+          controller: viewModel.clientContactNameController,
+          decoration: InputDecoration(
+            labelText: 'Nom du contact client',
+            hintText: 'Ex : Marie Dupont',
+            errorText: viewModel.clientContactNameError,
+          ),
+          textInputAction: TextInputAction.next,
+        ),
+        const SizedBox(height: 16),
+
+        // Contact client — téléphone
+        TextFormField(
+          controller: viewModel.clientContactPhoneController,
+          decoration: InputDecoration(
+            labelText: 'Téléphone du contact client',
+            hintText: 'Ex : 06 01 02 03 04',
+            errorText: viewModel.clientContactPhoneError,
+          ),
+          keyboardType: TextInputType.phone,
           textInputAction: TextInputAction.next,
         ),
         const SizedBox(height: 16),

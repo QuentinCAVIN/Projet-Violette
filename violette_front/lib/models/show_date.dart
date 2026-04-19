@@ -15,6 +15,14 @@ class ShowDate {
   final ShowDateStatus status;
   final int selectedCount;
 
+  /// Nom du contact client — requis par le backend REST pour la création.
+  /// Absent du modèle Firestore legacy (null si chargé via Firestore).
+  final String? clientContactName;
+
+  /// Téléphone du contact client — requis par le backend REST pour la création.
+  /// Absent du modèle Firestore legacy (null si chargé via Firestore).
+  final String? clientContactPhone;
+
   ShowDate({
     this.uid,
     required this.title,
@@ -25,8 +33,10 @@ class ShowDate {
     required this.artistsCount,
     required this.fee,
     this.description,
-    this.status = ShowDateStatus.option, // Par défaut une date nouvellement créée
+    this.status = ShowDateStatus.inquiry, // Par défaut une date nouvellement créée
     this.selectedCount = 0,
+    this.clientContactName,
+    this.clientContactPhone,
   });
 
   factory ShowDate.fromFirestore(

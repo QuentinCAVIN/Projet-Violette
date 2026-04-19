@@ -6,6 +6,7 @@ import io.violette.cabaretcompany.dto.CabaretShowDto;
 import io.violette.cabaretcompany.dto.CompanyMemberDto;
 import io.violette.cabaretcompany.service.CabaretCompanyService;
 import io.violette.cabaretcompany.service.CabaretShowService;
+import io.violette.security.CurrentUserContextProvider;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
@@ -32,10 +33,31 @@ import java.util.List;
 public class CabaretCompanyController {
 
     @Inject
+    CurrentUserContextProvider currentUserContextProvider;
+
+    @Inject
     CabaretCompanyService cabaretCompanyService;
 
     @Inject
     CabaretShowService cabaretShowService;
+
+    @GET
+    @Path("/mine")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed("MANAGER")
+    @Operation(
+            summary = "Ma compagnie",
+            description = "Retourne la compagnie dont l'utilisateur authentifié est le manager (un manager = une compagnie en Violette ; profil backend résolu depuis le JWT). Requiert le rôle MANAGER."
+    )
+    @APIResponse(responseCode = "200", description = "Compagnie trouvée", content = @Content(schema = @Schema(implementation = CabaretCompanyDto.class)))
+    @APIResponse(responseCode = "401", description = "Principal JWT introuvable ou invalide")
+    @APIResponse(responseCode = "403", description = "Accès refusé (rôle insuffisant)")
+    @APIResponse(responseCode = "404", description = "Aucun profil backend pour cet utilisateur, ou aucune compagnie pour ce manager")
+    public Response getMine() {
+        return currentUserContextProvider.getCurrentPrincipal()
+                .map(principal -> Response.ok(cabaretCompanyService.getMine(principal)).build())
+                .orElse(Response.status(Response.Status.UNAUTHORIZED).build());
+    }
 
     @GET
     @Path("/{id}")

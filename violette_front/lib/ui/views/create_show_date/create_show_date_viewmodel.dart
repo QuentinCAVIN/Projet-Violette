@@ -19,6 +19,23 @@ class CreateShowDateViewModel extends FormViewModel {
   TimeOfDay? selectedStartTime;
   TimeOfDay? selectedEndTime;
 
+  /// Contrôleurs pour les champs requis par le backend REST mais absents
+  /// du formulaire Stacked généré (non régénérer `.form.dart`).
+  final TextEditingController clientContactNameController =
+      TextEditingController();
+  final TextEditingController clientContactPhoneController =
+      TextEditingController();
+
+  String? clientContactNameError;
+  String? clientContactPhoneError;
+
+  @override
+  void dispose() {
+    clientContactNameController.dispose();
+    clientContactPhoneController.dispose();
+    super.dispose();
+  }
+
   int _timeOfDayToMinutes(TimeOfDay t) => t.hour * 60 + t.minute;
 
   // Appelé à chaque changement de champs par Stacked
@@ -33,6 +50,8 @@ class CreateShowDateViewModel extends FormViewModel {
     setArtistsCountValidationMessage(null);
     setFeeValidationMessage(null);
     setDescriptionValidationMessage(null);
+    clientContactNameError = null;
+    clientContactPhoneError = null;
 
     if (!formAlreadyValidatedOnce) {
       return;
@@ -97,6 +116,14 @@ class CreateShowDateViewModel extends FormViewModel {
         setFeeValidationMessage('Montant invalide');
       }
     }
+
+    // Contact client — requis côté backend REST
+    if (clientContactNameController.text.trim().isEmpty) {
+      clientContactNameError = 'Nom du contact client obligatoire';
+    }
+    if (clientContactPhoneController.text.trim().isEmpty) {
+      clientContactPhoneError = 'Téléphone du contact client obligatoire';
+    }
   }
 
   // methodes appelés depuis le widget pour relancer la validation après un pick
@@ -129,6 +156,11 @@ class CreateShowDateViewModel extends FormViewModel {
       return;
     }
 
+    // Les erreurs sur les champs manuels (hors Stacked form) bloquent aussi la soumission.
+    if (clientContactNameError != null || clientContactPhoneError != null) {
+      return;
+    }
+
     final showDate = ShowDate(
       title: titleValue!,
       date: DateTime.utc(
@@ -143,6 +175,8 @@ class CreateShowDateViewModel extends FormViewModel {
       artistsCount: int.parse(artistsCountValue!),
       fee: double.parse(feeValue!.replaceAll(',', '.')),
       description: descriptionValue,
+      clientContactName: clientContactNameController.text.trim(),
+      clientContactPhone: clientContactPhoneController.text.trim(),
     );
 
     await runBusyFuture(_showDateRepository.addShowDate(showDate));

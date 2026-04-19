@@ -7,6 +7,9 @@ import io.violette.cabaretcompany.mapper.CabaretCompanyMapper;
 import io.violette.cabaretcompany.mapper.CompanyMemberMapper;
 import io.violette.cabaretcompany.repository.CabaretCompanyRepository;
 import io.violette.cabaretcompany.repository.CompanyMemberRepository;
+import io.violette.security.JwtPrincipalInfo;
+import io.violette.violetteuser.exception.UserNotFoundException;
+import io.violette.violetteuser.repository.VioletteUserRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.slf4j.Logger;
@@ -36,6 +39,9 @@ public class CabaretCompanyService {
     @Inject
     CompanyMemberMapper companyMemberMapper;
 
+    @Inject
+    VioletteUserRepository violetteUserRepository;
+
     /**
      * Récupère une compagnie par son id.
      *
@@ -56,6 +62,23 @@ public class CabaretCompanyService {
         return cabaretCompanyRepository.findByManagerId(managerId).stream()
                 .map(cabaretCompanyMapper::toDto)
                 .toList();
+    }
+
+    /**
+     * Retourne la compagnie du manager identifié par le JWT (profil backend via firebaseUid).
+     * En Violette, un manager n'a qu'une seule compagnie ; s'il en existe plusieurs en base, la première trouvée est retournée.
+     *
+     * @throws UserNotFoundException             si aucun profil backend ne correspond au principal JWT
+     * @throws CabaretCompanyNotFoundException     si le manager n'a aucune compagnie
+     */
+    public CabaretCompanyDto getMine(JwtPrincipalInfo principal) {
+        Long managerId = violetteUserRepository.findByFirebaseUid(principal.firebaseUid())
+                .orElseThrow(UserNotFoundException::new)
+                .getId();
+        return cabaretCompanyRepository.findByManagerId(managerId).stream()
+                .findFirst()
+                .map(cabaretCompanyMapper::toDto)
+                .orElseThrow(CabaretCompanyNotFoundException::new);
     }
 
     /**

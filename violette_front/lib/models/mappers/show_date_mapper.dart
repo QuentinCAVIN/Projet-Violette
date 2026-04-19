@@ -31,6 +31,8 @@ class ShowDateMapper {
       description: json['showDetails'] as String?,
       status: fromApiStatus(json['status']),
       selectedCount: _toInt(json['selectedCount']),
+      clientContactName: json['clientContactName'] as String?,
+      clientContactPhone: json['clientContactPhone'] as String?,
     );
   }
 
