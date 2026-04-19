@@ -1,12 +1,44 @@
 import 'package:violette_front/models/artist_booking.dart';
 
+/// Contrat du domaine réservations artistes.
+///
+/// ## État de la migration REST (incrément en cours)
+///
+/// | Méthode                       | Implémentation active | Statut         |
+/// |-------------------------------|----------------------|----------------|
+/// | `getBookingsForDate`          | REST                 | ✓ migré        |
+/// | `getPendingRequestsForArtist` | REST                 | ✓ migré        |
+/// | `toggleSelection`             | REST                 | ✓ migré        |
+/// | `sendConfirmationRequests`    | REST                 | ✓ migré        |
+/// | `respondToRequest`            | REST                 | ✓ migré        |
+/// | `watchBookingsForDate`        | Firestore legacy     | ⚠ déprécié     |
+/// | `watchPendingRequestsForArtist` | Firestore legacy   | ⚠ déprécié     |
 abstract class BookingRepository {
-  /// Stream Firestore — utilisé uniquement là où le temps réel est indispensable.
-  /// L'écran manager détail n'écoute plus ce stream depuis la migration REST.
+  /// Écoute en temps réel les bookings d'une date via Firestore.
+  ///
+  /// @deprecated : plus utilisé par aucun écran actif.
+  /// Remplacé par [getBookingsForDate] (one-shot REST).
+  /// À supprimer après confirmation que [FirestoreBookingRepository] n'est plus
+  /// référencé directement.
+  @Deprecated(
+    'Délègue à Firestore. Utiliser getBookingsForDate à la place. '
+    'À supprimer après stabilisation complète du domaine booking.',
+  )
   Stream<List<ArtistBooking>> watchBookingsForDate(String dateId);
+
+  /// Écoute en temps réel les demandes de confirmation en attente pour un artiste.
+  ///
+  /// @deprecated : plus utilisé par aucun écran actif.
+  /// Remplacé par [getPendingRequestsForArtist] (one-shot REST).
+  /// À supprimer après confirmation que [FirestoreBookingRepository] n'est plus
+  /// référencé directement.
+  @Deprecated(
+    'Délègue à Firestore. Utiliser getPendingRequestsForArtist à la place. '
+    'À supprimer après stabilisation complète du domaine booking.',
+  )
   Stream<List<ArtistBooking>> watchPendingRequestsForArtist(String artistId);
 
-  /// Demandes de confirmation en attente pour l’artiste connecté (one-shot REST).
+  /// Demandes de confirmation en attente pour l'artiste connecté (one-shot REST).
   ///
   /// Implémentation : `GET /api/artist-bookings/me/pending` (JWT). Le paramètre
   /// [artistId] sert au fallback Firestore ; il est ignoré côté REST.
