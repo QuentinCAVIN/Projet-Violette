@@ -16,11 +16,11 @@ import 'package:stacked_shared/stacked_shared.dart';
 import '../repositories/availability_repository.dart';
 import '../repositories/booking_repository.dart';
 import '../repositories/rest_availability_repository.dart';
+import '../repositories/rest_booking_repository.dart';
 import '../repositories/rest_show_date_repository.dart';
 import '../repositories/rest_user_repository.dart';
 import '../repositories/show_date_repository.dart';
 import '../repositories/user_repository.dart';
-import '../services/booking_service.dart';
 
 final locator = StackedLocator.instance;
 
@@ -42,7 +42,7 @@ Future<void> setupLocator({
       () => RestShowDateRepository());
   locator.registerLazySingleton(() => SnackbarService());
   locator.registerLazySingleton<BookingRepository>(
-      () => FirestoreBookingRepository());
+      () => RestBookingRepository());
   locator.registerLazySingleton<AvailabilityRepository>(
       () => RestAvailabilityRepository());
 }

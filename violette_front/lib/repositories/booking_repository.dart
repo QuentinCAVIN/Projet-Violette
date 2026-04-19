@@ -6,5 +6,8 @@ abstract class BookingRepository {
 
   Future<void> toggleSelection(String dateId, String artistId, bool select);
   Future<void> sendConfirmationRequests(String dateId);
+
+  /// Réponse de l’artiste à une demande de confirmation (accepter / refuser).
+  /// Implémentation : REST (`PATCH /api/artist-bookings/{id}/respond`).
   Future<void> respondToRequest(String dateId, String artistId, bool accept);
 }

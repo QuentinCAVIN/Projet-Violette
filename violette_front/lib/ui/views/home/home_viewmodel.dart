@@ -142,6 +142,10 @@ class HomeViewModel extends BaseViewModel {
 
   /// Répond à une demande de confirmation (acceptation ou refus).
   ///
+  /// Persistance : [BookingRepository.respondToRequest] utilise le backend REST
+  /// (`PATCH /api/artist-bookings/{id}/respond`) ; la liste locale provient encore
+  /// du flux Firestore jusqu’à migration de ce flux.
+  ///
   /// - accept == true  => pendingConfirmation -> confirmed
   /// - accept == false => pendingConfirmation -> refused (et libère une place côté gérant)
   Future<void> respondToRequest(ArtistBooking booking, bool accept) async {
