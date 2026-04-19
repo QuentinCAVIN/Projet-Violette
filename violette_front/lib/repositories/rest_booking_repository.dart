@@ -6,8 +6,8 @@ import 'booking_repository.dart';
 
 /// Implémentation hybride : REST pour les actions migrées, Firestore pour le reste.
 ///
-/// Incrément 1 : [respondToRequest] passe par le backend Quarkus ; les flux
-/// temps réel et la présélection restent sur [FirestoreBookingRepository].
+/// REST : [respondToRequest], [sendConfirmationRequests].
+/// Firestore : flux temps réel, [toggleSelection] (legacy).
 class RestBookingRepository implements BookingRepository {
   RestBookingRepository({
     FirestoreBookingRepository? legacyRepository,
@@ -36,7 +36,7 @@ class RestBookingRepository implements BookingRepository {
 
   @override
   Future<void> sendConfirmationRequests(String dateId) =>
-      _legacy.sendConfirmationRequests(dateId);
+      _remote.sendConfirmationRequests(dateId);
 
   @override
   Future<void> respondToRequest(

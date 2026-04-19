@@ -7,7 +7,8 @@ import 'package:violette_front/models/mappers/artist_booking_mapper.dart';
 
 /// Source de données distante pour le domaine réservations artistes (REST).
 ///
-/// Incrément 1 : uniquement la réponse artiste à une demande de confirmation.
+/// Incréments : réponse artiste (`respondToRequest`), envoi des demandes de
+/// confirmation gérant (`sendConfirmationRequests`).
 class BookingRemoteDataSource {
   late final Dio _dio;
 
@@ -55,6 +56,22 @@ class BookingRemoteDataSource {
         data: <String, dynamic>{'accept': accept},
       );
     } on DioException catch (e) {
+      throw Exception(_messageFromDio(e));
+    }
+  }
+
+  /// Envoie les demandes de confirmation pour la date [showDateId] (rôle MANAGER).
+  ///
+  /// POST `/api/artist-bookings/show-dates/{showDateId}/send-confirmations`
+  Future<void> sendConfirmationRequests(String showDateId) async {
+    try {
+      await _dio.post<void>(
+        '/api/artist-bookings/show-dates/$showDateId/send-confirmations',
+      );
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        throw Exception('Date de spectacle introuvable côté serveur.');
+      }
       throw Exception(_messageFromDio(e));
     }
   }

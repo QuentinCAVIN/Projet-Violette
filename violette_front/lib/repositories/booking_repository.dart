@@ -5,6 +5,9 @@ abstract class BookingRepository {
   Stream<List<ArtistBooking>> watchPendingRequestsForArtist(String artistId);
 
   Future<void> toggleSelection(String dateId, String artistId, bool select);
+
+  /// Passe les réservations sélectionnées en attente de confirmation (gérant).
+  /// Implémentation : REST (`POST .../send-confirmations`).
   Future<void> sendConfirmationRequests(String dateId);
 
   /// Réponse de l’artiste à une demande de confirmation (accepter / refuser).

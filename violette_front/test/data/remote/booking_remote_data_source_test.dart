@@ -221,4 +221,80 @@ void main() {
       }
     });
   });
+
+  group('BookingRemoteDataSource.sendConfirmationRequests', () {
+    test(
+      'appelle POST /show-dates/{id}/send-confirmations sans corps',
+      () async {
+        final dio = Dio(BaseOptions(baseUrl: 'http://test'));
+        String? postPath;
+        Object? postData;
+
+        dio.interceptors.add(
+          InterceptorsWrapper(
+            onRequest: (options, handler) {
+              if (options.method == 'POST' &&
+                  options.path ==
+                      '/api/artist-bookings/show-dates/123/send-confirmations') {
+                postPath = options.path;
+                postData = options.data;
+                return handler.resolve(
+                  Response(
+                    requestOptions: options,
+                    statusCode: 200,
+                    data: <Map<String, dynamic>>[],
+                  ),
+                );
+              }
+              fail('Requête inattendue : ${options.method} ${options.path}');
+            },
+          ),
+        );
+
+        final ds = BookingRemoteDataSource(dio: dio);
+        await ds.sendConfirmationRequests('123');
+
+        expect(
+          postPath,
+          '/api/artist-bookings/show-dates/123/send-confirmations',
+        );
+        expect(postData, isNull);
+      },
+    );
+
+    test(
+      'remonte un message clair si la date est introuvable (404)',
+      () async {
+        final dio = Dio(BaseOptions(baseUrl: 'http://test'));
+        dio.interceptors.add(
+          InterceptorsWrapper(
+            onRequest: (options, handler) {
+              return handler.reject(
+                DioException(
+                  requestOptions: options,
+                  response: Response(
+                    requestOptions: options,
+                    statusCode: 404,
+                  ),
+                  type: DioExceptionType.badResponse,
+                ),
+              );
+            },
+          ),
+        );
+
+        final ds = BookingRemoteDataSource(dio: dio);
+        expect(
+          () => ds.sendConfirmationRequests('999'),
+          throwsA(
+            predicate(
+              (Object? e) =>
+                  e is Exception &&
+                  e.toString().contains('Date de spectacle introuvable'),
+            ),
+          ),
+        );
+      },
+    );
+  });
 }
