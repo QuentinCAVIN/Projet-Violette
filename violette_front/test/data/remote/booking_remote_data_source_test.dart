@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:violette_front/data/remote/booking_remote_data_source.dart';
+import 'package:violette_front/models/enums/booking_status.dart';
 
 void main() {
   group('BookingRemoteDataSource.respondToRequest', () {
@@ -504,6 +505,74 @@ void main() {
         final ds = BookingRemoteDataSource(dio: dio);
         expect(
           () => ds.getBookingsForDate('7'),
+          throwsA(isA<Exception>()),
+        );
+      },
+    );
+  });
+
+  group('BookingRemoteDataSource.getPendingRequestsForArtist', () {
+    test(
+      'appelle GET /me/pending et retourne des ArtistBooking',
+      () async {
+        final dio = Dio(BaseOptions(baseUrl: 'http://test'));
+        dio.interceptors.add(
+          InterceptorsWrapper(
+            onRequest: (options, handler) {
+              expect(options.path, '/api/artist-bookings/me/pending');
+              expect(options.method, 'GET');
+              return handler.resolve(
+                Response(
+                  requestOptions: options,
+                  statusCode: 200,
+                  data: <Map<String, dynamic>>[
+                    {
+                      'id': 42,
+                      'artistId': 5,
+                      'showDateId': 7,
+                      'status': 'PENDING_CONFIRMATION',
+                    },
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+
+        final ds = BookingRemoteDataSource(dio: dio);
+        final list = await ds.getPendingRequestsForArtist();
+
+        expect(list.length, 1);
+        expect(list.first.artistId, '5');
+        expect(list.first.dateId, '7');
+        expect(list.first.status, BookingStatus.pendingConfirmation);
+      },
+    );
+
+    test(
+      'lève une exception si le serveur répond une erreur HTTP',
+      () async {
+        final dio = Dio(BaseOptions(baseUrl: 'http://test'));
+        dio.interceptors.add(
+          InterceptorsWrapper(
+            onRequest: (options, handler) {
+              return handler.reject(
+                DioException(
+                  requestOptions: options,
+                  response: Response(
+                    requestOptions: options,
+                    statusCode: 503,
+                  ),
+                  type: DioExceptionType.badResponse,
+                ),
+              );
+            },
+          ),
+        );
+
+        final ds = BookingRemoteDataSource(dio: dio);
+        expect(
+          () => ds.getPendingRequestsForArtist(),
           throwsA(isA<Exception>()),
         );
       },

@@ -40,6 +40,18 @@ class FirestoreBookingRepository implements BookingRepository {
     });
   }
 
+  @override
+  Future<List<ArtistBooking>> getPendingRequestsForArtist(String artistId) async {
+    final snapshot = await _firestore
+        .collectionGroup('artistBookings')
+        .where('artistId', isEqualTo: artistId)
+        .where('status', isEqualTo: BookingStatus.pendingConfirmation.name)
+        .get();
+    return snapshot.docs
+        .map((doc) => ArtistBooking.fromFirestore(doc, null))
+        .toList();
+  }
+
   /// One-shot Firestore : charge la liste des bookings pour une date.
   ///
   /// Utilisé en fallback si le repository REST n'est pas disponible.

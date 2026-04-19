@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:stacked_firebase_auth/stacked_firebase_auth.dart';
 import 'package:violette_front/app/app.locator.dart';
 import 'package:violette_front/app/app.router.dart';
@@ -26,7 +25,6 @@ class HomeViewModel extends BaseViewModel {
 
   List<ArtistBooking> pendingRequests = [];
   Map<String, ShowDate> requestsShowDates = {};
-  StreamSubscription<List<ArtistBooking>>? _pendingRequestsSub;
 
   Future<void> logOut() async {
     await _authenticationService.logout();
@@ -58,7 +56,6 @@ class HomeViewModel extends BaseViewModel {
       try {
         currentUser = await _userRepository.getUser(uid);
       } catch (e) {
-        // Erreur réseau, backend inaccessible, token invalide, etc.
         await _dialogService.showDialog(
           title: 'Profil utilisateur',
           description:
@@ -71,20 +68,14 @@ class HomeViewModel extends BaseViewModel {
         return;
       }
 
-      // getUser retourne null si le backend répond 404 (profil absent).
-      // Ce cas ne devrait plus se produire grâce au routage de StartupViewModel,
-      // mais peut survenir si LoginViewModel navigue ici pour un compte sans profil.
-      // On déconnecte Firebase pour repartir d'un état cohérent.
       if (currentUser == null) {
         await _authenticationService.logout();
         _navigationService.replaceWithLoginView();
         return;
       }
 
-      // Si l'utilisateur courant est un artiste, on écoute ses demandes de confirmation en attente.
-      // Objectif : afficher sur la home une liste "Demandes en attente" avec Accept / Refuse.
       if (currentUser!.roles.contains(Role.artist)) {
-        _listenToPendingRequests(uid);
+        await _loadPendingRequests(uid);
       }
     } finally {
       setBusy(false);
@@ -92,33 +83,31 @@ class HomeViewModel extends BaseViewModel {
     }
   }
 
-  void _listenToPendingRequests(String artistId) {
-    _pendingRequestsSub?.cancel();
-    _pendingRequestsSub = _bookingRepository
-        .watchPendingRequestsForArtist(artistId)
-        .listen((bookings) async {
-      pendingRequests = bookings;
-
-      // Pré-charge les ShowDates liés aux demandes afin d'afficher les détails (titre, date, cachet, etc.)
+  /// Charge les demandes de confirmation en attente (REST `GET .../me/pending`).
+  ///
+  /// Remplace l’ancien flux temps réel Firestore (`watchPendingRequestsForArtist`).
+  Future<void> _loadPendingRequests(String artistId) async {
+    try {
+      pendingRequests =
+          await _bookingRepository.getPendingRequestsForArtist(artistId);
       await _loadShowDatesForRequests();
-
-      rebuildUi();
-    });
+    } catch (_) {
+      pendingRequests = [];
+      _snackbarService.showSnackbar(
+        message: 'Impossible de charger les demandes en attente.',
+        duration: const Duration(seconds: 3),
+      );
+    }
+    rebuildUi();
   }
 
-  /// Charge les ShowDates manquants associés aux bookings en attente.
-  ///
-  /// Lecture one-shot via repository.getShowDateById(dateId),
-  /// désormais branchée sur la couche REST (avec fallback transitoire géré dans le repository).
-  /// Le cache requestsShowDates évite les rechargements inutiles.
+  /// Charge les ShowDates manquants associés aux demandes en attente.
   Future<void> _loadShowDatesForRequests() async {
     for (final booking in pendingRequests) {
       final dateId = booking.dateId;
 
-      // On ignore les bookings incomplets
       if (dateId == null || dateId.isEmpty) continue;
 
-      // Si la date est déjà en cache, pas besoin de la recharger
       if (requestsShowDates.containsKey(dateId)) continue;
 
       try {
@@ -126,14 +115,9 @@ class HomeViewModel extends BaseViewModel {
         if (showDate != null) {
           requestsShowDates[dateId] = showDate;
         }
-      } catch (_) {
-        // Cas possible : la date a été supprimée ou inaccessible (droits / réseau)
-        // On n'affiche simplement pas les détails de cette date.
-      }
+      } catch (_) {}
     }
 
-    // Nettoyage optionnel : enlever du cache les dates qui ne sont plus référencées
-    // (utile si la liste pendingRequests change souvent).
     final validIds =
         pendingRequests.map((b) => b.dateId).whereType<String>().toSet();
 
@@ -142,18 +126,11 @@ class HomeViewModel extends BaseViewModel {
 
   /// Répond à une demande de confirmation (acceptation ou refus).
   ///
-  /// Persistance : [BookingRepository.respondToRequest] utilise le backend REST
-  /// (`PATCH /api/artist-bookings/{id}/respond`) ; la liste locale provient encore
-  /// du flux Firestore jusqu’à migration de ce flux.
-  ///
-  /// - accept == true  => pendingConfirmation -> confirmed
-  /// - accept == false => pendingConfirmation -> refused (et libère une place côté gérant)
+  /// Persistance : [BookingRepository.respondToRequest] (REST). Après succès,
+  /// la liste est rechargée depuis le serveur via [_loadPendingRequests].
   Future<void> respondToRequest(ArtistBooking booking, bool accept) async {
     final dateId = booking.dateId;
     if (dateId == null) return;
-
-    // Optimistically disable interaction or show simple loading if needed,
-    // but for "window closing" effect, we will just proceed.
 
     try {
       await _bookingRepository.respondToRequest(
@@ -166,22 +143,20 @@ class HomeViewModel extends BaseViewModel {
         duration: const Duration(seconds: 2),
       );
 
-      // Mise à jour optimiste : on retire immédiatement la demande de la liste.
-      pendingRequests.removeWhere(
-          (b) => b.artistId == booking.artistId && b.dateId == dateId);
-      rebuildUi();
+      final uid = _authenticationService.currentUser?.uid;
+      if (uid != null && currentUser?.roles.contains(Role.artist) == true) {
+        await _loadPendingRequests(uid);
+      } else {
+        pendingRequests.removeWhere(
+            (b) => b.artistId == booking.artistId && b.dateId == dateId);
+        rebuildUi();
+      }
     } catch (e) {
       _dialogService.showDialog(
         title: 'Erreur',
         description: e.toString(),
       );
     }
-  }
-
-  @override
-  void dispose() {
-    _pendingRequestsSub?.cancel();
-    super.dispose();
   }
 
 }

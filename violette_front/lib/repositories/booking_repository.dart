@@ -6,6 +6,12 @@ abstract class BookingRepository {
   Stream<List<ArtistBooking>> watchBookingsForDate(String dateId);
   Stream<List<ArtistBooking>> watchPendingRequestsForArtist(String artistId);
 
+  /// Demandes de confirmation en attente pour l’artiste connecté (one-shot REST).
+  ///
+  /// Implémentation : `GET /api/artist-bookings/me/pending` (JWT). Le paramètre
+  /// [artistId] sert au fallback Firestore ; il est ignoré côté REST.
+  Future<List<ArtistBooking>> getPendingRequestsForArtist(String artistId);
+
   /// Charge la liste des bookings pour une date (one-shot REST).
   /// Implémentation : `GET /api/artist-bookings/show-dates/{dateId}`.
   Future<List<ArtistBooking>> getBookingsForDate(String dateId);

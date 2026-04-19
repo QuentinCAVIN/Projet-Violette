@@ -8,14 +8,30 @@ import 'package:violette_front/models/mappers/artist_booking_mapper.dart';
 
 /// Source de données distante pour le domaine réservations artistes (REST).
 ///
-/// Incréments : réponse artiste (`respondToRequest`), envoi des demandes de
-/// confirmation gérant (`sendConfirmationRequests`), sélection / désélection
-/// gérant (`toggleSelection`).
+/// Incréments : réponse artiste (`respondToRequest`), liste des demandes en
+/// attente (`getPendingRequestsForArtist`), envoi des demandes de confirmation
+/// gérant (`sendConfirmationRequests`), sélection / désélection gérant
+/// (`toggleSelection`).
 class BookingRemoteDataSource {
   late final Dio _dio;
 
   BookingRemoteDataSource({Dio? dio}) {
     _dio = dio ?? DioClient.create();
+  }
+
+  /// Liste des demandes de confirmation en attente pour l’artiste authentifié.
+  ///
+  /// `GET /api/artist-bookings/me/pending`
+  ///
+  /// Le filtrage par artiste est assuré par le JWT ; aucun paramètre d’URL.
+  Future<List<ArtistBooking>> getPendingRequestsForArtist() async {
+    try {
+      final response = await _dio.get('/api/artist-bookings/me/pending');
+      final items = ArtistBookingMapper.parseBookingList(response.data);
+      return ArtistBookingMapper.toArtistBookingList(items);
+    } on DioException catch (e) {
+      throw Exception(_messageFromDio(e));
+    }
   }
 
   /// Répond à une demande de confirmation pour la date [showDateId].

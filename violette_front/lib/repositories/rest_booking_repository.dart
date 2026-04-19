@@ -4,10 +4,11 @@ import 'package:violette_front/services/booking_service.dart';
 
 import 'booking_repository.dart';
 
-/// Implémentation hybride : REST pour les actions migrées, Firestore pour le reste.
+/// Implémentation hybride : REST pour les lectures et actions migrées.
 ///
-/// REST : [respondToRequest], [sendConfirmationRequests], [toggleSelection].
-/// Firestore : flux temps réel uniquement.
+/// REST : [getBookingsForDate], [getPendingRequestsForArtist], [respondToRequest],
+/// [sendConfirmationRequests], [toggleSelection].
+/// Firestore : [watchBookingsForDate], [watchPendingRequestsForArtist] (héritage).
 class RestBookingRepository implements BookingRepository {
   RestBookingRepository({
     FirestoreBookingRepository? legacyRepository,
@@ -29,6 +30,10 @@ class RestBookingRepository implements BookingRepository {
   @override
   Future<List<ArtistBooking>> getBookingsForDate(String dateId) =>
       _remote.getBookingsForDate(dateId);
+
+  @override
+  Future<List<ArtistBooking>> getPendingRequestsForArtist(String artistId) =>
+      _remote.getPendingRequestsForArtist();
 
   @override
   Future<void> toggleSelection(
