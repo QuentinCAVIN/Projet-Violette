@@ -79,4 +79,47 @@ void main() {
       expect(() => ds.getMyCompanyId(), throwsA(isA<DioException>()));
     });
   });
+
+  group('ShowDateRemoteDataSource.deleteShowDate', () {
+    test('appelle DELETE /api/show-dates/{id} pour un id numérique valide',
+        () async {
+      final dio = Dio(BaseOptions(baseUrl: 'http://test'));
+      String? deletedPath;
+
+      dio.interceptors.add(
+        InterceptorsWrapper(
+          onRequest: (options, handler) {
+            if (options.method == 'DELETE') {
+              deletedPath = options.path;
+              return handler.resolve(
+                Response(requestOptions: options, statusCode: 204),
+              );
+            }
+            fail('Requête inattendue : ${options.method} ${options.path}');
+          },
+        ),
+      );
+
+      final ds = ShowDateRemoteDataSource(dio: dio);
+      await ds.deleteShowDate('12');
+
+      expect(deletedPath, '/api/show-dates/12');
+    });
+
+    test('lève ArgumentError si id vide', () async {
+      final ds = ShowDateRemoteDataSource(dio: Dio());
+      expect(
+        () => ds.deleteShowDate('   '),
+        throwsA(isA<ArgumentError>()),
+      );
+    });
+
+    test('lève FormatException si id non numérique', () async {
+      final ds = ShowDateRemoteDataSource(dio: Dio());
+      expect(
+        () => ds.deleteShowDate('abc'),
+        throwsA(isA<FormatException>()),
+      );
+    });
+  });
 }

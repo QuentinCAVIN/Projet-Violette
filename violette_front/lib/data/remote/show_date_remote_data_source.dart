@@ -12,6 +12,7 @@ import 'package:violette_front/models/show_date.dart';
 /// - GET `/api/show-dates/{id}`
 /// - GET `/api/companies/mine`
 /// - POST `/api/show-dates`
+/// - DELETE `/api/show-dates/{id}`
 class ShowDateRemoteDataSource {
   late final Dio _dio;
 
@@ -155,5 +156,26 @@ class ShowDateRemoteDataSource {
           'showDetails': showDetails.trim(),
       },
     );
+  }
+
+  /// Supprime une date de spectacle via REST.
+  ///
+  /// DELETE `/api/show-dates/{id}`
+  ///
+  /// [showDateId] doit être un identifiant backend numérique.
+  Future<void> deleteShowDate(String showDateId) async {
+    final normalizedId = showDateId.trim();
+    if (normalizedId.isEmpty) {
+      throw ArgumentError('Identifiant de date vide.');
+    }
+
+    final idNum = int.tryParse(normalizedId);
+    if (idNum == null) {
+      throw FormatException(
+        'Identifiant de date invalide pour REST: $showDateId',
+      );
+    }
+
+    await _dio.delete<void>('/api/show-dates/$idNum');
   }
 }

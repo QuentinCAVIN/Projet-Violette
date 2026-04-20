@@ -96,11 +96,31 @@ class RestShowDateRepository implements ShowDateRepository {
     }
   }
 
-  /// @deprecated : endpoint `DELETE /api/show-dates/{id}` absent du backend.
-  /// Délègue au repository Firestore legacy jusqu'à implémentation backend.
+  /// Supprime une date via REST si l'uid est un id backend numérique.
+  ///
+  /// Fallback legacy conservé uniquement pour la transition :
+  /// - uid non numérique (anciennes données Firestore)
+  /// - backend répond 404 (date absente côté SQL mais potentiellement présente côté Firestore)
   @override
-  Future<void> deleteShowDate(String uid) {
-    return _legacyRepository.deleteShowDate(uid);
+  Future<void> deleteShowDate(String uid) async {
+    final normalizedUid = uid.trim();
+    if (normalizedUid.isEmpty) {
+      throw ArgumentError('Identifiant de date vide.');
+    }
+
+    final backendId = int.tryParse(normalizedUid);
+    if (backendId == null) {
+      return _legacyRepository.deleteShowDate(uid);
+    }
+
+    try {
+      await _remoteDataSource.deleteShowDate(normalizedUid);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return _legacyRepository.deleteShowDate(uid);
+      }
+      rethrow;
+    }
   }
 
   /// @deprecated : endpoint `PUT /api/show-dates/{id}` absent du backend.
