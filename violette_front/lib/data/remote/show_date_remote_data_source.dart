@@ -10,6 +10,7 @@ import 'package:violette_front/models/show_date.dart';
 /// Encapsule les appels HTTP REST vers :
 /// - GET `/api/show-dates`
 /// - GET `/api/show-dates/{id}`
+/// - GET `/api/companies/mine`
 /// - POST `/api/show-dates`
 class ShowDateRemoteDataSource {
   late final Dio _dio;
@@ -72,39 +73,39 @@ class ShowDateRemoteDataSource {
     }
   }
 
-  /// Résout l'identifiant de la première compagnie disponible côté REST.
+  /// Retourne l'identifiant backend de la compagnie du manager courant.
   ///
-  /// Mécanisme transitoire : le backend ne dispose pas d'un endpoint
-  /// "ma compagnie" (ex. `GET /api/users/me/company`). On extrait le
-  /// `companyId` du premier résultat de `GET /api/show-dates`.
+  /// Contrat backend : `GET /api/companies/mine` retourne un objet compagnie
+  /// unique pour le manager authentifié.
   ///
-  /// Limitation : retourne `null` si aucune date n'existe encore pour cette
-  /// compagnie (première utilisation), ce qui déclenche le fallback Firestore.
-  ///
-  /// TODO : remplacer par un endpoint dédié dès que le backend l'exposera.
-  Future<String?> resolveFirstCompanyId() async {
+  /// En cas de `404` (profil manager sans compagnie), retourne `null` pour
+  /// permettre un fallback défensif côté repository.
+  Future<String?> getMyCompanyId() async {
     try {
-      final response = await _dio.get('/api/show-dates');
+      final response = await _dio.get('/api/companies/mine');
       final data = response.data;
 
-      List<dynamic> items = [];
-      if (data is List) {
-        items = data;
+      Map<String, dynamic>? payload;
+      if (data is Map<String, dynamic>) {
+        payload = data;
       } else if (data is String) {
         final decoded = jsonDecode(data);
-        if (decoded is List) items = decoded;
+        if (decoded is Map<String, dynamic>) {
+          payload = decoded;
+        }
       }
 
-      if (items.isEmpty) return null;
-
-      final first = items.first;
-      if (first is! Map<String, dynamic>) return null;
-
-      final companyId = first['companyId'];
+      if (payload == null) return null;
+      final companyId = payload['id'];
       if (companyId == null) return null;
       return companyId is num
           ? companyId.toInt().toString()
           : companyId.toString();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return null;
+      }
+      rethrow;
     } catch (_) {
       return null;
     }

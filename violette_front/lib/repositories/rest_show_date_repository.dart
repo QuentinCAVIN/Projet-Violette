@@ -54,27 +54,24 @@ class RestShowDateRepository implements ShowDateRepository {
   ///
   /// ## Stratégie transitoire
   ///
-  /// Le backend requiert un `companyId` que le frontend ne connaît pas
-  /// directement (pas d'endpoint "ma compagnie" côté REST).
-  /// On résout le `companyId` depuis la liste des dates existantes.
+  /// Le backend expose désormais `GET /api/companies/mine` pour résoudre
+  /// la compagnie métier du manager courant.
   ///
   /// Fallbacks Firestore déclenchés :
-  /// - si `resolveFirstCompanyId()` retourne null (aucune date existante)
+  /// - si `/api/companies/mine` répond `404` (manager sans compagnie)
+  /// - si le `companyId` est non résolvable dans la réponse
   /// - si la requête REST échoue (erreur réseau, 4xx, 5xx)
-  ///
-  /// TODO : supprimer le fallback Firestore dès qu'un endpoint
-  /// `GET /api/users/me/company` (ou équivalent) existe côté backend.
   @override
   Future<void> addShowDate(ShowDate showDate) async {
     String? companyId;
     try {
-      companyId = await _remoteDataSource.resolveFirstCompanyId();
-    } catch (_) {
+      companyId = await _remoteDataSource.getMyCompanyId();
+    } on DioException {
       companyId = null;
     }
 
     if (companyId == null) {
-      // Fallback Firestore : companyId non résolvable (pas encore de dates REST).
+      // Fallback défensif : compagnie manager introuvable/non résolvable.
       return _legacyRepository.addShowDate(showDate);
     }
 
