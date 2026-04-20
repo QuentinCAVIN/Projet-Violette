@@ -137,6 +137,23 @@ public class ShowDateService {
     }
 
     /**
+     * Supprime une date de spectacle.
+     *
+     * <p>Les entités liées ({@code artist_availability}, {@code artist_booking},
+     * {@code show_date_skill_requirement}) sont supprimées automatiquement
+     * par les contraintes SQL ON DELETE CASCADE.
+     *
+     * @throws ShowDateNotFoundException si la date n'existe pas
+     */
+    @Transactional
+    public void deleteShowDate(Long id) {
+        LOG.info("Suppression de la date de spectacle id={}", id);
+        ShowDateEntity entity = showDateRepository.findByIdOptional(id)
+                .orElseThrow(ShowDateNotFoundException::new);
+        showDateRepository.delete(entity);
+    }
+
+    /**
      * Construit le DTO avec titre affiché et agrégats calculés (non persistés).
      */
     private ShowDateDto mapToDto(ShowDateEntity entity) {

@@ -14,6 +14,7 @@ import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
@@ -84,6 +85,18 @@ public class ShowDateController {
     public Response getById(@PathParam("id") Long id) {
         ShowDateDto dto = showDateService.getById(id);
         return Response.ok(dto).build();
+    }
+
+    @DELETE
+    @Path("/{id}")
+    @RolesAllowed("MANAGER")
+    @Operation(summary = "Supprimer une date de spectacle", description = "Supprime une date de spectacle par son identifiant. Requiert le rôle MANAGER.")
+    @APIResponse(responseCode = "204", description = "Date supprimée")
+    @APIResponse(responseCode = "403", description = "Accès refusé (rôle insuffisant)")
+    @APIResponse(responseCode = "404", description = "Date introuvable")
+    public Response deleteById(@PathParam("id") Long id) {
+        showDateService.deleteShowDate(id);
+        return Response.noContent().build();
     }
 
     @GET

@@ -11,6 +11,7 @@ import io.violette.cabaretcompany.repository.CabaretShowRepository;
 import io.violette.showdate.dto.CreateShowDateRequestDto;
 import io.violette.showdate.dto.CreateSkillRequirementRequestDto;
 import io.violette.showdate.dto.ShowDateDto;
+import io.violette.showdate.exception.ShowDateNotFoundException;
 import io.violette.showdate.model.ShowDateEntity;
 import io.violette.showdate.repository.ShowDateRepository;
 import io.violette.violetteuser.model.ArtistSkill;
@@ -30,6 +31,7 @@ import java.util.Locale;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @QuarkusTest
 class ShowDateServiceTest {
@@ -178,6 +180,34 @@ class ShowDateServiceTest {
 
         ShowDateDto dto = showDateService.getById(created.id());
         assertEquals(3, dto.selectedCount());
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("deleteShowDate supprime la date existante par id")
+    void deleteShowDate_whenShowDateExists_thenDeleteRow() {
+        Seed seed = seedCompanyAndManager("svc-del-ok");
+        ShowDateDto created = showDateService.createShowDate(new CreateShowDateRequestDto(
+                seed.company.getId(),
+                null,
+                LocalDate.of(2026, 3, 8),
+                LocalTime.of(18, 0),
+                "Nantes",
+                "Contact Delete",
+                "0600001122",
+                null
+        ));
+
+        showDateService.deleteShowDate(created.id());
+
+        assertEquals(0, showDateRepository.count("id", created.id()));
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("deleteShowDate lève ShowDateNotFoundException si l'id est introuvable")
+    void deleteShowDate_whenShowDateMissing_thenThrowNotFound() {
+        assertThrows(ShowDateNotFoundException.class, () -> showDateService.deleteShowDate(999_999L));
     }
 
     private record Seed(CabaretCompanyEntity company, VioletteUserEntity manager) {
