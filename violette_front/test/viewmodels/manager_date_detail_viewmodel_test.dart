@@ -27,25 +27,21 @@ void main() {
             locator<AvailabilityRepository>() as MockAvailabilityRepository;
 
         final initialShowDate = ShowDate(
-          uid: 'date-1',
+          id: 'date-1',
           title: 'Date initiale',
           date: DateTime(2026, 1, 1),
-          startMinutes: 540,
-          endMinutes: 600,
+          meetingTimeMinutes: 540,
           address: 'Adresse initiale',
-          artistsCount: 2,
-          fee: 100,
+          totalRequiredArtists: 2,
         );
 
         final restShowDate = ShowDate(
-          uid: 'date-1',
+          id: 'date-1',
           title: 'Date REST',
           date: DateTime(2026, 1, 2),
-          startMinutes: 600,
-          endMinutes: 600,
+          meetingTimeMinutes: 600,
           address: 'Adresse REST',
-          artistsCount: 3,
-          fee: 0,
+          totalRequiredArtists: 3,
           selectedCount: 1,
         );
 
@@ -71,14 +67,12 @@ void main() {
         final bookingRepository = locator<BookingRepository>() as MockBookingRepository;
 
         final showDateWithoutId = ShowDate(
-          uid: null,
+          id: '',
           title: 'Date sans id',
           date: DateTime(2026, 1, 1),
-          startMinutes: 540,
-          endMinutes: 600,
+          meetingTimeMinutes: 540,
           address: 'Adresse test',
-          artistsCount: 2,
-          fee: 100,
+          totalRequiredArtists: 2,
         );
 
         final viewModel = ManagerDateDetailViewModel(showDate: showDateWithoutId);
@@ -101,14 +95,12 @@ void main() {
             locator<AvailabilityRepository>() as MockAvailabilityRepository;
 
         final initialShowDate = ShowDate(
-          uid: 'date-1',
+          id: 'date-1',
           title: 'Date initiale',
           date: DateTime(2026, 1, 1),
-          startMinutes: 540,
-          endMinutes: 600,
+          meetingTimeMinutes: 540,
           address: 'Adresse initiale',
-          artistsCount: 2,
-          fee: 100,
+          totalRequiredArtists: 2,
         );
 
         when(() => bookingRepository.getBookingsForDate('date-1'))
@@ -135,20 +127,18 @@ void main() {
             locator<AvailabilityRepository>() as MockAvailabilityRepository;
 
         final showDate = ShowDate(
-          uid: 'date-1',
+          id: 'date-1',
           title: 'Test',
           date: DateTime(2026, 1, 1),
-          startMinutes: 540,
-          endMinutes: 600,
+          meetingTimeMinutes: 540,
           address: 'Adresse',
-          artistsCount: 2,
-          fee: 0,
+          totalRequiredArtists: 2,
         );
 
         final existingBooking = ArtistBooking(
           artistId: '5',
           dateId: 'date-1',
-          status: BookingStatus.selected,
+          status: BookingStatus.preselected,
         );
 
         when(() => bookingRepository.getBookingsForDate('date-1'))
@@ -177,25 +167,21 @@ void main() {
             locator<AvailabilityRepository>() as MockAvailabilityRepository;
 
         final initialShowDate = ShowDate(
-          uid: 'date-1',
+          id: 'date-1',
           title: 'Date initiale',
           date: DateTime(2026, 1, 1),
-          startMinutes: 540,
-          endMinutes: 600,
+          meetingTimeMinutes: 540,
           address: 'Adresse initiale',
-          artistsCount: 2,
-          fee: 100,
+          totalRequiredArtists: 2,
         );
 
         final refreshedShowDate = ShowDate(
-          uid: 'date-1',
+          id: 'date-1',
           title: 'Date rechargée',
           date: DateTime(2026, 1, 2),
-          startMinutes: 600,
-          endMinutes: 600,
+          meetingTimeMinutes: 600,
           address: 'Adresse rechargée',
-          artistsCount: 3,
-          fee: 0,
+          totalRequiredArtists: 3,
           selectedCount: 1,
         );
 
@@ -227,14 +213,12 @@ void main() {
             locator<BookingRepository>() as MockBookingRepository;
 
         final showDateSansId = ShowDate(
-          uid: null,
+          id: '',
           title: 'Date sans id',
           date: DateTime(2026, 1, 1),
-          startMinutes: 540,
-          endMinutes: 600,
+          meetingTimeMinutes: 540,
           address: 'Adresse test',
-          artistsCount: 2,
-          fee: 0,
+          totalRequiredArtists: 2,
         );
 
         final viewModel = ManagerDateDetailViewModel(showDate: showDateSansId);
@@ -256,20 +240,18 @@ void main() {
             locator<AvailabilityRepository>() as MockAvailabilityRepository;
 
         final showDate = ShowDate(
-          uid: '7',
+          id: '7',
           title: 'Test',
           date: DateTime(2026, 1, 1),
-          startMinutes: 540,
-          endMinutes: 600,
+          meetingTimeMinutes: 540,
           address: 'Adresse',
-          artistsCount: 2,
-          fee: 0,
+          totalRequiredArtists: 2,
         );
 
         final bookingApresSelection = ArtistBooking(
           artistId: '5',
           dateId: '7',
-          status: BookingStatus.selected,
+          status: BookingStatus.preselected,
         );
 
         when(() => bookingRepository.getBookingsForDate('7'))
@@ -290,7 +272,7 @@ void main() {
         await viewModel.toggleSelection('5', true);
 
         expect(viewModel.bookings.length, 1);
-        expect(viewModel.bookings.first.status, BookingStatus.selected);
+        expect(viewModel.bookings.first.status, BookingStatus.preselected);
         verify(() => bookingRepository.toggleSelection('7', '5', true))
             .called(1);
         verify(() => showDateRepository.getShowDateById('7')).called(2);
@@ -305,14 +287,12 @@ void main() {
             locator<BookingRepository>() as MockBookingRepository;
 
         final showDateSansId = ShowDate(
-          uid: null,
+          id: '',
           title: 'Date sans id',
           date: DateTime(2026, 1, 1),
-          startMinutes: 540,
-          endMinutes: 600,
+          meetingTimeMinutes: 540,
           address: 'Adresse test',
-          artistsCount: 2,
-          fee: 0,
+          totalRequiredArtists: 2,
         );
 
         final viewModel = ManagerDateDetailViewModel(showDate: showDateSansId);
@@ -333,14 +313,12 @@ void main() {
             locator<AvailabilityRepository>() as MockAvailabilityRepository;
 
         final showDate = ShowDate(
-          uid: '7',
+          id: '7',
           title: 'Test',
           date: DateTime(2026, 1, 1),
-          startMinutes: 540,
-          endMinutes: 600,
+          meetingTimeMinutes: 540,
           address: 'Adresse',
-          artistsCount: 2,
-          fee: 0,
+          totalRequiredArtists: 2,
         );
 
         final bookingApresEnvoi = ArtistBooking(
@@ -354,7 +332,7 @@ void main() {
                   ArtistBooking(
                     artistId: '5',
                     dateId: '7',
-                    status: BookingStatus.selected,
+                    status: BookingStatus.preselected,
                   ),
                 ]);
         when(() => showDateRepository.getShowDateById('7'))
@@ -385,14 +363,12 @@ void main() {
           'devrait autoriser la désélection quand un booking existe avec status selected',
           () {
         final showDate = ShowDate(
-          uid: 'date-1',
+          id: 'date-1',
           title: 'Test',
           date: DateTime(2026, 1, 1),
-          startMinutes: 540,
-          endMinutes: 600,
+          meetingTimeMinutes: 540,
           address: 'Adresse test',
-          artistsCount: 2,
-          fee: 100,
+          totalRequiredArtists: 2,
           status: ShowDateStatus.inquiry,
         );
 
@@ -407,7 +383,7 @@ void main() {
           ArtistBooking(
             artistId: 'artist1',
             dateId: 'date-1',
-            status: BookingStatus.selected,
+            status: BookingStatus.preselected,
           ),
         ];
 
@@ -421,14 +397,12 @@ void main() {
           'devrait refuser la sélection quand un booking existe avec status non selected',
           () {
         final showDate = ShowDate(
-          uid: 'date-1',
+          id: 'date-1',
           title: 'Test',
           date: DateTime(2026, 1, 1),
-          startMinutes: 540,
-          endMinutes: 600,
+          meetingTimeMinutes: 540,
           address: 'Adresse test',
-          artistsCount: 2,
-          fee: 100,
+          totalRequiredArtists: 2,
         );
 
         final viewModel = ManagerDateDetailViewModel(showDate: showDate);
@@ -456,14 +430,12 @@ void main() {
           "devrait refuser la sélection si l'artiste n'est pas available",
           () {
         final currentShowDate = ShowDate(
-          uid: 'date-1',
+          id: 'date-1',
           title: 'Test',
           date: DateTime(2026, 1, 1),
-          startMinutes: 540,
-          endMinutes: 600,
+          meetingTimeMinutes: 540,
           address: 'Adresse test',
-          artistsCount: 2,
-          fee: 100,
+          totalRequiredArtists: 2,
           status: ShowDateStatus.option,
         );
 
@@ -486,14 +458,12 @@ void main() {
           'devrait refuser la sélection si le plafond artistsCount est atteint',
           () {
         final currentShowDate = ShowDate(
-          uid: 'date-1',
+          id: 'date-1',
           title: 'Test',
           date: DateTime(2026, 1, 1),
-          startMinutes: 540,
-          endMinutes: 600,
+          meetingTimeMinutes: 540,
           address: 'Adresse test',
-          artistsCount: 2,
-          fee: 100,
+          totalRequiredArtists: 2,
           selectedCount: 2,
           status: ShowDateStatus.option,
         );
@@ -517,14 +487,12 @@ void main() {
         'devrait refuser une nouvelle sélection si le statut de date est inquiry',
         () {
           final currentShowDate = ShowDate(
-            uid: 'date-1',
+            id: 'date-1',
             title: 'Test',
             date: DateTime(2026, 1, 1),
-            startMinutes: 540,
-            endMinutes: 600,
+            meetingTimeMinutes: 540,
             address: 'Adresse test',
-            artistsCount: 2,
-            fee: 100,
+            totalRequiredArtists: 2,
             selectedCount: 0,
             status: ShowDateStatus.inquiry,
           );
@@ -555,14 +523,12 @@ void main() {
             ShowDateStatus.archived,
           ]) {
             final currentShowDate = ShowDate(
-              uid: 'date-1',
+              id: 'date-1',
               title: 'Test',
               date: DateTime(2026, 1, 1),
-              startMinutes: 540,
-              endMinutes: 600,
+              meetingTimeMinutes: 540,
               address: 'Adresse test',
-              artistsCount: 2,
-              fee: 100,
+              totalRequiredArtists: 2,
               selectedCount: 0,
               status: status,
             );
@@ -594,14 +560,12 @@ void main() {
             ShowDateStatus.confirmed,
           ]) {
             final currentShowDate = ShowDate(
-              uid: 'date-1',
+              id: 'date-1',
               title: 'Test',
               date: DateTime(2026, 1, 1),
-              startMinutes: 540,
-              endMinutes: 600,
+              meetingTimeMinutes: 540,
               address: 'Adresse test',
-              artistsCount: 2,
-              fee: 100,
+              totalRequiredArtists: 2,
               selectedCount: 0,
               status: status,
             );
@@ -630,14 +594,12 @@ void main() {
       test('retourne false sans booking ou si refused', () {
         final viewModel = ManagerDateDetailViewModel(
           showDate: ShowDate(
-            uid: 'date-1',
+            id: 'date-1',
             title: 'Test',
             date: DateTime(2026, 1, 1),
-            startMinutes: 540,
-            endMinutes: 600,
+            meetingTimeMinutes: 540,
             address: 'Adresse test',
-            artistsCount: 2,
-            fee: 100,
+            totalRequiredArtists: 2,
           ),
         );
 
@@ -656,19 +618,17 @@ void main() {
       test('retourne true pour selected, pendingConfirmation ou confirmed', () {
         final viewModel = ManagerDateDetailViewModel(
           showDate: ShowDate(
-            uid: 'date-1',
+            id: 'date-1',
             title: 'Test',
             date: DateTime(2026, 1, 1),
-            startMinutes: 540,
-            endMinutes: 600,
+            meetingTimeMinutes: 540,
             address: 'Adresse test',
-            artistsCount: 2,
-            fee: 100,
+            totalRequiredArtists: 2,
           ),
         );
 
         for (final status in [
-          BookingStatus.selected,
+          BookingStatus.preselected,
           BookingStatus.pendingConfirmation,
           BookingStatus.confirmed,
         ]) {

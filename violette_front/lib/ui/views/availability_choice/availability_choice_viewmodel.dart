@@ -53,8 +53,8 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
     if (currentUser == null) return;
 
     for (final showDate in showDates) {
-      final showDateId = showDate.uid;
-      if (showDateId == null) continue;
+      final showDateId = showDate.id;
+      if (showDateId.isEmpty) continue;
 
       try {
         final availabilities =
@@ -100,7 +100,7 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
     }
 
     // 2e tap sur le même jour : on change le statut côté backend.
-    if (_authenticationService.currentUser != null && picked.uid != null) {
+    if (_authenticationService.currentUser != null && picked.id.isNotEmpty) {
       final currentStatus =
           getStatusForDay(tappedDay) ?? AvailabilityStatus.pending;
       final nextStatus = currentStatus.next;
@@ -108,14 +108,14 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
       try {
         await runBusyFuture(
           _availabilityRepository.upsertMyAvailability(
-            showDateId: picked.uid!,
+            showDateId: picked.id,
             status: nextStatus,
           ),
           throwException: true,
         );
 
         // Mise à jour locale pour refléter immédiatement la réponse utilisateur.
-        _myAvailabilityByShowDateId[picked.uid!] = nextStatus;
+        _myAvailabilityByShowDateId[picked.id] = nextStatus;
       } catch (_) {
         _snackbarService.showSnackbar(
           message: "Impossible d'enregistrer la disponibilité.",
@@ -159,8 +159,8 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
     if (showDate == null) {
       return null;
     }
-    final showDateId = showDate.uid;
-    if (_authenticationService.currentUser == null || showDateId == null) {
+    final showDateId = showDate.id;
+    if (_authenticationService.currentUser == null || showDateId.isEmpty) {
       return AvailabilityStatus.pending;
     }
 

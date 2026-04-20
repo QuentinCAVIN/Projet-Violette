@@ -48,19 +48,11 @@ class ShowDateDetail extends StatelessWidget {
         ),
         Card(
           child: ListTile(
-            title:
-                Text("Nombre d'artiste nécessaire : ${showDate.artistsCount}"),
-          ),
-        ),
-        if (showDate.fee > 0)
-          Card(
-            child: ListTile(
-              title: Text(
-                'Montant du cachet (indicatif) : '
-                '${showDate.fee.toStringAsFixed(0)} €',
-              ),
+            title: Text(
+              "Nombre d'artiste nécessaire : ${showDate.totalRequiredArtists}",
             ),
           ),
+        ),
         Card(
           child: ListTile(
             title: Text("Description : ${showDate.description}"),

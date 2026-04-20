@@ -140,7 +140,7 @@ class ArtistBookingMapper {
     if (raw == null) return null;
     switch (raw.toString().trim().toUpperCase()) {
       case 'SELECTED':
-        return BookingStatus.selected;
+        return BookingStatus.preselected;
       case 'PENDING_CONFIRMATION':
         return BookingStatus.pendingConfirmation;
       case 'CONFIRMED':

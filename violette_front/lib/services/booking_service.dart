@@ -3,6 +3,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:violette_front/models/artist_booking.dart';
 import 'package:violette_front/models/enums/booking_status.dart';
+import 'package:violette_front/models/enums/show_date_status.dart';
 import 'package:violette_front/models/show_date.dart';
 import 'package:violette_front/repositories/booking_repository.dart';
 
@@ -122,11 +123,11 @@ class FirestoreBookingRepository implements BookingRepository {
         throw Exception("Date introuvable");
       }
 
-      final showDate = ShowDate.fromFirestore(dateSnapshot, null);
+      final showDate = _showDateFromFirestoreSnapshot(dateSnapshot);
       final bookingSnapshot = await transaction.get(bookingRef);
 
       if (select) {
-        if (showDate.selectedCount >= showDate.artistsCount) {
+        if (showDate.selectedCount >= showDate.totalRequiredArtists) {
           throw Exception("Limite d'artistes atteinte");
         }
 
@@ -140,7 +141,7 @@ class FirestoreBookingRepository implements BookingRepository {
           bookingRef,
           ArtistBooking(
             artistId: artistId,
-            status: BookingStatus.selected,
+            status: BookingStatus.preselected,
             createdAt: DateTime.now(),
             updatedAt: DateTime.now(),
           ).toFirestore(),
@@ -166,7 +167,7 @@ class FirestoreBookingRepository implements BookingRepository {
         .collection('artistBookings');
 
     final selectedBookingsSnapshot = await bookingsRef
-        .where('status', isEqualTo: BookingStatus.selected.name)
+        .where('status', isEqualTo: BookingStatus.preselected.name)
         .get();
 
     if (selectedBookingsSnapshot.docs.isEmpty) return;
@@ -229,4 +230,24 @@ class FirestoreBookingRepository implements BookingRepository {
       }
     });
   }
+}
+
+/// Lecture d’un document `showDates/{id}` pour le legacy Firestore booking uniquement.
+/// Le modèle domaine [ShowDate] n’embarque plus de sérialisation Firestore.
+ShowDate _showDateFromFirestoreSnapshot(
+  DocumentSnapshot<Map<String, dynamic>> snapshot,
+) {
+  final data = snapshot.data()!;
+
+  return ShowDate(
+    id: snapshot.id,
+    title: data['title'],
+    date: data['date'].toDate().toLocal(),
+    meetingTimeMinutes: data['startTime'] as int,
+    address: data['address'],
+    totalRequiredArtists: data['artistsCount'] as int,
+    description: data['description'],
+    status: showDateStatusFromString(data['status'] ?? ''),
+    selectedCount: data['selectedCount'] ?? 0,
+  );
 }

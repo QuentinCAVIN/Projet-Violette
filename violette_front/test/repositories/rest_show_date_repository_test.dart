@@ -4,13 +4,9 @@ import 'package:mocktail/mocktail.dart';
 import 'package:violette_front/data/remote/show_date_remote_data_source.dart';
 import 'package:violette_front/models/show_date.dart';
 import 'package:violette_front/repositories/rest_show_date_repository.dart';
-import 'package:violette_front/services/show_date_service.dart';
 
 class _MockShowDateRemoteDataSource extends Mock
     implements ShowDateRemoteDataSource {}
-
-class _MockFirestoreShowDateRepository extends Mock
-    implements FirestoreShowDateRepository {}
 
 class _FakeShowDate extends Fake implements ShowDate {}
 
@@ -20,17 +16,55 @@ void main() {
     registerFallbackValue(DateTime.utc(2000, 1, 1));
   });
 
-  group('RestShowDateRepository.deleteShowDate', () {
+  group('RestShowDateRepository.addShowDate', () {
     late _MockShowDateRemoteDataSource remote;
-    late _MockFirestoreShowDateRepository legacy;
     late RestShowDateRepository repository;
 
     setUp(() {
       remote = _MockShowDateRemoteDataSource();
-      legacy = _MockFirestoreShowDateRepository();
+      repository = RestShowDateRepository(remoteDataSource: remote);
+    });
+
+    test('lève StateError si aucune compagnie (GET /api/companies/mine vide)', () async {
+      when(() => remote.getMyCompanyId()).thenAnswer((_) async => null);
+
+      final showDate = ShowDate(
+        title: 'Titre',
+        date: DateTime.utc(2026, 4, 20),
+        meetingTimeMinutes: 10 * 60,
+        address: 'Lieu',
+        totalRequiredArtists: 3,
+        clientContactName: 'Alice',
+        clientContactPhone: '0600000000',
+      );
+
+      expect(
+        () => repository.addShowDate(showDate),
+        throwsA(isA<StateError>()),
+      );
+      verify(() => remote.getMyCompanyId()).called(1);
+      verifyNever(
+        () => remote.createShowDate(
+          companyId: any(named: 'companyId'),
+          eventDate: any(named: 'eventDate'),
+          meetingTimeMinutes: any(named: 'meetingTimeMinutes'),
+          location: any(named: 'location'),
+          clientContactName: any(named: 'clientContactName'),
+          clientContactPhone: any(named: 'clientContactPhone'),
+          showDetails: any(named: 'showDetails'),
+        ),
+      );
+    });
+  });
+
+  group('RestShowDateRepository.deleteShowDate', () {
+    late _MockShowDateRemoteDataSource remote;
+    late RestShowDateRepository repository;
+
+    setUp(() {
+      remote = _MockShowDateRemoteDataSource();
       repository = RestShowDateRepository(
         remoteDataSource: remote,
-        legacyRepository: legacy,
       );
     });
 
@@ -40,20 +74,20 @@ void main() {
       await repository.deleteShowDate('15');
 
       verify(() => remote.deleteShowDate('15')).called(1);
-      verifyNever(() => legacy.deleteShowDate(any()));
     });
 
-    test('fallback legacy quand uid non numérique', () async {
-      when(() => legacy.deleteShowDate('firestore-doc-id'))
-          .thenAnswer((_) async {});
+    test('propage FormatException quand uid non numérique', () async {
+      when(() => remote.deleteShowDate('firestore-doc-id')).thenThrow(
+        const FormatException('Identifiant de date invalide pour REST'),
+      );
 
-      await repository.deleteShowDate('firestore-doc-id');
-
-      verify(() => legacy.deleteShowDate('firestore-doc-id')).called(1);
-      verifyNever(() => remote.deleteShowDate(any()));
+      expect(
+        () => repository.deleteShowDate('firestore-doc-id'),
+        throwsA(isA<FormatException>()),
+      );
     });
 
-    test('fallback legacy quand REST répond 404', () async {
+    test('ignore DioException 404 (suppression idempotente)', () async {
       when(() => remote.deleteShowDate('42')).thenThrow(
         DioException(
           requestOptions: RequestOptions(path: '/api/show-dates/42'),
@@ -64,12 +98,10 @@ void main() {
           type: DioExceptionType.badResponse,
         ),
       );
-      when(() => legacy.deleteShowDate('42')).thenAnswer((_) async {});
 
       await repository.deleteShowDate('42');
 
       verify(() => remote.deleteShowDate('42')).called(1);
-      verify(() => legacy.deleteShowDate('42')).called(1);
     });
 
     test('propage l’erreur REST si statut différent de 404', () async {
@@ -88,7 +120,6 @@ void main() {
         () => repository.deleteShowDate('42'),
         throwsA(isA<DioException>()),
       );
-      verifyNever(() => legacy.deleteShowDate(any()));
     });
 
     test('lève ArgumentError si uid vide', () async {
@@ -97,34 +128,28 @@ void main() {
         throwsA(isA<ArgumentError>()),
       );
       verifyNever(() => remote.deleteShowDate(any()));
-      verifyNever(() => legacy.deleteShowDate(any()));
     });
   });
 
   group('RestShowDateRepository.updateShowDate', () {
     late _MockShowDateRemoteDataSource remote;
-    late _MockFirestoreShowDateRepository legacy;
     late RestShowDateRepository repository;
 
     setUp(() {
       remote = _MockShowDateRemoteDataSource();
-      legacy = _MockFirestoreShowDateRepository();
       repository = RestShowDateRepository(
         remoteDataSource: remote,
-        legacyRepository: legacy,
       );
     });
 
     test('met à jour via REST quand uid numérique', () async {
       final showDate = ShowDate(
-        uid: '17',
+        id: '17',
         title: 'Titre',
         date: DateTime.utc(2026, 4, 20),
-        startMinutes: 20 * 60,
-        endMinutes: 22 * 60,
+        meetingTimeMinutes: 20 * 60,
         address: 'Nantes',
-        artistsCount: 5,
-        fee: 100,
+        totalRequiredArtists: 5,
         description: 'Description patch',
         clientContactName: 'Contact',
         clientContactPhone: '0600000000',
@@ -146,35 +171,27 @@ void main() {
 
       verify(
         () => remote.updateShowDate(
-          showDateId: showDate.uid!,
+          showDateId: showDate.id,
           eventDate: showDate.date,
-          meetingTimeMinutes: showDate.startMinutes,
+          meetingTimeMinutes: showDate.meetingTimeMinutes,
           location: showDate.address,
           clientContactName: showDate.clientContactName,
           clientContactPhone: showDate.clientContactPhone,
           showDetails: showDate.description,
         ),
       ).called(1);
-      verifyNever(() => legacy.updateShowDate(any()));
     });
 
-    test('fallback legacy quand uid non numérique', () async {
+    test('propage FormatException quand uid non numérique', () async {
       final showDate = ShowDate(
-        uid: 'legacy-firestore-id',
+        id: 'legacy-firestore-id',
         title: 'Titre',
         date: DateTime.utc(2026, 4, 20),
-        startMinutes: 20 * 60,
-        endMinutes: 22 * 60,
+        meetingTimeMinutes: 20 * 60,
         address: 'Nantes',
-        artistsCount: 5,
-        fee: 100,
+        totalRequiredArtists: 5,
       );
-      when(() => legacy.updateShowDate(showDate)).thenAnswer((_) async {});
-
-      await repository.updateShowDate(showDate);
-
-      verify(() => legacy.updateShowDate(showDate)).called(1);
-      verifyNever(
+      when(
         () => remote.updateShowDate(
           showDateId: any(named: 'showDateId'),
           eventDate: any(named: 'eventDate'),
@@ -184,19 +201,24 @@ void main() {
           clientContactPhone: any(named: 'clientContactPhone'),
           showDetails: any(named: 'showDetails'),
         ),
+      ).thenThrow(
+        const FormatException('Identifiant de date invalide pour REST'),
+      );
+
+      expect(
+        () => repository.updateShowDate(showDate),
+        throwsA(isA<FormatException>()),
       );
     });
 
     test('propage l’erreur REST pour uid numérique', () async {
       final showDate = ShowDate(
-        uid: '17',
+        id: '17',
         title: 'Titre',
         date: DateTime.utc(2026, 4, 20),
-        startMinutes: 20 * 60,
-        endMinutes: 22 * 60,
+        meetingTimeMinutes: 20 * 60,
         address: 'Nantes',
-        artistsCount: 5,
-        fee: 100,
+        totalRequiredArtists: 5,
       );
 
       when(
@@ -224,26 +246,22 @@ void main() {
         () => repository.updateShowDate(showDate),
         throwsA(isA<DioException>()),
       );
-      verifyNever(() => legacy.updateShowDate(any()));
     });
 
     test('lève ArgumentError si uid vide', () async {
       final showDate = ShowDate(
-        uid: '   ',
+        id: '   ',
         title: 'Titre',
         date: DateTime.utc(2026, 4, 20),
-        startMinutes: 20 * 60,
-        endMinutes: 22 * 60,
+        meetingTimeMinutes: 20 * 60,
         address: 'Nantes',
-        artistsCount: 5,
-        fee: 100,
+        totalRequiredArtists: 5,
       );
 
       expect(
         () => repository.updateShowDate(showDate),
         throwsA(isA<ArgumentError>()),
       );
-      verifyNever(() => legacy.updateShowDate(any()));
     });
   });
 }

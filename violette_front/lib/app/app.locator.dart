@@ -41,8 +41,8 @@ Future<void> setupLocator({
   locator.registerLazySingleton<ShowDateRepository>(
       () => RestShowDateRepository());
   locator.registerLazySingleton(() => SnackbarService());
-  locator.registerLazySingleton<BookingRepository>(
-      () => RestBookingRepository());
+  locator
+      .registerLazySingleton<BookingRepository>(() => RestBookingRepository());
   locator.registerLazySingleton<AvailabilityRepository>(
       () => RestAvailabilityRepository());
 }

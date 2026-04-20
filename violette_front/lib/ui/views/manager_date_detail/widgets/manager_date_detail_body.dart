@@ -90,7 +90,7 @@ class ManagerDateDetailBody extends ViewModelWidget<ManagerDateDetailViewModel> 
           children: [
             Flexible(
               child: Text(
-                "Sélection : ${currentShowDate.selectedCount} / ${currentShowDate.artistsCount}",
+                "Sélection : ${currentShowDate.selectedCount} / ${currentShowDate.totalRequiredArtists}",
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: theme.colorScheme.onSurfaceVariant,

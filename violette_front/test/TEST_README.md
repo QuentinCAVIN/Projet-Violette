@@ -34,7 +34,7 @@ test/
 │   ├── enums/
 │   │   ├── availability_status_test.dart   # Transitions et labels
 │   │   └── role_test.dart                  # Mapping string ↔ enum
-│   └── show_date_test.dart                 # Conversions, règle 12h
+│   └── show_date_test.dart                 # Conversions HH:mm, formatage date
 │
 ├── viewmodels/                      # Tests ViewModels légers (priorité 2)
 │   ├── availability_choice_viewmodel_test.dart
@@ -63,11 +63,9 @@ test/
 **Ce qui est testé :**
 - ✅ Conversion minutes ↔ HH:mm (ex: 125 → "02:05")
 - ✅ Formatage de dates
-- ✅ **Règle métier : Durée max 12h pour un cachet**
-- ✅ Formatage et helpers de `ShowDate` (date, heures, règles de durée)
+- ✅ Affichage de l’heure de convocation (`meetingTime`)
 
 **Pourquoi c'est important :**
-- Contrainte légale : un cachet d'intermittent ≤ 12h
 - Conversions utilisées dans toute l'UI
 - Logique pure, testable sans mocks
 
@@ -176,9 +174,7 @@ final user = TestDataBuilders.createTestUser(
 // Créer une ShowDate de test
 final showDate = TestDataBuilders.createTestShowDate(
   date: DateTime(2025, 6, 15),
-  status: AvailabilityStatus.available,
-  startMinutes: 540, // 9:00
-  endMinutes: 1020,  // 17:00
+  meetingTimeMinutes: 540,
 );
 
 // Créer plusieurs ShowDates pour un mois

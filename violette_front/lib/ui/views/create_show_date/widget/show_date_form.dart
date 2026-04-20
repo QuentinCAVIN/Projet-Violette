@@ -8,10 +8,8 @@ class ShowDateForm extends ViewModelWidget<CreateShowDateViewModel> {
   final TextEditingController titleController;
   final TextEditingController dateController;
   final TextEditingController startTimeController;
-  final TextEditingController endTimeController;
   final TextEditingController addressController;
   final TextEditingController artistsCountController;
-  final TextEditingController feeController;
   final TextEditingController descriptionController;
 
   const ShowDateForm({
@@ -20,9 +18,7 @@ class ShowDateForm extends ViewModelWidget<CreateShowDateViewModel> {
     required this.dateController,
     required this.startTimeController,
     required this.addressController,
-    required this.endTimeController,
     required this.artistsCountController,
-    required this.feeController,
     required this.descriptionController,
   });
 
@@ -37,7 +33,6 @@ class ShowDateForm extends ViewModelWidget<CreateShowDateViewModel> {
         ),
         const SizedBox(height: 24),
 
-        // Nom du spectacle
         TextFormField(
           controller: titleController,
           decoration: InputDecoration(
@@ -48,7 +43,6 @@ class ShowDateForm extends ViewModelWidget<CreateShowDateViewModel> {
         ),
         const SizedBox(height: 16),
 
-        // Date (picker)
         TextFormField(
           controller: dateController,
           readOnly: true,
@@ -62,51 +56,24 @@ class ShowDateForm extends ViewModelWidget<CreateShowDateViewModel> {
         ),
         const SizedBox(height: 16),
 
-        // Heure début / fin (pickers)
-        Row(
-          children: [
-            Expanded(
-              child: TextFormField(
-                controller: startTimeController,
-                readOnly: true,
-                decoration: InputDecoration(
-                  labelText: 'Heure début',
-                  hintText: '--:--',
-                  suffixIcon: const Icon(Icons.access_time),
-                  errorText: viewModel.startTimeValidationMessage,
-                ),
-                onTap: () => _selectTime(
-                  context: context,
-                  initialTime: viewModel.selectedStartTime,
-                  controller: startTimeController,
-                  onTimeChanged: viewModel.onStartTimeChanged,
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: TextFormField(
-                controller: endTimeController,
-                readOnly: true,
-                decoration: InputDecoration(
-                  labelText: 'Heure fin',
-                  hintText: '--:--',
-                  suffixIcon: const Icon(Icons.access_time),
-                  errorText: viewModel.endTimeValidationMessage,
-                ),
-                onTap: () => _selectTime(
-                  context: context,
-                  initialTime: viewModel.selectedEndTime,
-                  controller: endTimeController,
-                  onTimeChanged: viewModel.onEndTimeChanged,
-                ),
-              ),
-            ),
-          ],
+        TextFormField(
+          controller: startTimeController,
+          readOnly: true,
+          decoration: InputDecoration(
+            labelText: 'Heure de convocation',
+            hintText: '--:--',
+            suffixIcon: const Icon(Icons.access_time),
+            errorText: viewModel.startTimeValidationMessage,
+          ),
+          onTap: () => _selectTime(
+            context: context,
+            initialTime: viewModel.selectedStartTime,
+            controller: startTimeController,
+            onTimeChanged: viewModel.onStartTimeChanged,
+          ),
         ),
         const SizedBox(height: 16),
 
-        // Adresse / lieu
         TextFormField(
           controller: addressController,
           decoration: InputDecoration(
@@ -117,7 +84,6 @@ class ShowDateForm extends ViewModelWidget<CreateShowDateViewModel> {
         ),
         const SizedBox(height: 16),
 
-        // Contact client — nom
         TextFormField(
           controller: viewModel.clientContactNameController,
           decoration: InputDecoration(
@@ -129,7 +95,6 @@ class ShowDateForm extends ViewModelWidget<CreateShowDateViewModel> {
         ),
         const SizedBox(height: 16),
 
-        // Contact client — téléphone
         TextFormField(
           controller: viewModel.clientContactPhoneController,
           decoration: InputDecoration(
@@ -142,38 +107,17 @@ class ShowDateForm extends ViewModelWidget<CreateShowDateViewModel> {
         ),
         const SizedBox(height: 16),
 
-        // Artistes nécessaires / Rémunération
-        Row(
-          children: [
-            Expanded(
-              child: TextFormField(
-                controller: artistsCountController,
-                decoration: InputDecoration(
-                  labelText: 'Artistes nécessaires',
-                  hintText: '5',
-                  errorText: viewModel.artistsCountValidationMessage,
-                ),
-                keyboardType: TextInputType.number,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: TextFormField(
-                controller: feeController,
-                decoration: InputDecoration(
-                  labelText: 'Rémunération (€)',
-                  hintText: '150',
-                  errorText: viewModel.feeValidationMessage,
-                ),
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-              ),
-            ),
-          ],
+        TextFormField(
+          controller: artistsCountController,
+          decoration: InputDecoration(
+            labelText: 'Artistes nécessaires',
+            hintText: '5',
+            errorText: viewModel.artistsCountValidationMessage,
+          ),
+          keyboardType: TextInputType.number,
         ),
         const SizedBox(height: 16),
 
-        // Description
         TextFormField(
           controller: descriptionController,
           decoration: InputDecoration(
@@ -187,20 +131,6 @@ class ShowDateForm extends ViewModelWidget<CreateShowDateViewModel> {
         ),
         const SizedBox(height: 24),
 
-        // Message d'erreur global
-        if (viewModel.globalErrorMessage != null)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8.0),
-            child: Text(
-              viewModel.globalErrorMessage!,
-              style: const TextStyle(
-                color: Colors.red,
-                fontSize: 13,
-              ),
-            ),
-          ),
-
-        // Bouton "Créer la date"
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
@@ -216,7 +146,6 @@ class ShowDateForm extends ViewModelWidget<CreateShowDateViewModel> {
         ),
         const SizedBox(height: 8),
 
-        // Bouton "Annuler"
         SizedBox(
           width: double.infinity,
           child: TextButton(
@@ -228,10 +157,6 @@ class ShowDateForm extends ViewModelWidget<CreateShowDateViewModel> {
     );
   }
 
-  //TODO A Refactoriser dans une method DateUtil
-//****************************************************************************//
-//DATE ET TIME PICKERS                                                        //
-//****************************************************************************//
   Future<void> _selectDate(
     BuildContext context,
     CreateShowDateViewModel viewModel,
@@ -266,11 +191,9 @@ class ShowDateForm extends ViewModelWidget<CreateShowDateViewModel> {
 
     if (picked == null) return;
 
-    // Format HH:mm
     controller.text = '${picked.hour.toString().padLeft(2, '0')}:'
         '${picked.minute.toString().padLeft(2, '0')}';
 
-    // Mise à jour du ViewModel
     onTimeChanged(picked);
   }
 }

@@ -168,7 +168,7 @@ void main() {
         expect(booking, isNotNull);
         expect(booking!.artistId, '5');
         expect(booking.dateId, '7');
-        expect(booking.status, BookingStatus.selected);
+        expect(booking.status, BookingStatus.preselected);
       });
 
       test('convertit PENDING_CONFIRMATION correctement', () {

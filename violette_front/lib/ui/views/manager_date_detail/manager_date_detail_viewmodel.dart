@@ -35,20 +35,20 @@ class ManagerDateDetailViewModel extends BaseViewModel {
   ShowDate? currentShowDate;
 
   int get artistsCount =>
-      currentShowDate?.artistsCount ?? showDate.artistsCount;
+      currentShowDate?.totalRequiredArtists ?? showDate.totalRequiredArtists;
 
   int get selectedCount =>
       currentShowDate?.selectedCount ?? showDate.selectedCount;
 
   bool get canSendConfirmation =>
-      bookings.any((b) => b.status == BookingStatus.selected);
+      bookings.any((b) => b.status == BookingStatus.preselected);
 
   /// Méthode d'initialisation appelée à l'ouverture de la vue.
   Future<void> initialize() async {
     setBusy(true);
 
-    final dateId = showDate.uid;
-    if (dateId == null || dateId.isEmpty) {
+    final dateId = showDate.id;
+    if (dateId.isEmpty) {
       currentShowDate = showDate;
       availabilities = [];
       artistLines = [];
@@ -71,8 +71,8 @@ class ManagerDateDetailViewModel extends BaseViewModel {
 
   /// Recharge manuellement le détail de la date via REST.
   Future<void> refreshShowDateDetail() async {
-    final dateId = showDate.uid;
-    if (dateId == null || dateId.isEmpty) {
+    final dateId = showDate.id;
+    if (dateId.isEmpty) {
       currentShowDate = showDate;
       rebuildUi();
       return;
@@ -116,8 +116,9 @@ class ManagerDateDetailViewModel extends BaseViewModel {
   }
 
   Future<void> _loadAvailabilities() async {
-    final dateId = displayedShowDate.uid ?? showDate.uid;
-    if (dateId == null || dateId.isEmpty) {
+    final dateId =
+        displayedShowDate.id.isNotEmpty ? displayedShowDate.id : showDate.id;
+    if (dateId.isEmpty) {
       availabilities = [];
       return;
     }
@@ -156,8 +157,9 @@ class ManagerDateDetailViewModel extends BaseViewModel {
   /// Recharge les bookings et le détail de la date (selectedCount) puis
   /// reconstruit le widget.
   Future<void> _refreshAfterAction() async {
-    final dateId = displayedShowDate.uid ?? showDate.uid;
-    if (dateId == null || dateId.isEmpty) return;
+    final dateId =
+        displayedShowDate.id.isNotEmpty ? displayedShowDate.id : showDate.id;
+    if (dateId.isEmpty) return;
 
     await Future.wait([
       _loadBookings(dateId),
@@ -209,12 +211,12 @@ class ManagerDateDetailViewModel extends BaseViewModel {
   ///    - la date doit être en [ShowDateStatus.option] ou [ShowDateStatus.confirmed]
   ///      (pas inquiry / staffed / cancelled / archived)
   ///    - l'artiste doit être "available"
-  ///    - le plafond artistsCount ne doit pas être atteint
+  ///    - le plafond `totalRequiredArtists` ne doit pas être atteint
   bool isSelectionEnabled(ShowDate currentShowDate, String artistId) {
     final booking = getBookingForArtist(artistId);
 
     if (booking != null) {
-      return booking.status == BookingStatus.selected;
+      return booking.status == BookingStatus.preselected;
     }
 
     if (!_allowsNewArtistSelectionForShowDateStatus(currentShowDate.status)) {
@@ -227,7 +229,8 @@ class ManagerDateDetailViewModel extends BaseViewModel {
       return false;
     }
 
-    if (currentShowDate.selectedCount >= currentShowDate.artistsCount) {
+    if (currentShowDate.selectedCount >=
+        currentShowDate.totalRequiredArtists) {
       return false;
     }
 
@@ -252,8 +255,9 @@ class ManagerDateDetailViewModel extends BaseViewModel {
   /// Après la mutation REST, l'écran est rechargé via [_refreshAfterAction].
   Future<void> toggleSelection(String artistId, bool? value) async {
     if (value == null) return;
-    final dateId = displayedShowDate.uid ?? showDate.uid;
-    if (dateId == null || dateId.isEmpty) {
+    final dateId =
+        displayedShowDate.id.isNotEmpty ? displayedShowDate.id : showDate.id;
+    if (dateId.isEmpty) {
       _snackbarService.showSnackbar(
         message: "Identifiant de date manquant.",
         duration: const Duration(seconds: 2),
@@ -280,8 +284,9 @@ class ManagerDateDetailViewModel extends BaseViewModel {
   ///
   /// Après l'envoi REST, l'écran est rechargé via [_refreshAfterAction].
   Future<void> sendConfirmation() async {
-    final dateId = displayedShowDate.uid ?? showDate.uid;
-    if (dateId == null || dateId.isEmpty) {
+    final dateId =
+        displayedShowDate.id.isNotEmpty ? displayedShowDate.id : showDate.id;
+    if (dateId.isEmpty) {
       _snackbarService.showSnackbar(
         message: "Identifiant de date manquant.",
         duration: const Duration(seconds: 2),

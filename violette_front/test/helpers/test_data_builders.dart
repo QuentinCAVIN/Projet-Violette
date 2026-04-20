@@ -1,11 +1,9 @@
 import 'package:violette_front/models/enums/role.dart';
 import 'package:violette_front/models/show_date.dart';
 import 'package:violette_front/models/violette_user.dart';
-// Généré par IA
 
 /// Builders pour créer des données de test facilement et de manière réutilisable
 class TestDataBuilders {
-  /// Crée un VioletteUser de test avec des valeurs par défaut
   static VioletteUser createTestUser({
     String uid = 'test-uid-123',
     String firstName = 'Jean',
@@ -22,32 +20,26 @@ class TestDataBuilders {
     );
   }
 
-  /// Crée une ShowDate de test avec des valeurs par défaut
   static ShowDate createTestShowDate({
-    String? uid,
+    String id = '',
     String title = 'Spectacle Test',
     DateTime? date,
-    int startMinutes = 540, // 9:00
-    int endMinutes = 720, // 12:00
+    int meetingTimeMinutes = 540,
     String address = '123 Rue de Test, Paris',
-    int artistsCount = 3,
-    double fee = 250.0,
+    int totalRequiredArtists = 3,
     String? description,
   }) {
     return ShowDate(
-      uid: uid,
+      id: id,
       title: title,
       date: date ?? DateTime(2025, 6, 15),
-      startMinutes: startMinutes,
-      endMinutes: endMinutes,
+      meetingTimeMinutes: meetingTimeMinutes,
       address: address,
-      artistsCount: artistsCount,
-      fee: fee,
+      totalRequiredArtists: totalRequiredArtists,
       description: description,
     );
   }
 
-  /// Crée plusieurs ShowDates pour un mois donné (pratique pour tester le calendrier)
   static List<ShowDate> createTestShowDatesForMonth({
     required int year,
     required int month,
@@ -55,9 +47,9 @@ class TestDataBuilders {
   }) {
     return List.generate(count, (index) {
       return createTestShowDate(
-        uid: 'show-$index',
+        id: 'show-$index',
         title: 'Spectacle ${index + 1}',
-        date: DateTime(year, month, (index + 1) * 5), // Tous les 5 jours
+        date: DateTime(year, month, (index + 1) * 5),
       );
     });
   }

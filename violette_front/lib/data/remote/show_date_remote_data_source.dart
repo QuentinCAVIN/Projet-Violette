@@ -66,7 +66,7 @@ class ShowDateRemoteDataSource {
 
       return null;
     } on DioException catch (e) {
-      // 404 = date absente : retourne null pour laisser le ViewModel gérer le fallback UI.
+      // 404 = date absente : retourne null (affichage / chargement à la charge du ViewModel).
       if (e.response?.statusCode == 404) {
         return null;
       }
@@ -80,8 +80,8 @@ class ShowDateRemoteDataSource {
   /// Contrat backend : `GET /api/companies/mine` retourne un objet compagnie
   /// unique pour le manager authentifié.
   ///
-  /// En cas de `404` (profil manager sans compagnie), retourne `null` pour
-  /// permettre un fallback défensif côté repository.
+  /// En cas de `404` (profil manager sans compagnie), retourne `null`.
+  /// Le repository décide alors (ex. [RestShowDateRepository.addShowDate] lève une erreur explicite).
   Future<String?> getMyCompanyId() async {
     try {
       final response = await _dio.get('/api/companies/mine');

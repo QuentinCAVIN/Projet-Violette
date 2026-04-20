@@ -1,33 +1,23 @@
 import 'package:violette_front/models/enums/show_date_status.dart';
 import 'package:violette_front/models/show_date.dart';
 
-/// Mapper entre JSON REST du backend showDate et modèle domaine Flutter [ShowDate].
-///
-/// Mapping transitoire :
-/// - id(Long) -> uid(String)
-/// - displayTitle -> title
-/// - eventDate -> date
-/// - meetingTime -> startMinutes (heure de convocation backend ; pas de fin métier)
-/// - location -> address
-/// - totalRequiredArtists -> artistsCount
+/// JSON REST `ShowDateDto` → [ShowDate].
 class ShowDateMapper {
   ShowDateMapper._();
 
   static ShowDate fromJson(Map<String, dynamic> json) {
     final eventDate = _parseEventDate(json['eventDate']);
-    final startMinutes = _parseMeetingTimeToMinutes(json['meetingTime']);
+    final meetingTimeMinutes = _parseMeetingTimeToMinutes(json['meetingTime']);
 
     return ShowDate(
-      uid: _toUid(json['id']),
+      id: _toId(json['id']),
       title: (json['displayTitle'] as String?)?.trim().isNotEmpty == true
           ? (json['displayTitle'] as String)
           : (json['cabaretShowTitle'] as String?) ?? '',
       date: eventDate,
-      startMinutes: startMinutes,
-      endMinutes: startMinutes, // transitoire : non exposé par l'API ; seul meetingTime existe côté backend
+      meetingTimeMinutes: meetingTimeMinutes,
       address: (json['location'] as String?) ?? '',
-      artistsCount: _toInt(json['totalRequiredArtists']),
-      fee: 0, // transitoire : le backend n'expose pas de cachet global au niveau ShowDateDto
+      totalRequiredArtists: _toInt(json['totalRequiredArtists']),
       description: json['showDetails'] as String?,
       status: fromApiStatus(json['status']),
       selectedCount: _toInt(json['selectedCount']),
@@ -55,7 +45,7 @@ class ShowDateMapper {
     }
   }
 
-  static String _toUid(dynamic rawId) {
+  static String _toId(dynamic rawId) {
     if (rawId == null) return '';
     if (rawId is num) return rawId.toInt().toString();
     return rawId.toString();

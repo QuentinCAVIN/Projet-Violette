@@ -21,8 +21,7 @@ Créer des mocks pour tous ces services irait à l'encontre de la stratégie **"
 
 Ces tests couvrent les règles critiques :
 - Transitions de statut `AvailabilityStatus`
-- Règle métier : durée max 12h
-- Conversions minutes ↔ HH:mm
+- Conversions minutes ↔ HH:mm (`ShowDate`, formatage)
 
 ### Quand ajouter des tests ViewModels ?
 
