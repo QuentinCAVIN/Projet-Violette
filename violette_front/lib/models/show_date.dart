@@ -82,6 +82,18 @@ extension ShowDateX on ShowDate {
 
   String get formattedStartTime => _minutesToHHmm(startMinutes);
   String get formattedEndTime => _minutesToHHmm(endMinutes);
+
+  /// Heure de rendez-vous / convocation à afficher, alignée sur le backend réel :
+  /// l’API expose `eventDate` (jour du spectacle) et `meetingTime` (une seule
+  /// heure, type `LocalTime`), sans heure de fin — ce n’est pas une plage
+  /// horaire de représentation.
+  ///
+  /// Côté Flutter, `startMinutes` est dérivé de `meetingTime` ; `endMinutes`
+  /// reste transitoire (ancien formulaire ou Firestore) et n’existe pas sur
+  /// l’entité `ShowDateEntity`. On n’utilise donc pas `endMinutes` ici, pour
+  /// éviter tout libellé suggérant une plage début/fin ou un doublon trompeur
+  /// (ex. 09:00 – 09:00).
+  String get formattedMeetingTimeForDisplay => formattedStartTime;
 }
 
 //TODO Reflechir si on laisse ici ou si on met dans un Helper a coté

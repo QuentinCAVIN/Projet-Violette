@@ -7,7 +7,7 @@ import 'package:violette_front/models/show_date.dart';
 /// - id(Long) -> uid(String)
 /// - displayTitle -> title
 /// - eventDate -> date
-/// - meetingTime -> startMinutes
+/// - meetingTime -> startMinutes (heure de convocation backend ; pas de fin métier)
 /// - location -> address
 /// - totalRequiredArtists -> artistsCount
 class ShowDateMapper {
@@ -24,7 +24,7 @@ class ShowDateMapper {
           : (json['cabaretShowTitle'] as String?) ?? '',
       date: eventDate,
       startMinutes: startMinutes,
-      endMinutes: startMinutes, // transitoire : le backend ne fournit pas d'heure de fin
+      endMinutes: startMinutes, // transitoire : non exposé par l'API ; seul meetingTime existe côté backend
       address: (json['location'] as String?) ?? '',
       artistsCount: _toInt(json['totalRequiredArtists']),
       fee: 0, // transitoire : le backend n'expose pas de cachet global au niveau ShowDateDto

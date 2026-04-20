@@ -10,8 +10,7 @@ import 'show_date_repository.dart';
 /// Incrément transitoire :
 /// - [getAllShowDates] bascule sur REST
 /// - [addShowDate], [deleteShowDate] et [updateShowDate] sont branchées REST
-/// - [updateAllShowDates] conserve temporairement le comportement Firestore
-///   pour ne pas impacter les écrans hors périmètre de cet incrément.
+///   avec fallback Firestore défensif lorsque nécessaire
 class RestShowDateRepository implements ShowDateRepository {
   final ShowDateRemoteDataSource _remoteDataSource;
   final FirestoreShowDateRepository _legacyRepository;
@@ -124,13 +123,6 @@ class RestShowDateRepository implements ShowDateRepository {
     }
   }
 
-  /// @deprecated : aucun endpoint backend de mise à jour batch.
-  /// Délègue au repository Firestore legacy.
-  @override
-  Future<void> updateAllShowDates(List<ShowDate> updatedList) {
-    return _legacyRepository.updateAllShowDates(updatedList);
-  }
-
   /// Mise à jour unitaire : désormais branchée sur REST (`PATCH /api/show-dates/{id}`).
   ///
   /// Fallback legacy conservé uniquement pour les uid non numériques
@@ -156,14 +148,5 @@ class RestShowDateRepository implements ShowDateRepository {
       clientContactPhone: updated.clientContactPhone,
       showDetails: updated.description,
     );
-  }
-
-  /// @deprecated : délègue au repository Firestore legacy.
-  /// Ne pas introduire de nouveaux usages de cette méthode.
-  /// Utiliser [getShowDateById] à la place dans tout nouveau code (migration booking incluse).
-  @override
-  // ignore: deprecated_member_use_from_same_package
-  Stream<ShowDate> watchShowDate(String dateId) {
-    return _legacyRepository.watchShowDate(dateId);
   }
 }

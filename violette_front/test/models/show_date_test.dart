@@ -71,6 +71,35 @@ void main() {
     });
   });
 
+  group('ShowDate - Heure de rendez-vous (alignement backend meetingTime)', () {
+    test(
+      'formattedMeetingTimeForDisplay reprend uniquement meetingTime (startMinutes)',
+      () {
+        final showDate = _createTestShowDate(
+          startMinutes: 540,
+          endMinutes: 540,
+        );
+        expect(showDate.formattedMeetingTimeForDisplay, '09:00');
+        expect(
+          showDate.formattedMeetingTimeForDisplay,
+          showDate.formattedStartTime,
+        );
+      },
+    );
+
+    test(
+      'formattedMeetingTimeForDisplay ignore endMinutes (hors modèle API)',
+      () {
+        final showDate = _createTestShowDate(
+          startMinutes: 540,
+          endMinutes: 720,
+        );
+        expect(showDate.formattedMeetingTimeForDisplay, '09:00');
+        expect(showDate.formattedEndTime, '12:00');
+      },
+    );
+  });
+
   group('ShowDate - Règle métier : Durée max 12h (720 minutes)', () {
     test('Durée de 12h exactement (720 min) devrait être valide', () {
       final showDate = _createTestShowDate(
