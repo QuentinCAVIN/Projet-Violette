@@ -7,6 +7,7 @@ import io.violette.showdate.dto.CreateShowDateRequestDto;
 import io.violette.showdate.dto.CreateSkillRequirementRequestDto;
 import io.violette.showdate.dto.ShowDateDto;
 import io.violette.showdate.dto.ShowDateSkillRequirementDto;
+import io.violette.showdate.dto.UpdateShowDateRequestDto;
 import io.violette.showdate.dto.UpsertAvailabilityRequestDto;
 import io.violette.showdate.service.ArtistAvailabilityService;
 import io.violette.showdate.service.ShowDateService;
@@ -14,7 +15,9 @@ import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.PATCH;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
@@ -83,6 +86,36 @@ public class ShowDateController {
     @APIResponse(responseCode = "404", description = "Date introuvable")
     public Response getById(@PathParam("id") Long id) {
         ShowDateDto dto = showDateService.getById(id);
+        return Response.ok(dto).build();
+    }
+
+    @DELETE
+    @Path("/{id}")
+    @RolesAllowed("MANAGER")
+    @Operation(summary = "Supprimer une date de spectacle", description = "Supprime une date de spectacle par son identifiant. Requiert le rôle MANAGER.")
+    @APIResponse(responseCode = "204", description = "Date supprimée")
+    @APIResponse(responseCode = "403", description = "Accès refusé (rôle insuffisant)")
+    @APIResponse(responseCode = "404", description = "Date introuvable")
+    public Response deleteById(@PathParam("id") Long id) {
+        showDateService.deleteShowDate(id);
+        return Response.noContent().build();
+    }
+
+    @PATCH
+    @Path("/{id}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed("MANAGER")
+    @Operation(
+            summary = "Mettre à jour partiellement une date de spectacle",
+            description = "Met à jour les champs fournis dans la requête. Les champs absents ou null sont laissés inchangés. Requiert le rôle MANAGER."
+    )
+    @APIResponse(responseCode = "200", description = "Date mise à jour", content = @Content(schema = @Schema(implementation = ShowDateDto.class)))
+    @APIResponse(responseCode = "400", description = "Corps de la requête invalide")
+    @APIResponse(responseCode = "403", description = "Accès refusé (rôle insuffisant)")
+    @APIResponse(responseCode = "404", description = "Date introuvable")
+    public Response patchById(@PathParam("id") Long id, @Valid UpdateShowDateRequestDto request) {
+        ShowDateDto dto = showDateService.updateShowDate(id, request);
         return Response.ok(dto).build();
     }
 

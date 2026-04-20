@@ -35,25 +35,22 @@ class ShowDateDetail extends StatelessWidget {
         Card(
           child: ListTile(
             title: Text(
-                "Periode : ${showDate.formattedStartTime} à ${showDate.formattedEndTime}"),
-          ),
-        ),
-        Card(
-          child: ListTile(
-            title: Text(
-              "Adresse : ${showDate.description}",
+              'Heure de rendez-vous : ${showDate.formattedMeetingTimeForDisplay}',
             ),
           ),
         ),
         Card(
           child: ListTile(
-            title:
-                Text("Nombre d'artiste nécessaire : ${showDate.artistsCount}"),
+            title: Text(
+              "Adresse : ${showDate.address}",
+            ),
           ),
         ),
         Card(
           child: ListTile(
-            title: Text("Montant du cachet : ${showDate.fee} €"),
+            title: Text(
+              "Nombre d'artiste nécessaire : ${showDate.totalRequiredArtists}",
+            ),
           ),
         ),
         Card(

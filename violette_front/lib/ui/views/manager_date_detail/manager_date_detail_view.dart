@@ -21,7 +21,7 @@ class ManagerDateDetailView extends StackedView<ManagerDateDetailViewModel> {
   ) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(showDate.title),
+        title: Text(viewModel.displayedShowDate.title),
       ),
       body: const ManagerDateDetailBody(),
     );

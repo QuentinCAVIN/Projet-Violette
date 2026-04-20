@@ -16,7 +16,7 @@ class ManagerShowDateSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final dayStr = DateFormat('d', 'fr_FR').format(showDate.date);
     final monthStr = DateFormat('MMM', 'fr_FR').format(showDate.date);
-    final timeStr = showDate.formattedStartTime.replaceFirst(':', 'h');
+    final timeStr = showDate.formattedMeetingTime.replaceFirst(':', 'h');
 
     return GestureDetector(
       onTap: onTap,

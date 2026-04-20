@@ -51,13 +51,13 @@ void main() {
         );
 
         final showDate = TestDataBuilders.createTestShowDate(
-          uid: 'date-1',
+          id: 'date-1',
           date: testDate,
         );
 
         when(() => showDateRepo.getAllShowDates())
             .thenAnswer((_) => Future.value([showDate]));
-        when(() => availabilityRepo.getAvailabilitiesForDate(showDate.uid!))
+        when(() => availabilityRepo.getAvailabilitiesForDate(showDate.id))
             .thenAnswer((_) => Future.value([
                   Availability(
                     artistId: 'artist1',
@@ -103,13 +103,13 @@ void main() {
 
         final testDate = DateTime(2026, 2, 15);
         final showDate = TestDataBuilders.createTestShowDate(
-          uid: 'date-1',
+          id: 'date-1',
           date: testDate,
         );
 
         when(() => showDateRepo.getAllShowDates())
             .thenAnswer((_) => Future.value([showDate]));
-        when(() => availabilityRepo.getAvailabilitiesForDate(showDate.uid!))
+        when(() => availabilityRepo.getAvailabilitiesForDate(showDate.id))
             .thenAnswer((_) => Future.value([
                   Availability(
                     artistId: 'artist1',
@@ -132,7 +132,7 @@ void main() {
       test('isExpanded devrait être false par défaut', () async {
         final viewModel = ManagerPlanningViewModel();
         final showDate = TestDataBuilders.createTestShowDate(
-          uid: 'date-1',
+          id: 'date-1',
         );
 
         expect(viewModel.isExpanded(showDate), isFalse);
@@ -143,7 +143,7 @@ void main() {
           () async {
         final viewModel = ManagerPlanningViewModel();
         final showDate = TestDataBuilders.createTestShowDate(
-          uid: 'date-1',
+          id: 'date-1',
         );
 
         viewModel.toggleExpanded(showDate);
@@ -160,10 +160,10 @@ void main() {
           () async {
         final viewModel = ManagerPlanningViewModel();
         final firstDate = TestDataBuilders.createTestShowDate(
-          uid: 'date-1',
+          id: 'date-1',
         );
         final secondDate = TestDataBuilders.createTestShowDate(
-          uid: 'date-2',
+          id: 'date-2',
         );
 
         viewModel.toggleExpanded(firstDate);
@@ -184,13 +184,13 @@ void main() {
 
         final testDate = DateTime(2026, 2, 15);
         final showDate = TestDataBuilders.createTestShowDate(
-          uid: 'date-1',
+          id: 'date-1',
           date: testDate,
         );
 
         when(() => showDateRepo.getAllShowDates())
             .thenAnswer((_) => Future.value([showDate]));
-        when(() => availabilityRepo.getAvailabilitiesForDate(showDate.uid!))
+        when(() => availabilityRepo.getAvailabilitiesForDate(showDate.id))
             .thenAnswer((_) => Future.value([
                   Availability(
                     artistId: 'artist1',

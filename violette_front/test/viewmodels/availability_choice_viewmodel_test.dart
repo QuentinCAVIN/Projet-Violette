@@ -42,14 +42,12 @@ void main() {
 
         final cleanDate = DateTime(2025, 10, 10);
         final dummyShowDate = ShowDate(
-          uid: 'show-date-1',
+          id: 'show-date-1',
           title: 'Test',
           date: cleanDate,
-          startMinutes: 0,
-          endMinutes: 0,
+          meetingTimeMinutes: 0,
           address: 'Paris',
-          artistsCount: 1,
-          fee: 100,
+          totalRequiredArtists: 1,
         );
 
         when(() => showDateRepo.getAllShowDates())

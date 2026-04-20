@@ -20,19 +20,28 @@ void main() {
     artist1Id = 'artist_1';
     artist2Id = 'artist_2';
 
-    // Configuration de la date initiale
-    await firestore.collection('showDates').doc(dateId).set(ShowDate(
-          uid: dateId,
-          title: 'Concert Test',
-          date: DateTime.now(),
-          startMinutes: 600,
-          endMinutes: 720,
-          address: 'Test Address',
-          artistsCount: 2, // La limite est de 2
-          fee: 100,
-          status: ShowDateStatus.confirmed,
-          selectedCount: 0,
-        ).toFirestore());
+    // Configuration de la date initiale (schéma Firestore legacy showDates)
+    final seedShowDate = ShowDate(
+      id: dateId,
+      title: 'Concert Test',
+      date: DateTime.now(),
+      meetingTimeMinutes: 600,
+      address: 'Test Address',
+      totalRequiredArtists: 2,
+      status: ShowDateStatus.confirmed,
+      selectedCount: 0,
+    );
+    await firestore.collection('showDates').doc(dateId).set({
+      'title': seedShowDate.title,
+      'date': seedShowDate.date,
+      'startTime': seedShowDate.meetingTimeMinutes,
+      'endTime': 720,
+      'address': seedShowDate.address,
+      'artistsCount': seedShowDate.totalRequiredArtists,
+      'fee': 100,
+      'status': seedShowDate.status.name,
+      'selectedCount': seedShowDate.selectedCount,
+    });
   });
 
   group('BookingService', () {
@@ -48,7 +57,7 @@ void main() {
             .doc(artist1Id)
             .get();
         expect(bookingSnap.exists, true);
-        expect(bookingSnap.data()?['status'], BookingStatus.selected.name);
+        expect(bookingSnap.data()?['status'], BookingStatus.preselected.name);
 
         final dateSnap =
             await firestore.collection('showDates').doc(dateId).get();
@@ -100,7 +109,7 @@ void main() {
             .doc(artist1Id)
             .set({
           'artistId': artist1Id,
-          'status': BookingStatus.selected.name,
+          'status': BookingStatus.preselected.name,
         });
 
         await firestore

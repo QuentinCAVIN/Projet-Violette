@@ -13,12 +13,12 @@ import 'package:violette_front/ui/views/manager_planning/manager_planning_view.d
 import 'package:violette_front/ui/views/manager_date_detail/manager_date_detail_view.dart';
 import 'package:violette_front/repositories/booking_repository.dart';
 import 'package:violette_front/repositories/rest_availability_repository.dart';
+import 'package:violette_front/repositories/rest_booking_repository.dart';
+import 'package:violette_front/repositories/rest_show_date_repository.dart';
 import 'package:violette_front/repositories/rest_user_repository.dart';
 import 'package:violette_front/repositories/show_date_repository.dart';
 import 'package:violette_front/repositories/user_repository.dart';
 import 'package:violette_front/repositories/availability_repository.dart';
-import 'package:violette_front/services/booking_service.dart';
-import 'package:violette_front/services/show_date_service.dart';
 // @stacked-import
 
 @StackedApp(
@@ -39,11 +39,10 @@ import 'package:violette_front/services/show_date_service.dart';
     LazySingleton(classType: NavigationService),
     LazySingleton(classType: FirebaseAuthenticationService),
     LazySingleton(classType: RestUserRepository, asType: UserRepository),
-    LazySingleton(
-        classType: FirestoreShowDateRepository, asType: ShowDateRepository),
+    LazySingleton(classType: RestShowDateRepository, asType: ShowDateRepository),
     LazySingleton(classType: SnackbarService),
     LazySingleton(
-        classType: FirestoreBookingRepository, asType: BookingRepository),
+        classType: RestBookingRepository, asType: BookingRepository),
     LazySingleton(
         classType: RestAvailabilityRepository,
         asType: AvailabilityRepository),

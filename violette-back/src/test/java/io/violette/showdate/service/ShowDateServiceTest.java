@@ -11,6 +11,8 @@ import io.violette.cabaretcompany.repository.CabaretShowRepository;
 import io.violette.showdate.dto.CreateShowDateRequestDto;
 import io.violette.showdate.dto.CreateSkillRequirementRequestDto;
 import io.violette.showdate.dto.ShowDateDto;
+import io.violette.showdate.dto.UpdateShowDateRequestDto;
+import io.violette.showdate.exception.ShowDateNotFoundException;
 import io.violette.showdate.model.ShowDateEntity;
 import io.violette.showdate.repository.ShowDateRepository;
 import io.violette.violetteuser.model.ArtistSkill;
@@ -30,6 +32,7 @@ import java.util.Locale;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @QuarkusTest
 class ShowDateServiceTest {
@@ -178,6 +181,77 @@ class ShowDateServiceTest {
 
         ShowDateDto dto = showDateService.getById(created.id());
         assertEquals(3, dto.selectedCount());
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("deleteShowDate supprime la date existante par id")
+    void deleteShowDate_whenShowDateExists_thenDeleteRow() {
+        Seed seed = seedCompanyAndManager("svc-del-ok");
+        ShowDateDto created = showDateService.createShowDate(new CreateShowDateRequestDto(
+                seed.company.getId(),
+                null,
+                LocalDate.of(2026, 3, 8),
+                LocalTime.of(18, 0),
+                "Nantes",
+                "Contact Delete",
+                "0600001122",
+                null
+        ));
+
+        showDateService.deleteShowDate(created.id());
+
+        assertEquals(0, showDateRepository.count("id", created.id()));
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("deleteShowDate lève ShowDateNotFoundException si l'id est introuvable")
+    void deleteShowDate_whenShowDateMissing_thenThrowNotFound() {
+        assertThrows(ShowDateNotFoundException.class, () -> showDateService.deleteShowDate(999_999L));
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("updateShowDate met à jour uniquement les champs fournis")
+    void updateShowDate_whenPartialPayload_thenOnlyProvidedFieldsAreUpdated() {
+        Seed seed = seedCompanyAndManager("svc-upd-ok");
+        ShowDateDto created = showDateService.createShowDate(new CreateShowDateRequestDto(
+                seed.company.getId(),
+                null,
+                LocalDate.of(2026, 4, 10),
+                LocalTime.of(17, 30),
+                "Lyon",
+                "Contact Initial",
+                "0600001111",
+                "Détails initiaux"
+        ));
+
+        ShowDateDto updated = showDateService.updateShowDate(created.id(), new UpdateShowDateRequestDto(
+                LocalDate.of(2026, 4, 11),
+                null,
+                "Lyon - Centre",
+                null,
+                null,
+                "Détails modifiés"
+        ));
+
+        assertEquals(LocalDate.of(2026, 4, 11), updated.eventDate());
+        assertEquals(LocalTime.of(17, 30), updated.meetingTime());
+        assertEquals("Lyon - Centre", updated.location());
+        assertEquals("Contact Initial", updated.clientContactName());
+        assertEquals("0600001111", updated.clientContactPhone());
+        assertEquals("Détails modifiés", updated.showDetails());
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("updateShowDate lève ShowDateNotFoundException si l'id est introuvable")
+    void updateShowDate_whenShowDateMissing_thenThrowNotFound() {
+        assertThrows(ShowDateNotFoundException.class, () -> showDateService.updateShowDate(
+                999_999L,
+                new UpdateShowDateRequestDto(LocalDate.now(), null, null, null, null, null)
+        ));
     }
 
     private record Seed(CabaretCompanyEntity company, VioletteUserEntity manager) {
