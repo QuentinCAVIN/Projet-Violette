@@ -11,6 +11,7 @@ import io.violette.showdate.dto.CreateShowDateRequestDto;
 import io.violette.showdate.dto.CreateSkillRequirementRequestDto;
 import io.violette.showdate.dto.ShowDateDto;
 import io.violette.showdate.dto.ShowDateSkillRequirementDto;
+import io.violette.showdate.dto.UpdateShowDateRequestDto;
 import io.violette.showdate.exception.ShowDateNotFoundException;
 import io.violette.showdate.mapper.ShowDateMapper;
 import io.violette.showdate.mapper.ShowDateSkillRequirementMapper;
@@ -151,6 +152,41 @@ public class ShowDateService {
         ShowDateEntity entity = showDateRepository.findByIdOptional(id)
                 .orElseThrow(ShowDateNotFoundException::new);
         showDateRepository.delete(entity);
+    }
+
+    /**
+     * Met à jour partiellement une date de spectacle.
+     * Les champs {@code null} dans le DTO sont ignorés (pas de modification).
+     *
+     * @throws ShowDateNotFoundException si la date n'existe pas
+     */
+    @Transactional
+    public ShowDateDto updateShowDate(Long id, UpdateShowDateRequestDto request) {
+        LOG.info("Mise à jour partielle de la date de spectacle id={}", id);
+        ShowDateEntity entity = showDateRepository.findByIdOptional(id)
+                .orElseThrow(ShowDateNotFoundException::new);
+
+        if (request.eventDate() != null) {
+            entity.setEventDate(request.eventDate());
+        }
+        if (request.meetingTime() != null) {
+            entity.setMeetingTime(request.meetingTime());
+        }
+        if (request.location() != null) {
+            entity.setLocation(request.location());
+        }
+        if (request.clientContactName() != null) {
+            entity.setClientContactName(request.clientContactName());
+        }
+        if (request.clientContactPhone() != null) {
+            entity.setClientContactPhone(request.clientContactPhone());
+        }
+        if (request.showDetails() != null) {
+            entity.setShowDetails(request.showDetails());
+        }
+
+        showDateRepository.flush();
+        return mapToDto(entity);
     }
 
     /**

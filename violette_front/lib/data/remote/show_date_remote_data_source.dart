@@ -13,6 +13,7 @@ import 'package:violette_front/models/show_date.dart';
 /// - GET `/api/companies/mine`
 /// - POST `/api/show-dates`
 /// - DELETE `/api/show-dates/{id}`
+/// - PATCH `/api/show-dates/{id}`
 class ShowDateRemoteDataSource {
   late final Dio _dio;
 
@@ -177,5 +178,68 @@ class ShowDateRemoteDataSource {
     }
 
     await _dio.delete<void>('/api/show-dates/$idNum');
+  }
+
+  /// Met à jour partiellement une date de spectacle via REST.
+  ///
+  /// PATCH `/api/show-dates/{id}`
+  ///
+  /// Convention backend :
+  /// - champ envoyé non nul => mis à jour
+  /// - champ absent => inchangé
+  Future<void> updateShowDate({
+    required String showDateId,
+    DateTime? eventDate,
+    int? meetingTimeMinutes,
+    String? location,
+    String? clientContactName,
+    String? clientContactPhone,
+    String? showDetails,
+  }) async {
+    final normalizedId = showDateId.trim();
+    if (normalizedId.isEmpty) {
+      throw ArgumentError('Identifiant de date vide.');
+    }
+
+    final idNum = int.tryParse(normalizedId);
+    if (idNum == null) {
+      throw FormatException(
+        'Identifiant de date invalide pour REST: $showDateId',
+      );
+    }
+
+    final payload = <String, dynamic>{};
+    if (eventDate != null) {
+      payload['eventDate'] =
+          '${eventDate.year.toString().padLeft(4, '0')}-'
+          '${eventDate.month.toString().padLeft(2, '0')}-'
+          '${eventDate.day.toString().padLeft(2, '0')}';
+    }
+    if (meetingTimeMinutes != null) {
+      final hours = (meetingTimeMinutes ~/ 60).toString().padLeft(2, '0');
+      final minutes = (meetingTimeMinutes % 60).toString().padLeft(2, '0');
+      payload['meetingTime'] = '$hours:$minutes:00';
+    }
+    if (location != null) {
+      payload['location'] = location.trim();
+    }
+    if (clientContactName != null) {
+      payload['clientContactName'] = clientContactName.trim();
+    }
+    if (clientContactPhone != null) {
+      payload['clientContactPhone'] = clientContactPhone.trim();
+    }
+    if (showDetails != null) {
+      payload['showDetails'] = showDetails.trim();
+    }
+
+    if (payload.isEmpty) {
+      return;
+    }
+
+    await _dio.patch<void>(
+      '/api/show-dates/$idNum',
+      data: payload,
+    );
   }
 }

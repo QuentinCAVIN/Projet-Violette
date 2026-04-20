@@ -9,7 +9,8 @@ import 'show_date_repository.dart';
 ///
 /// Incrément transitoire :
 /// - [getAllShowDates] bascule sur REST
-/// - les autres méthodes conservent temporairement le comportement Firestore
+/// - [addShowDate], [deleteShowDate] et [updateShowDate] sont branchées REST
+/// - [updateAllShowDates] conserve temporairement le comportement Firestore
 ///   pour ne pas impacter les écrans hors périmètre de cet incrément.
 class RestShowDateRepository implements ShowDateRepository {
   final ShowDateRemoteDataSource _remoteDataSource;
@@ -123,18 +124,38 @@ class RestShowDateRepository implements ShowDateRepository {
     }
   }
 
-  /// @deprecated : endpoint `PUT /api/show-dates/{id}` absent du backend.
-  /// Délègue au repository Firestore legacy jusqu'à implémentation backend.
+  /// @deprecated : aucun endpoint backend de mise à jour batch.
+  /// Délègue au repository Firestore legacy.
   @override
   Future<void> updateAllShowDates(List<ShowDate> updatedList) {
     return _legacyRepository.updateAllShowDates(updatedList);
   }
 
-  /// @deprecated : endpoint `PUT /api/show-dates/{id}` absent du backend.
-  /// Délègue au repository Firestore legacy jusqu'à implémentation backend.
+  /// Mise à jour unitaire : désormais branchée sur REST (`PATCH /api/show-dates/{id}`).
+  ///
+  /// Fallback legacy conservé uniquement pour les uid non numériques
+  /// (documents Firestore historiques).
   @override
-  Future<void> updateShowDate(ShowDate updated) {
-    return _legacyRepository.updateShowDate(updated);
+  Future<void> updateShowDate(ShowDate updated) async {
+    final normalizedUid = (updated.uid ?? '').trim();
+    if (normalizedUid.isEmpty) {
+      throw ArgumentError('Identifiant de date vide.');
+    }
+
+    final backendId = int.tryParse(normalizedUid);
+    if (backendId == null) {
+      return _legacyRepository.updateShowDate(updated);
+    }
+
+    await _remoteDataSource.updateShowDate(
+      showDateId: normalizedUid,
+      eventDate: updated.date,
+      meetingTimeMinutes: updated.startMinutes,
+      location: updated.address,
+      clientContactName: updated.clientContactName,
+      clientContactPhone: updated.clientContactPhone,
+      showDetails: updated.description,
+    );
   }
 
   /// @deprecated : délègue au repository Firestore legacy.
