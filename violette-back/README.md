@@ -27,9 +27,9 @@ Backend REST de la plateforme **Violette**, conçu avec Java 21 et Quarkus.
 **Violette** est une plateforme de gestion de compagnies de cabaret (fixes ou itinérantes).  
 Elle permet à des gérants et des artistes de coordonner les dates de spectacle, les disponibilités et les réservations d'artistes.
 
-Ce backend est l'API REST centrale de la plateforme. Il remplace progressivement Firebase (Firestore + Auth) utilisé dans l'application Flutter existante.
+Ce backend est l'API REST centrale de la plateforme. Depuis la préparation de `v0.4.0`, il devient la source métier principale pour les domaines `user`, `availability`, `showDate` et `booking`.
 
-L'authentification reste assurée par **Firebase Auth** côté frontend : le frontend obtient un JWT Firebase et l'envoie dans chaque requête. Le backend valide ce token et maintient sa propre base utilisateur (rôles, profils, données applicatives).
+L'authentification reste assurée par **Firebase Auth** côté frontend : le frontend obtient un JWT Firebase et l'envoie dans chaque requête. Le backend valide ce token et maintient sa propre base utilisateur (rôles, profils, données applicatives). Firestore n'est plus la source de vérité du code métier migré.
 
 ---
 
@@ -314,7 +314,7 @@ io.violette
 │   │   ├── ArtistAvailabilityEntity.java        ← @Entity (disponibilité artiste)
 │   │   ├── ArtistAvailabilityId.java            ← @Embeddable, clé composite (showDateId, artistId)
 │   │   ├── ShowDateStatus.java                  ← Enum : INQUIRY, OPTION, CONFIRMED, STAFFED, CANCELLED, ARCHIVED
-│   │   └── AvailabilityStatus.java              ← Enum : PENDING, AVAILABLE, CONDITIONAL, UNAVAILABLE
+│   │   └── AvailabilityStatus.java              ← Enum : PENDING, AVAILABLE, IF_NEEDED, UNAVAILABLE
 │   ├── dto/
 │   │   ├── ShowDateDto.java
 │   │   ├── CreateShowDateRequestDto.java
@@ -594,6 +594,8 @@ src/main/resources/db/migration/
   V3__cabaretcompany_add_updated_at.sql ← Ajout de la colonne updated_at sur cabaret_company
   V4__create_showdate_tables.sql      ← Tables show_date, show_date_skill_requirement, artist_availability (domaine showdate)
   V5__create_artist_booking_table.sql ← Table artist_booking (domaine artistbooking)
+  V6__refactor_showdate_location_and_availability_status.sql ← Adresse structurée + renommage de disponibilité vers IF_NEEDED
+  V7__rename_showdate_status_values.sql ← Renommage PENDING/OPTIONAL/LOCKED vers INQUIRY/OPTION/STAFFED + ajout ARCHIVED
 ```
 
 ### Convention de nommage
@@ -644,11 +646,14 @@ Sans token ou token invalide : 401 ou 403.
 ## 10. Exécuter les tests
 
 ```bash
-# Tests unitaires et d'intégration (H2 in-memory, sans MySQL)
+# Tests unitaires rapides (H2 in-memory, sans MySQL)
 ./mvnw test
 
 # Build, tests et couverture (rapport JaCoCo + seuil 30 % minimum)
 ./mvnw verify
+
+# Build complet avec tests d'intégration suffixés IT
+./mvnw verify -DskipITs=false
 ```
 
 La couverture de code est mesurée avec **JaCoCo** (extension `quarkus-jacoco`). La commande `./mvnw verify` génère :
@@ -743,7 +748,7 @@ Les tests utilisent le profil `test` défini dans `src/test/resources/applicatio
 
 ```
 Disponibilité (ArtistAvailability)
-  └── L'artiste déclare s'il peut venir (AVAILABLE / CONDITIONAL / UNAVAILABLE).
+  └── L'artiste déclare s'il peut venir (AVAILABLE / IF_NEEDED / UNAVAILABLE).
       Aucun engagement. Aucun lien contractuel. Possible dès OPTION.
 
 Présélection (ArtistBooking en SELECTED, date en OPTION)
@@ -800,7 +805,7 @@ Violette permet à des compagnies de cabaret de gérer leurs spectacles de bout 
 | Unicité de disponibilité   | Un artiste ne peut déclarer qu'une seule disponibilité par date (clé composite show_date/artist) |
 | Unicité de la réservation  | Un artiste ne peut être réservé qu'une fois par date de spectacle (domaine `artistbooking`)    |
 | Statuts d'une date         | `INQUIRY` → `OPTION` → `CONFIRMED` → `STAFFED` ou `CANCELLED` ou `ARCHIVED`                   |
-| Statuts d'une disponibilité| `PENDING` → `AVAILABLE` ou `CONDITIONAL` ou `UNAVAILABLE`                                     |
+| Statuts d'une disponibilité| `PENDING` → `AVAILABLE` ou `IF_NEEDED` ou `UNAVAILABLE`                                      |
 | Statuts d'une réservation  | `SELECTED` → `PENDING_CONFIRMATION` → `CONFIRMED` ou `REFUSED` ou `CANCELLED`                 |
 | Compagnie                  | Doit avoir au moins un gérant                                                                  |
 

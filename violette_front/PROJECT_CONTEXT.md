@@ -16,17 +16,19 @@ Ce fichier résume les règles importantes, conventions et leçons apprises à r
 - **Données de Test** : Utiliser systématiquement `test/helpers/test_data_builders.dart` pour instancier des objets complexes (ShowDate, User...). Ex: `TestDataBuilders.createTestShowDate(...)`.
 
 ## 3. Gestion des Dates et Timezones
-> ⚠️ **Point Critique** : Problème récurrent de décalage horaire (UTC vs Local).
+> **Point critique** : éviter les décalages de jour calendaire entre l'API, l'appareil et l'affichage local.
 
-- **Enregistrement (Firestore)** : Toujours créer les dates à **Midi UTC** pour garantir qu'elles tombent le bon jour calendaire indépendamment du fuseau horaire de l'utilisateur.
+- **Enregistrement / mapping API REST** : normaliser les dates de spectacle en conservant l'intention calendaire. Pour les dates sans heure métier, utiliser une heure neutre comme **midi UTC** si un `DateTime` complet est nécessaire.
   ```dart
   DateTime.utc(year, month, day, 12);
   ```
-- **Lecture** : Convertir systématiquement en heure locale (`.toLocal()`) lors de la `factory fromFirestore` pour l'affichage correct dans l'UI.
+- **Lecture** : convertir seulement au niveau adapté à l'affichage. Ne pas introduire de conversion locale dans un mapper si elle change le jour métier attendu.
 
-## 4. Robustesse Firestore (Enums)
-- **Parsing** : Ne jamais caster directement une String Firestore en Enum. Utiliser une méthode statique de parsing avec une valeur par défaut de secours (fallback).
-- **Exemple** : Si le champ `status` vaut "unknown" ou est null, l'application ne doit pas planter (Spinner infini), mais retourner une valeur par défaut (ex: `ShowDateStatus.pending`).
+## 4. Robustesse API REST (Enums)
+- **Parsing** : ne jamais caster directement une chaîne API en enum domaine. Utiliser les mappers dédiés (`ShowDateMapper`, `AvailabilityMapper`, `ArtistBookingMapper`) et conserver une valeur de secours explicite.
+- **ShowDateStatus** : les valeurs métier actuelles sont `inquiry`, `option`, `confirmed`, `staffed`, `cancelled`, `archived`.
+- **AvailabilityStatus** : `pending`, `available`, `ifNeeded`, `unavailable`.
+- **BookingStatus** : le backend expose `SELECTED`, `PENDING_CONFIRMATION`, `CONFIRMED`, `REFUSED`, `CANCELLED`; le domaine Flutter affiche `preselected`, `pendingConfirmation`, `confirmed`, `refused`, `cancelled`.
 
 ## 5. UI & Design
 - **Composants** : Privilégier la réutilisation des composants existants (ex: `VioletteCalendar`, `ManagerDateDetailCard`).

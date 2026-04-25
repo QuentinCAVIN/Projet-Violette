@@ -2,7 +2,7 @@
 
 ## Objectif
 
-Garantir la stabilité du contrat DTO ↔ domaine à chaque migration Firestore → REST backend, et détecter les régressions avant merge.
+Garantir la stabilité du contrat API REST ↔ domaine à chaque évolution frontend/backend, et détecter les régressions avant merge.
 
 ---
 
@@ -13,7 +13,7 @@ Garantir la stabilité du contrat DTO ↔ domaine à chaque migration Firestore 
 | Type | Outil | Périmètre |
 |------|-------|-----------|
 | Unitaire H2 | `@QuarkusTest` + H2 in-memory | Service, Repository, Mapper, Controller (logique) |
-| Intégration MySQL | `@QuarkusTest` + Testcontainers | Repository + flux complets sur MySQL réel |
+| Intégration MySQL | `@QuarkusTest` + Dev Services / Testcontainers | Repository + flux complets sur MySQL réel |
 | Sécurité HTTP | `@TestSecurity` + `@InjectMock` | Contrôleur avec principal JWT simulé |
 
 Flyway est **désactivé** en profil test ; Hibernate régénère le schéma via `drop-and-create`.
@@ -24,6 +24,7 @@ Flyway est **désactivé** en profil test ; Hibernate régénère le schéma via
 |------|-------|-----------|
 | Unitaire Mapper | `flutter_test` (pur Dart) | Contrat DTO API → modèle métier |
 | Unitaire ViewModel | `flutter_test` + `mocktail` | Flux de routage, appels service |
+| Golden tests | `flutter_test` / `golden_toolkit` | Stabilité visuelle des composants ciblés |
 
 ---
 
@@ -55,13 +56,22 @@ Cela garantit :
 
 ---
 
-## Règle de migration
+## Règle de migration REST
 
-Chaque domaine migré de Firestore vers le backend REST doit embarquer :
+Chaque domaine migré vers le backend REST doit embarquer :
 
 1. **Test mapper** (Flutter) — vérifie champ par champ le mapping DTO ↔ domaine, cas null, rôles/enums inconnus.
 2. **Test ViewModel** (Flutter) — couvre les chemins nominaux et les cas d'erreur (réseau, état incohérent).
 3. **Test contrôleur backend** — au minimum : happy path (200), not found (404), non authentifié (401).
+
+Domaines concernés pour `v0.4.0` :
+
+| Domaine | État attendu |
+|---|---|
+| `user` | REST via client OpenAPI généré |
+| `availability` | REST via Dio + mapper manuel |
+| `showDate` | REST via Dio + mapper manuel |
+| `booking` | REST via Dio + mapper manuel |
 
 ---
 
@@ -72,9 +82,25 @@ Chaque domaine migré de Firestore vers le backend REST doit embarquer :
 - `quarkus.jacoco.reuse-data-file=true` → cumul Surefire (H2) + Failsafe (ITs MySQL) dans un seul rapport.
 - ITs activés en CI avec `-DskipITs=false`.
 
+Commandes utiles :
+
+```bash
+cd violette-back
+./mvnw test
+./mvnw verify
+./mvnw verify -DskipITs=false
+```
+
+```bash
+cd violette_front
+flutter analyze
+flutter test
+flutter test --update-goldens
+```
+
 ---
 
-## Tests de recette manuelle — domaine `user`
+## Tests de recette manuelle — domaines REST
 
 | ID | Scénario |
 |----|----------|
@@ -82,3 +108,11 @@ Chaque domaine migré de Firestore vers le backend REST doit embarquer :
 | USER-REC-02 | Inscription nouvel utilisateur → profil créé, navigation vers Home au prochain lancement |
 | USER-REC-03 | Perte réseau au démarrage → écran d'erreur, aucune navigation silencieuse |
 | USER-REC-04 | Session Firebase sans profil backend → logout + redirection Login |
+
+À compléter avant release avec des recettes courtes pour :
+
+- disponibilité artiste sur téléphone ;
+- planning gérant et détail de date ;
+- présélection en `OPTION` ;
+- demande de confirmation après passage en `CONFIRMED` ;
+- réponse artiste et affichage booking.

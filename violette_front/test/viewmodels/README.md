@@ -1,42 +1,21 @@
-# Tests ViewModels - Volontairement différés - Généré par IA
+# Tests ViewModels
 
-## ⏳ Pourquoi ce dossier est vide
+Ce dossier contient les tests unitaires des ViewModels Flutter.
 
-Les tests ViewModels ont été **volontairement supprimés** pour respecter l'approche agile du projet.
+## Rôle
 
-### Problème rencontré
+Les ViewModels orchestrent les repositories, services Stacked et états d'écran. Les tests doivent rester ciblés sur les comportements utiles :
 
-Les ViewModels dépendent du **locator Stacked (GetIt)** qui doit être initialisé avec tous les services :
-- `NavigationService`
-- `DialogService`
-- `BottomSheetService`
-- `FirebaseAuthenticationService`
-- etc.
+- chargement des données depuis les repositories REST ;
+- navigation selon l'état utilisateur ou métier ;
+- gestion des erreurs réseau ou des états incohérents ;
+- transformation simple d'état UI quand elle n'est pas déjà couverte par un mapper.
 
-Créer des mocks pour tous ces services irait à l'encontre de la stratégie **"tests légers et non bloquants"**.
+## Conventions
 
-### Solution actuelle
+- Utiliser `mocktail` pour isoler les repositories et services externes.
+- Initialiser le locator Stacked uniquement quand le ViewModel en dépend réellement.
+- Garder la logique métier complexe dans les modèles, mappers ou services dédiés afin de pouvoir la tester sans UI.
+- Voir `test/TEST_README.md` et `docs/testing-strategy.md` pour la stratégie globale.
 
-**✅ Focus sur les tests de logique métier pure** (45 tests dans `test/models/`)
-
-Ces tests couvrent les règles critiques :
-- Transitions de statut `AvailabilityStatus`
-- Conversions minutes ↔ HH:mm (`ShowDate`, formatage)
-
-### Quand ajouter des tests ViewModels ?
-
-**Plus tard**, quand :
-1. L'architecture des ViewModels sera stabilisée
-2. Vous serez prêt à créer un setup de locator pour les tests
-3. Les règles métier seront extraites des ViewModels vers des services testables
-
-### Alternative recommandée
-
-Au lieu de tester les ViewModels directement, vous pouvez :
-- Extraire la logique métier en **fonctions pures** ou **services**
-- Tester ces fonctions/services isolément
-- Garder les ViewModels minces (juste de la coordination)
-
----
-
-**Voir `test/TEST_README.md` pour plus d'informations sur la stratégie de tests.**
+Ce fichier n'est pas une justification d'absence de tests : les tests ViewModels existent et doivent être maintenus lorsqu'un flux utilisateur ou REST évolue.

@@ -5,34 +5,115 @@ Toutes les versions suivent la convention Semantic Versioning (MAJOR.MINOR.PATCH
 
 ## [Unreleased] — travaux en cours sur main
 
-### Front-end (Flutter) / Migration REST
-#### Added
-- Mise en place d'OpenAPI Generator (`openapitools.json`) avec le générateur `dart-dio` ; client Dart
-  généré dans `violette_api_client/` à partir du spec OpenAPI du backend.
-- `DioClient` : client HTTP Dio avec intercepteur JWT Firebase (injection automatique du Bearer token).
-- `UserRemoteDataSource` : couche d'accès aux endpoints utilisateur du backend ; seul point d'import
-  du client généré.
-- `RestUserRepository` : implémentation de `UserRepository` via `UserRemoteDataSource` ; remplace
-  `FirestoreUserRepository` pour le domaine `user`.
-- `UserMapper` : conversion `VioletteUserDto` (built_value) ↔ `VioletteUser` (modèle métier Flutter).
-- `docs/migration-domaine-user.md` : documentation technique complète de la migration (setup,
-  flux auth, régénération client, adb reverse, dette résiduelle).
+> Aucun changement non planifié pour le moment après la préparation de `v0.4.0`.
 
-#### Changed
-- `StartupViewModel` : routage initial déterministe — vérifie l'existence du profil backend au
-  démarrage avant de naviguer (Firebase session + profil absent → logout + LoginView).
-- `StartupView` : ajout d'un écran d'erreur avec bouton « Réessayer » si le backend est inaccessible.
-- `HomeViewModel` : profil backend absent → logout + LoginView (cohérent avec StartupViewModel) ;
-  suppression du dead code Stacked (scaffolding généré inutilisé).
-- `RegisterViewModel` : gestion d'erreur backend explicite lors de la création du profil.
-- `LoginViewModel` : navigation vers HomeView après connexion réussie.
+---
 
-### Back-end (Quarkus)
-#### Added
-- `GET /api/users/me/profile` : nouvel endpoint retournant le `VioletteUserDto` complet de
-  l'utilisateur authentifié courant (200 si profil trouvé, 404 sinon).
-- Export automatique du spec OpenAPI vers `target/openapi/openapi.yaml` en profils `dev` et `test`
-  (propriété `quarkus.smallrye-openapi.store-schema-directory`).
+## v0.4.0 – Migration REST frontend, consolidation métier et documentation release
+Date : À venir
+
+### Added
+- Mise en place du client HTTP `DioClient` avec injection automatique du JWT Firebase dans les
+  requêtes REST. Firebase Auth reste utilisé pour l'identité et l'authentification.
+- Ajout du client Dart généré `violette_api_client/` via OpenAPI Generator (`dart-dio`) et de la
+  configuration `openapitools.json`.
+- Ajout des couches REST frontend : remote data sources, repositories et mappers pour les domaines
+  `user`, `availability`, `showDate` et `booking`.
+- Ajout de `UserRemoteDataSource`, `RestUserRepository` et `UserMapper` pour raccorder le profil
+  utilisateur backend (`GET /api/users/me/profile`) au démarrage de l'application.
+- Ajout d'endpoints backend pour les disponibilités artistes, dont la création / mise à jour de la
+  disponibilité courante et la lecture des disponibilités d'une date.
+- Ajout de l'identifiant `artistFirebaseUid` dans les données de disponibilité afin de sécuriser le
+  rapprochement frontend entre disponibilité, artiste Firebase et profil backend.
+- Ajout d'un endpoint `GET /api/companies/mine` pour résoudre la compagnie du gérant courant lors
+  de la création REST des dates.
+- Ajout des DTOs backend `UpdateShowDateRequestDto` et `UpsertAvailabilityRequestDto` pour les flux
+  REST de mise à jour partielle et de disponibilité.
+
+### Changed
+- Migration REST côté frontend des domaines `user`, `availability`, `showDate` et `booking`.
+  Firestore est retiré du code métier frontend pour ces domaines, sans supprimer Firebase Auth.
+- Remplacement de la persistance Firestore des dates, disponibilités et bookings par des appels au
+  backend Quarkus via Dio, repositories REST et mappers dédiés.
+- Nettoyage du modèle Flutter `ShowDate` : suppression des champs et méthodes Firestore
+  (`fromFirestore`, `toFirestore`, disponibilités embarquées), alignement sur le DTO REST et sur
+  `meetingTime`.
+- Nettoyage du domaine `booking` frontend : suppression du service Firestore, raccordement de la
+  sélection, désélection, envoi des demandes, réponse artiste et demandes en attente aux endpoints
+  REST.
+- Clarification de `ShowDateStatus` : `INQUIRY`, `OPTION`, `CONFIRMED`, `STAFFED`, `CANCELLED`,
+  `ARCHIVED`, avec distinction entre demande client, option, date confirmée et équipe complète.
+- Clarification de `AvailabilityStatus` : remplacement de `CONDITIONAL` par `IF_NEEDED` et libellé
+  utilisateur « Si besoin ».
+- Clarification de `BookingStatus` : distinction entre présélection (`SELECTED` / `preselected`),
+  demande de confirmation, confirmation, refus et annulation.
+- Distinction métier explicitée entre disponibilité, présélection en `OPTION` et booking ferme après
+  confirmation client.
+- Configuration réseau Flutter via `--dart-define=API_BASE_URL=...`, utilisée en local, sur
+  émulateur, téléphone Android et APK de production.
+- Export OpenAPI automatique en profils `dev` et `test`, et alignement de la version Swagger/OpenAPI
+  sur le tag de release pendant le workflow de déploiement.
+- Ajustement de la configuration datasource Quarkus pour isoler les profils `dev`, `test`,
+  `integration` et `prod`.
+
+### Removed
+- Suppression des dépendances Flutter `cloud_firestore` et `fake_cloud_firestore`, ainsi que de leurs
+  dépendances transitives devenues inutiles.
+- Suppression des anciens services frontend Firestore `booking_service.dart`, `show_date_service.dart`
+  et `violette_user_service.dart`.
+- Suppression des tests frontend attachés à l'ancien service Firestore de booking.
+- Suppression des reliquats de mapping Firestore dans les modèles métier frontend migrés.
+
+### Fixed
+- Correction de l'identification artiste dans le flux disponibilité / détail de date après migration
+  REST, avec prise en compte des identifiants backend et du `firebaseUid` historique si nécessaire.
+- Correction de l'affichage des bookings dans le détail de date manager pour l'aligner sur les données
+  renvoyées par le backend REST.
+- Correction des cases de sélection et de la sémantique de sélection / présélection dans le détail
+  manager.
+- Correction d'un import `firebase_auth` redondant dans les tests Flutter.
+- Correction d'avertissements d'analyse statique sur le domaine disponibilité.
+
+### Tests
+- Ajout de tests backend pour les contrôleurs `artistbooking`, `showdate`, `cabaretcompany` et
+  `violetteuser`, dont les flux disponibilités, suppression, mise à jour et profil utilisateur.
+- Ajout de tests backend de service pour `ArtistAvailabilityService` et `ShowDateService`.
+- Consolidation des tests repository backend autour de `artistbooking`, `showdate` et des agrégats.
+- Ajout de tests Flutter pour les remote data sources REST `booking` et `showDate`.
+- Ajout de tests Flutter pour les mappers `user`, `availability`, `showDate` et `artistBooking`.
+- Ajout et mise à jour de tests ViewModel (`startup`, `home`, `availability_choice`,
+  `manager_planning`, `manager_date_detail`) pour les flux REST et les cas d'erreur.
+- Activation des tests d'intégration backend dans la CI avec `-DskipITs=false`.
+
+### Documentation
+- Ajout et mise à jour de la documentation de migration REST, de stratégie de tests et de démarrage
+  frontend avec `API_BASE_URL`.
+- Ajout d'une documentation métier consolidée sur les statuts, la disponibilité, la présélection et
+  le booking ferme.
+- Ajout d'une documentation d'architecture globale Flutter / Quarkus / Firebase Auth / REST.
+- Ajout d'une checklist de préparation `v0.4.0` couvrant tests, Swagger, Fly.io et APK.
+- Mise à jour du README racine avec une section d'installation Android destinée aux artistes et
+  gérants non techniques.
+- Mise à jour des README frontend, backend, déploiement, tests et documentation utilisateur pour
+  refléter l'état REST actuel.
+
+### CI/CD
+- Extension des déclencheurs Flutter CI aux branches `feature/**`.
+- Extension des déclencheurs backend CI aux branches `feature/**` et `refactor/**`.
+- Exécution des tests d'intégration backend dans `backend-ci.yml`.
+- Alignement de la version Maven sur le tag `vX.Y.Z` dans `deploy.yml` afin que Quarkus et Swagger
+  exposent la version de release.
+- Build APK de release avec `--dart-define=API_BASE_URL=https://violette-back.fly.dev`.
+
+### Known limitations
+- Firebase Auth reste nécessaire : la release supprime Firestore du code métier frontend migré, mais
+  ne supprime pas Firebase comme fournisseur d'identité.
+- Le client OpenAPI généré est introduit et utilisé pour le domaine `user`, tandis que `availability`,
+  `showDate` et `booking` utilisent encore Dio avec JSON et mappers manuels.
+- Des garde-fous de compatibilité autour de `firebaseUid` restent présents pour absorber certaines
+  données historiques pendant la transition vers les identifiants backend.
+- Les tests générés dans `violette_api_client/test` restent des squelettes OpenAPI et ne constituent
+  pas une barrière fonctionnelle complète.
 
 ---
 

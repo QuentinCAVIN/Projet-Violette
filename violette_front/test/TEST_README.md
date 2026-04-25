@@ -207,7 +207,7 @@ final showDates = TestDataBuilders.createTestShowDatesForMonth(
 Ces éléments sont volontairement **reportés** pour rester agile :
 
 - **Smoke tests** (2-3 tests end-to-end)
-- **Tests services** avec mocks Firestore
+- **Tests repositories / remote data sources** avec mocks HTTP ou clients REST
 - **Widget tests** pour l'UI
 - **Injection de dépendances** dans les services
 - **Coverage** > 80%
