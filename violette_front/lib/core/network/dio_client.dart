@@ -20,8 +20,12 @@ class DioClient {
   /// **Téléphone sur le même Wi‑Fi que le PC** (sans adb reverse) : mettre l’IP
   /// locale du PC, ex. `http://192.168.1.42:8080` (cmd Windows : `ipconfig`).
   ///
-  /// **Production** : URL HTTPS du backend déployé.
-  static const String _baseUrl = 'http://127.0.0.1:8080';
+  /// **Production** : passer l'URL Fly.io au build :
+  /// `--dart-define=API_BASE_URL=https://violette-back.fly.dev`
+  static const String _baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://127.0.0.1:8080',
+  );
 
   static Dio create() {
     final dio = Dio(

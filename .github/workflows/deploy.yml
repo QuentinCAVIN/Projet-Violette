@@ -199,11 +199,7 @@ jobs:
         run: flutter pub get
 
       - name: Build release APK
-        # Note : aucun --dart-define nécessaire pour l'instant.
-        # Le frontend utilise Firebase/Firestore directement — pas d'appel HTTP au backend Quarkus.
-        # À ajouter ici quand la migration Firebase → Quarkus sera effectuée :
-        #   --dart-define=API_BASE_URL=https://violette-back.fly.dev
-        run: flutter build apk --release
+        run: flutter build apk --release --dart-define=API_BASE_URL=https://violette-back.fly.dev
 
       - name: Upload APK to GitHub Release
         env:
