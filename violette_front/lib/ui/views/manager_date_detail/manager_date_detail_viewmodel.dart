@@ -309,4 +309,48 @@ class ManagerDateDetailViewModel extends BaseViewModel {
       );
     }
   }
+
+  List<ShowDateStatus> getAvailableNextStatuses() {
+    switch (displayedShowDate.status) {
+      case ShowDateStatus.inquiry:
+        return const [ShowDateStatus.option];
+      case ShowDateStatus.option:
+        return const [ShowDateStatus.confirmed];
+      case ShowDateStatus.confirmed:
+        return const [ShowDateStatus.staffed];
+      case ShowDateStatus.staffed:
+      case ShowDateStatus.cancelled:
+      case ShowDateStatus.archived:
+        return const [];
+    }
+  }
+
+  Future<void> changeShowDateStatus(ShowDateStatus targetStatus) async {
+    final dateId =
+        displayedShowDate.id.isNotEmpty ? displayedShowDate.id : showDate.id;
+    if (dateId.isEmpty) {
+      _snackbarService.showSnackbar(
+        message: "Identifiant de date manquant.",
+        duration: const Duration(seconds: 2),
+      );
+      return;
+    }
+
+    try {
+      await _showDateRepository.updateShowDateStatus(dateId, targetStatus);
+      await _refreshAfterAction();
+      await _loadAvailabilities();
+      await _loadAllArtists();
+      rebuildUi();
+      _snackbarService.showSnackbar(
+        message: "Statut mis à jour : ${targetStatus.label}.",
+        duration: const Duration(seconds: 2),
+      );
+    } catch (e) {
+      await _dialogService.showDialog(
+        title: 'Changement de statut impossible',
+        description: e.toString(),
+      );
+    }
+  }
 }

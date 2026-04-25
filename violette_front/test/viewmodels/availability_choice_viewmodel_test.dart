@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:dio/dio.dart';
 import 'package:violette_front/app/app.locator.dart';
 import 'package:violette_front/models/availability.dart';
 import 'package:violette_front/ui/views/availability_choice/availability_choice_viewmodel.dart';
@@ -20,7 +21,7 @@ void main() {
           () {
         // Le service mocké renvoie une liste vide
         final showDateRepo = getAndRegisterShowDateRepository();
-        when(() => showDateRepo.getAllShowDates())
+        when(() => showDateRepo.getMyAvailableShowDates())
             .thenAnswer((_) => Future.value([]));
 
         final viewModel = AvailabilityChoiceViewModel();
@@ -50,18 +51,18 @@ void main() {
           totalRequiredArtists: 1,
         );
 
-        when(() => showDateRepo.getAllShowDates())
+        when(() => showDateRepo.getMyAvailableShowDates())
             .thenAnswer((_) => Future.value([dummyShowDate]));
         when(
-          () => availabilityRepo.getAvailabilitiesForDate('show-date-1'),
+          () => availabilityRepo.getMyAvailabilityForDate('show-date-1'),
         ).thenAnswer(
-          (_) => Future.value([
+          (_) => Future.value(
             Availability(
               artistId: '42',
               artistFirebaseUid: 'uid-123',
               status: AvailabilityStatus.available,
             ),
-          ]),
+          ),
         );
         when(() => authService.currentUser).thenReturn(MockUser(
             uid: 'uid-123')); // besoin d'un utilisateur fictif ou similaire
@@ -91,17 +92,17 @@ void main() {
             totalRequiredArtists: 1,
           );
 
-          when(() => showDateRepo.getAllShowDates())
+          when(() => showDateRepo.getMyAvailableShowDates())
               .thenAnswer((_) => Future.value([dummyShowDate]));
-          when(() => availabilityRepo.getAvailabilitiesForDate('show-date-2'))
+          when(() => availabilityRepo.getMyAvailabilityForDate('show-date-2'))
               .thenAnswer(
-            (_) => Future.value([
+            (_) => Future.value(
               Availability(
-                artistId: '42', // id backend numérique conservé pour les usages métier manager
+                artistId: '42',
                 artistFirebaseUid: 'firebase-uid-artist',
                 status: AvailabilityStatus.available,
               ),
-            ]),
+            ),
           );
           when(() => authService.currentUser).thenReturn(
             MockUser(uid: 'firebase-uid-artist'),
@@ -117,9 +118,10 @@ void main() {
       );
 
       test(
-        'getStatusForDay_whenArtistFirebaseUidIsMissing_returnsPending',
+        'getStatusForDay_whenMyAvailabilityIsReturnedWithoutFirebaseUid_stillUsesStatus',
         () async {
-          // Garde-fou défensif: si le backend ne fournit pas le Firebase UID, on évite toute mauvaise attribution.
+          // Le endpoint /availabilities/me renvoie la disponibilité de l'utilisateur courant.
+          // Le Firebase UID n'est donc plus nécessaire pour faire un matching côté frontend.
           final showDateRepo = getAndRegisterShowDateRepository();
           final availabilityRepo = getAndRegisterAvailabilityRepository();
           final authService = getAndRegisterFirebaseAuthenticationService();
@@ -134,16 +136,16 @@ void main() {
             totalRequiredArtists: 1,
           );
 
-          when(() => showDateRepo.getAllShowDates())
+          when(() => showDateRepo.getMyAvailableShowDates())
               .thenAnswer((_) => Future.value([dummyShowDate]));
-          when(() => availabilityRepo.getAvailabilitiesForDate('show-date-4'))
+          when(() => availabilityRepo.getMyAvailabilityForDate('show-date-4'))
               .thenAnswer(
-            (_) => Future.value([
+            (_) => Future.value(
               Availability(
                 artistId: '42',
                 status: AvailabilityStatus.available,
               ),
-            ]),
+            ),
           );
           when(() => authService.currentUser).thenReturn(
             MockUser(uid: 'firebase-uid-artist'),
@@ -152,7 +154,7 @@ void main() {
           final viewModel = AvailabilityChoiceViewModel();
           await viewModel.loadShowDates();
 
-          expect(viewModel.getStatusForDay(cleanDate), AvailabilityStatus.pending);
+          expect(viewModel.getStatusForDay(cleanDate), AvailabilityStatus.available);
         },
       );
 
@@ -173,17 +175,17 @@ void main() {
             totalRequiredArtists: 1,
           );
 
-          when(() => showDateRepo.getAllShowDates())
+          when(() => showDateRepo.getMyAvailableShowDates())
               .thenAnswer((_) => Future.value([dummyShowDate]));
-          when(() => availabilityRepo.getAvailabilitiesForDate('show-date-3'))
+          when(() => availabilityRepo.getMyAvailabilityForDate('show-date-3'))
               .thenAnswer(
-            (_) => Future.value([
+            (_) => Future.value(
               Availability(
                 artistId: '77',
                 artistFirebaseUid: 'uid-artist-if-needed',
                 status: AvailabilityStatus.ifNeeded,
               ),
-            ]),
+            ),
           );
           when(() => authService.currentUser)
               .thenReturn(MockUser(uid: 'uid-artist-if-needed'));
@@ -192,6 +194,57 @@ void main() {
           await viewModel.loadShowDates();
 
           expect(viewModel.getStatusForDay(cleanDate), AvailabilityStatus.ifNeeded);
+        },
+      );
+
+      test(
+        'loadShowDates_whenMyAvailabilityEndpointReturns403_showsAccessDeniedSnackbar',
+        () async {
+          final showDateRepo = getAndRegisterShowDateRepository();
+          final availabilityRepo = getAndRegisterAvailabilityRepository();
+          final authService = getAndRegisterFirebaseAuthenticationService();
+          final snackbarService = getAndRegisterSnackbarService();
+
+          final dummyShowDate = ShowDate(
+            id: 'show-date-403',
+            title: 'Test 403',
+            date: DateTime(2025, 10, 14),
+            meetingTimeMinutes: 0,
+            address: 'Paris',
+            totalRequiredArtists: 1,
+          );
+
+          when(() => showDateRepo.getMyAvailableShowDates())
+              .thenAnswer((_) async => [dummyShowDate]);
+          when(() => authService.currentUser).thenReturn(MockUser(uid: 'uid-403'));
+          when(() => availabilityRepo.getMyAvailabilityForDate('show-date-403'))
+              .thenThrow(
+            DioException(
+              requestOptions: RequestOptions(path: '/api/show-dates/show-date-403/availabilities/me'),
+              response: Response(
+                requestOptions: RequestOptions(path: '/api/show-dates/show-date-403/availabilities/me'),
+                statusCode: 403,
+              ),
+            ),
+          );
+          when(() => snackbarService.showSnackbar(
+                message: any(named: 'message'),
+                title: any(named: 'title'),
+                duration: any(named: 'duration'),
+                mainButtonTitle: any(named: 'mainButtonTitle'),
+                onTap: any(named: 'onTap'),
+              )).thenReturn(null);
+
+          final viewModel = AvailabilityChoiceViewModel();
+          await viewModel.loadShowDates();
+
+          verify(() => snackbarService.showSnackbar(
+                message: 'Accès refusé pour charger votre disponibilité.',
+                title: any(named: 'title'),
+                duration: any(named: 'duration'),
+                mainButtonTitle: any(named: 'mainButtonTitle'),
+                onTap: any(named: 'onTap'),
+              )).called(1);
         },
       );
     });

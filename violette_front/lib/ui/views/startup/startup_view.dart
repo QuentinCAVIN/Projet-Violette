@@ -36,10 +36,22 @@ class StartupView extends StackedView<StartupViewModel> {
                   style: const TextStyle(fontSize: 13, color: Colors.black54),
                 ),
                 const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  onPressed: viewModel.runStartupLogic,
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Réessayer'),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 8,
+                  alignment: WrapAlignment.center,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: viewModel.runStartupLogic,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Réessayer'),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: viewModel.logoutAndGoToLogin,
+                      icon: const Icon(Icons.logout),
+                      label: const Text('Se déconnecter'),
+                    ),
+                  ],
                 ),
               ],
             ),

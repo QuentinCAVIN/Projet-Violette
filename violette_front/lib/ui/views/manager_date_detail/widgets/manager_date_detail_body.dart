@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
+import 'package:violette_front/models/enums/show_date_status.dart';
 import 'package:violette_front/ui/views/manager_date_detail/widgets/booking_status_pill.dart';
 import 'package:violette_front/ui/views/manager_date_detail/manager_date_detail_viewmodel.dart';
 import 'package:violette_front/ui/widgets/common/availability_status_pill.dart';
@@ -16,6 +17,7 @@ class ManagerDateDetailBody extends ViewModelWidget<ManagerDateDetailViewModel> 
   Widget build(BuildContext context, ManagerDateDetailViewModel viewModel) {
     final theme = Theme.of(context);
     final currentShowDate = viewModel.displayedShowDate;
+    final availableNextStatuses = viewModel.getAvailableNextStatuses();
 
     final listView = ListView.builder(
       shrinkWrap: isInline,
@@ -83,40 +85,76 @@ class ManagerDateDetailBody extends ViewModelWidget<ManagerDateDetailViewModel> 
 
     final children = <Widget>[
       Container(
+        width: double.infinity,
         padding: const EdgeInsets.all(16),
         color: theme.colorScheme.surfaceContainerHighest,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Flexible(
-              child: Text(
-                "Sélection : ${currentShowDate.selectedCount} / ${currentShowDate.totalRequiredArtists}",
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onSurfaceVariant,
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    "Sélection : ${currentShowDate.selectedCount} / ${currentShowDate.totalRequiredArtists}",
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-                overflow: TextOverflow.ellipsis,
-              ),
+                if (isInline && availableNextStatuses.isNotEmpty) ...[
+                  const SizedBox(width: 8),
+                  PopupMenuButton<ShowDateStatus>(
+                    icon: const Icon(Icons.swap_horiz),
+                    tooltip: 'Changer le statut',
+                    onSelected: viewModel.changeShowDateStatus,
+                    itemBuilder: (context) => availableNextStatuses
+                        .map(
+                          (status) => PopupMenuItem<ShowDateStatus>(
+                            value: status,
+                            child: Text('Passer en ${status.label}'),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ],
+              ],
             ),
-            const SizedBox(width: 16),
-            ElevatedButton(
-              onPressed: viewModel.canSendConfirmation
-                  ? viewModel.sendConfirmation
-                  : null,
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(120, 36),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: ElevatedButton(
+                onPressed: viewModel.canSendConfirmation
+                    ? viewModel.sendConfirmation
+                    : null,
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(0, 36),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                ),
+                child: const Text(
+                  "Demander confirmation",
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              child: const Text("Demander confirmation"),
             ),
           ],
         ),
       ),
       if (viewModel.isBusy)
-        const Expanded(
-          child: Center(
-            child: CircularProgressIndicator(),
-          ),
-        )
+        if (isInline)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Center(
+              child: CircularProgressIndicator(),
+            ),
+          )
+        else
+          const Expanded(
+            child: Center(
+              child: CircularProgressIndicator(),
+            ),
+          )
       else if (isInline)
         listView
       else
@@ -124,6 +162,7 @@ class ManagerDateDetailBody extends ViewModelWidget<ManagerDateDetailViewModel> 
     ];
 
     return Column(
+      mainAxisSize: isInline ? MainAxisSize.min : MainAxisSize.max,
       children: children,
     );
   }

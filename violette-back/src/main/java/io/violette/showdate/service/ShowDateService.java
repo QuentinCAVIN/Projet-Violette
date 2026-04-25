@@ -1,6 +1,7 @@
 package io.violette.showdate.service;
 
 import io.violette.artistbooking.repository.ArtistBookingRepository;
+import io.violette.cabaretcompany.repository.CompanyMemberRepository;
 import io.violette.cabaretcompany.exception.CabaretCompanyNotFoundException;
 import io.violette.cabaretcompany.exception.CabaretShowNotFoundException;
 import io.violette.cabaretcompany.model.CabaretCompanyEntity;
@@ -20,13 +21,17 @@ import io.violette.showdate.model.ShowDateSkillRequirementEntity;
 import io.violette.showdate.model.ShowDateStatus;
 import io.violette.showdate.repository.ShowDateRepository;
 import io.violette.showdate.repository.ShowDateSkillRequirementRepository;
+import io.violette.security.JwtPrincipalInfo;
+import io.violette.violetteuser.exception.UserNotFoundException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.BadRequestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -41,6 +46,16 @@ public class ShowDateService {
 
     private static final DateTimeFormatter DISPLAY_TITLE_DATE_FORMAT =
             DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.FRENCH);
+    private static final List<ShowDateStatus> ARTIST_VISIBLE_STATUSES = Arrays.asList(
+            ShowDateStatus.OPTION,
+            ShowDateStatus.CONFIRMED,
+            ShowDateStatus.STAFFED
+    );
+    private static final List<ShowDateStatus> V040_ALLOWED_MANAGER_STATUS_TARGETS = Arrays.asList(
+            ShowDateStatus.OPTION,
+            ShowDateStatus.CONFIRMED,
+            ShowDateStatus.STAFFED
+    );
 
     @Inject
     ShowDateRepository showDateRepository;
@@ -62,6 +77,12 @@ public class ShowDateService {
 
     @Inject
     ShowDateSkillRequirementMapper skillRequirementMapper;
+
+    @Inject
+    CompanyMemberRepository companyMemberRepository;
+
+    @Inject
+    io.violette.violetteuser.repository.VioletteUserRepository violetteUserRepository;
 
     /**
      * Crée une nouvelle date de spectacle.
@@ -119,6 +140,28 @@ public class ShowDateService {
     public List<ShowDateDto> getAll() {
         LOG.debug("Récupération de toutes les dates de spectacle");
         return showDateRepository.findAllOrderByEventDateAsc().stream()
+                .map(this::mapToDto)
+                .toList();
+    }
+
+    /**
+     * Règle temporaire v0.4.0 :
+     * liste les dates visibles pour l'artiste courant en limitant les statuts exposés
+     * (OPTION, CONFIRMED, STAFFED) et aux compagnies dont il est membre.
+     */
+    public List<ShowDateDto> getVisibleForArtist(JwtPrincipalInfo principal) {
+        var artist = violetteUserRepository.findByFirebaseUid(principal.firebaseUid())
+                .orElseThrow(UserNotFoundException::new);
+        var companyIds = companyMemberRepository.findByArtistId(artist.getId()).stream()
+                .map(membership -> membership.getId().getCompanyId())
+                .distinct()
+                .toList();
+
+        if (companyIds.isEmpty()) {
+            return List.of();
+        }
+
+        return showDateRepository.findByCompanyIdsAndStatuses(companyIds, ARTIST_VISIBLE_STATUSES).stream()
                 .map(this::mapToDto)
                 .toList();
     }
@@ -184,9 +227,31 @@ public class ShowDateService {
         if (request.showDetails() != null) {
             entity.setShowDetails(request.showDetails());
         }
+        if (request.status() != null) {
+            applyV040StatusTransition(entity, request.status());
+        }
 
         showDateRepository.flush();
         return mapToDto(entity);
+    }
+
+    /**
+     * Règle transitoire v0.4.0 :
+     * autorise uniquement les transitions nécessaires au test E2E.
+     */
+    private void applyV040StatusTransition(ShowDateEntity entity, ShowDateStatus targetStatus) {
+        ShowDateStatus currentStatus = entity.getStatus();
+        boolean isAllowed =
+                (currentStatus == ShowDateStatus.INQUIRY && targetStatus == ShowDateStatus.OPTION)
+                        || (currentStatus == ShowDateStatus.OPTION && targetStatus == ShowDateStatus.CONFIRMED)
+                        || (currentStatus == ShowDateStatus.CONFIRMED && targetStatus == ShowDateStatus.STAFFED);
+
+        if (!isAllowed || !V040_ALLOWED_MANAGER_STATUS_TARGETS.contains(targetStatus)) {
+            throw new BadRequestException(
+                    "Transition de statut non autorisée en v0.4.0 : " + currentStatus + " -> " + targetStatus
+            );
+        }
+        entity.setStatus(targetStatus);
     }
 
     /**

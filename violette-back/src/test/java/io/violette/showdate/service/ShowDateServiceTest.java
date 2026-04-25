@@ -14,6 +14,7 @@ import io.violette.showdate.dto.ShowDateDto;
 import io.violette.showdate.dto.UpdateShowDateRequestDto;
 import io.violette.showdate.exception.ShowDateNotFoundException;
 import io.violette.showdate.model.ShowDateEntity;
+import io.violette.showdate.model.ShowDateStatus;
 import io.violette.showdate.repository.ShowDateRepository;
 import io.violette.violetteuser.model.ArtistSkill;
 import io.violette.violetteuser.model.UserRole;
@@ -21,6 +22,7 @@ import io.violette.violetteuser.model.VioletteUserEntity;
 import io.violette.violetteuser.repository.VioletteUserRepository;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.BadRequestException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -233,7 +235,8 @@ class ShowDateServiceTest {
                 "Lyon - Centre",
                 null,
                 null,
-                "Détails modifiés"
+                "Détails modifiés",
+                null
         ));
 
         assertEquals(LocalDate.of(2026, 4, 11), updated.eventDate());
@@ -250,8 +253,64 @@ class ShowDateServiceTest {
     void updateShowDate_whenShowDateMissing_thenThrowNotFound() {
         assertThrows(ShowDateNotFoundException.class, () -> showDateService.updateShowDate(
                 999_999L,
-                new UpdateShowDateRequestDto(LocalDate.now(), null, null, null, null, null)
+                new UpdateShowDateRequestDto(LocalDate.now(), null, null, null, null, null, null)
         ));
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("updateShowDate autorise la transition minimale INQUIRY -> OPTION")
+    void updateShowDate_whenStatusTransitionIsInquiryToOption_thenSucceeds() {
+        Seed seed = seedCompanyAndManager("svc-upd-status-ok");
+        ShowDateDto created = showDateService.createShowDate(new CreateShowDateRequestDto(
+                seed.company.getId(),
+                null,
+                LocalDate.of(2026, 4, 10),
+                LocalTime.of(17, 30),
+                "Lyon",
+                "Contact Initial",
+                "0600001111",
+                "Détails initiaux"
+        ));
+
+        ShowDateDto updated = showDateService.updateShowDate(created.id(), new UpdateShowDateRequestDto(
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                ShowDateStatus.OPTION
+        ));
+
+        assertEquals(ShowDateStatus.OPTION, updated.status());
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("updateShowDate refuse une transition hors séquence INQUIRY -> CONFIRMED")
+    void updateShowDate_whenStatusTransitionSkipsStep_thenThrowsBadRequest() {
+        Seed seed = seedCompanyAndManager("svc-upd-status-ko");
+        ShowDateDto created = showDateService.createShowDate(new CreateShowDateRequestDto(
+                seed.company.getId(),
+                null,
+                LocalDate.of(2026, 4, 10),
+                LocalTime.of(17, 30),
+                "Lyon",
+                "Contact Initial",
+                "0600001111",
+                "Détails initiaux"
+        ));
+
+        assertThrows(BadRequestException.class, () -> showDateService.updateShowDate(created.id(), new UpdateShowDateRequestDto(
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                ShowDateStatus.CONFIRMED
+        )));
     }
 
     private record Seed(CabaretCompanyEntity company, VioletteUserEntity manager) {

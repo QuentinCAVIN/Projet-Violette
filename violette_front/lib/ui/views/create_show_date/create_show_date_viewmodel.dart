@@ -10,6 +10,7 @@ import 'create_show_date_view.form.dart';
 
 class CreateShowDateViewModel extends FormViewModel {
   final _navigationService = locator<NavigationService>();
+  final _dialogService = locator<DialogService>();
   final _showDateRepository = locator<ShowDateRepository>();
 
   bool formAlreadyValidatedOnce = false;
@@ -129,8 +130,20 @@ class CreateShowDateViewModel extends FormViewModel {
       clientContactPhone: clientContactPhoneController.text.trim(),
     );
 
-    await runBusyFuture(_showDateRepository.addShowDate(showDate));
-    _navigationService.replaceWithHomeView();
+    try {
+      await runBusyFuture(_showDateRepository.addShowDate(showDate));
+      _navigationService.replaceWithHomeView();
+    } catch (e) {
+      final message = e.toString();
+      final isNoCompanyError = message.contains('aucune compagnie associée');
+
+      await _dialogService.showDialog(
+        title: 'Création de date impossible',
+        description: isNoCompanyError
+            ? 'Impossible de créer la date. Votre compte manager n’est associé à aucune compagnie.'
+            : 'Impossible de créer la date pour le moment. Merci de réessayer.',
+      );
+    }
   }
 
   void navigateBack() {

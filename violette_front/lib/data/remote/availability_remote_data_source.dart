@@ -63,5 +63,29 @@ class AvailabilityRemoteDataSource {
       },
     );
   }
+
+  /// Lit uniquement la disponibilité de l'artiste courant pour une date.
+  ///
+  /// GET /api/show-dates/{id}/availabilities/me
+  Future<Availability> getMyAvailabilityForDate(String showDateId) async {
+    final response = await _dio.get('/api/show-dates/$showDateId/availabilities/me');
+    final data = response.data;
+
+    if (data is Map<String, dynamic>) {
+      return AvailabilityMapper.fromJson(data);
+    }
+
+    if (data is String) {
+      final decoded = jsonDecode(data);
+      if (decoded is Map<String, dynamic>) {
+        return AvailabilityMapper.fromJson(decoded);
+      }
+    }
+
+    return Availability(
+      artistId: '',
+      status: AvailabilityMapper.fromApiStatus('PENDING'),
+    );
+  }
 }
 

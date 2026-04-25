@@ -1,6 +1,7 @@
 package io.violette.violetteuser.service;
 
 import io.quarkus.panache.common.Page;
+import io.violette.cabaretcompany.service.CabaretCompanyService;
 import io.violette.security.JwtPrincipalInfo;
 import io.violette.violetteuser.dto.AuthenticatedUserDto;
 import io.violette.violetteuser.dto.CreateUserRequestDto;
@@ -33,6 +34,9 @@ public class VioletteUserService {
 
     @Inject
     VioletteUserMapper violetteUserMapper;
+
+    @Inject
+    CabaretCompanyService cabaretCompanyService;
 
     /**
      * Construit le DTO de l'utilisateur courant à partir du principal JWT.
@@ -83,6 +87,12 @@ public class VioletteUserService {
         entity.setRoles(roles);
 
         violetteUserRepository.persist(entity);
+        // Règle temporaire v0.4.0 :
+        // rattacher automatiquement tous les utilisateurs (MANAGER et/ou ARTIST)
+        // à la compagnie unique "Dream's Production" en attendant v0.5.0.
+        if (roles.contains(UserRole.MANAGER) || roles.contains(UserRole.ARTIST)) {
+            cabaretCompanyService.ensureUserAttachedToDefaultCompany(entity);
+        }
         return violetteUserMapper.toDto(entity);
     }
 

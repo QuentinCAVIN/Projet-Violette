@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_firebase_auth/stacked_firebase_auth.dart';
 import 'package:violette_front/app/app.locator.dart';
@@ -48,13 +49,36 @@ class StartupViewModel extends BaseViewModel {
         await _authenticationService.logout();
         _navigationService.replaceWithLoginView();
       }
+    } on DioException catch (e) {
+      final code = e.response?.statusCode;
+
+      if (code == 404) {
+        startupError =
+            'Ton compte est bien connecté à Firebase, mais ton profil backend est introuvable.\n'
+            'Ceci arrive souvent en dev quand la base H2 est vide après redémarrage.\n\n'
+            'Tu peux appuyer sur "Se déconnecter" puis te reconnecter / te réinscrire.';
+      } else if (code == 401 || code == 403) {
+        startupError =
+            'Session invalide ou refusée par le backend.\n'
+            'Appuie sur "Se déconnecter", puis reconnecte-toi.';
+      } else {
+        startupError =
+            'Impossible de joindre le serveur au démarrage.\n'
+            'Vérifie que Quarkus tourne (profil firebase + FIREBASE_PROJECT_ID) '
+            'et que adb reverse est actif si tu es sur téléphone USB.\n\n$e';
+      }
+      rebuildUi();
     } catch (e) {
-      // Backend inaccessible ou erreur réseau — on ne navigue pas aveuglément.
+      // Erreur non prévue — on affiche un message explicite et actionnable.
       startupError =
-          'Impossible de joindre le serveur au démarrage.\n'
-          'Vérifie que Quarkus tourne (profil firebase + FIREBASE_PROJECT_ID) '
-          'et que adb reverse est actif si tu es sur téléphone USB.\n\n$e';
+          'Erreur inattendue au démarrage.\n'
+          'Appuie sur "Se déconnecter" puis reconnecte-toi.\n\n$e';
       rebuildUi();
     }
+  }
+
+  Future<void> logoutAndGoToLogin() async {
+    await _authenticationService.logout();
+    _navigationService.replaceWithLoginView();
   }
 }

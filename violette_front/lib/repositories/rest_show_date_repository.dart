@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:violette_front/data/remote/show_date_remote_data_source.dart';
+import 'package:violette_front/models/enums/show_date_status.dart';
 import 'package:violette_front/models/show_date.dart';
 
 import 'show_date_repository.dart';
@@ -15,6 +16,11 @@ class RestShowDateRepository implements ShowDateRepository {
   @override
   Future<List<ShowDate>> getAllShowDates() async {
     return _remoteDataSource.getAllShowDates();
+  }
+
+  @override
+  Future<List<ShowDate>> getMyAvailableShowDates() async {
+    return _remoteDataSource.getMyAvailableShowDates();
   }
 
   @override
@@ -82,6 +88,22 @@ class RestShowDateRepository implements ShowDateRepository {
       clientContactName: updated.clientContactName,
       clientContactPhone: updated.clientContactPhone,
       showDetails: updated.description,
+    );
+  }
+
+  @override
+  Future<void> updateShowDateStatus(
+    String showDateId,
+    ShowDateStatus status,
+  ) async {
+    final normalizedUid = showDateId.trim();
+    if (normalizedUid.isEmpty) {
+      throw ArgumentError('Identifiant de date vide.');
+    }
+
+    await _remoteDataSource.updateShowDate(
+      showDateId: normalizedUid,
+      status: status,
     );
   }
 }

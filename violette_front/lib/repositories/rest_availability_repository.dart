@@ -29,6 +29,15 @@ class RestAvailabilityRepository implements AvailabilityRepository {
   }
 
   @override
+  Future<Availability> getMyAvailabilityForDate(String showDateId) async {
+    try {
+      return await _remoteDataSource.getMyAvailabilityForDate(showDateId);
+    } on DioException {
+      rethrow;
+    }
+  }
+
+  @override
   Future<void> upsertMyAvailability({
     required String showDateId,
     required AvailabilityStatus status,

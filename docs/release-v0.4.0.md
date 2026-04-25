@@ -83,3 +83,28 @@ Après déploiement :
 - Vérifier que `violette_api_client` ne contredit pas les enums métier actuelles avant de s'en servir comme référence.
 - Ne pas réintroduire Firestore comme source métier frontend pour les domaines migrés.
 - Vérifier que `API_BASE_URL` est bien fourni au build APK de production.
+
+---
+
+## Limitation temporaire v0.4.0 — compagnie unique
+
+Pour éviter de bloquer la démo et les tests de création de date (`POST /api/show-dates`) :
+
+- le backend initialise une compagnie unique nommée `Dream's Production` si possible ;
+- tout utilisateur créé avec le rôle `MANAGER` et/ou `ARTIST` est automatiquement rattaché à cette compagnie ;
+- la logique est volontairement temporaire et documentée dans le code backend (bootstrap v0.4.0).
+- l'exposition des dates côté artiste passe par des endpoints dédiés (`/api/show-dates/me/available` et `/api/show-dates/{id}/availabilities/me`) pour ne pas exposer les disponibilités des autres artistes.
+- une action manager minimale permet de changer manuellement le statut d'une date pour tester le flux `INQUIRY -> OPTION -> CONFIRMED` (et `CONFIRMED -> STAFFED`) en v0.4.0.
+
+Conséquence :
+
+- en local H2 comme en production, la release `v0.4.0` reste testable de bout en bout sans écran de gestion de compagnie.
+- le cycle de vie complet des statuts reste simplifié : seules les transitions minimales nécessaires à la démonstration E2E sont exposées côté manager.
+
+Hors périmètre v0.4.0 :
+
+- la création autonome de compagnie ;
+- la gestion multi-compagnies ;
+- le choix explicite de la compagnie active.
+
+Ces fonctionnalités sont prévues pour `v0.5.0`.

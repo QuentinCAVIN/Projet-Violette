@@ -99,4 +99,30 @@ public class ArtistAvailabilityService {
         LOG.info("Disponibilité créée pour showDateId={} artistId={} status={}", showDateId, artist.getId(), status);
         return artistAvailabilityMapper.toDto(entity);
     }
+
+    /**
+     * Retourne uniquement la disponibilité de l'artiste courant pour une date.
+     * Si aucune ligne n'existe encore, renvoie un DTO logique en PENDING.
+     */
+    @Transactional
+    public ArtistAvailabilityDto getMyAvailability(Long showDateId, JwtPrincipalInfo principal) {
+        showDateRepository.findByIdOptional(showDateId)
+                .orElseThrow(ShowDateNotFoundException::new);
+
+        VioletteUserEntity artist = violetteUserRepository.findByFirebaseUid(principal.firebaseUid())
+                .orElseThrow(UserNotFoundException::new);
+
+        ArtistAvailabilityId key = new ArtistAvailabilityId(showDateId, artist.getId());
+        return artistAvailabilityRepository.findByIdOptional(key)
+                .map(artistAvailabilityMapper::toDto)
+                .orElseGet(() -> new ArtistAvailabilityDto(
+                        showDateId,
+                        artist.getId(),
+                        artist.getFirebaseUid(),
+                        artist.getFirstName(),
+                        artist.getLastName(),
+                        AvailabilityStatus.PENDING,
+                        null
+                ));
+    }
 }

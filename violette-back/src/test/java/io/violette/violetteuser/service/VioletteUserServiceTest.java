@@ -2,9 +2,12 @@ package io.violette.violetteuser.service;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.violette.artistbooking.repository.ArtistBookingRepository;
+import io.violette.cabaretcompany.model.CabaretCompanyEntity;
+import io.violette.cabaretcompany.model.CompanyMemberEntity;
 import io.violette.cabaretcompany.repository.CabaretCompanyRepository;
 import io.violette.cabaretcompany.repository.CabaretShowRepository;
 import io.violette.cabaretcompany.repository.CompanyMemberRepository;
+import io.violette.cabaretcompany.service.CabaretCompanyService;
 import io.violette.security.JwtPrincipalInfo;
 import io.violette.showdate.repository.ArtistAvailabilityRepository;
 import io.violette.showdate.repository.ShowDateRepository;
@@ -101,6 +104,116 @@ class VioletteUserServiceTest {
         assertAll(
                 () -> assertEquals(Set.of(UserRole.MANAGER), dto.roles()),
                 () -> assertEquals(Set.of(UserRole.MANAGER), violetteUserRepository.findByFirebaseUid("uid-with-roles").orElseThrow().getRoles())
+        );
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("createUser — un MANAGER est rattaché automatiquement à Dream's Production (règle temporaire v0.4.0)")
+    void createUser_whenManagerRoleProvided_attachesManagerToDefaultCompany() {
+        artistBookingRepository.deleteAll();
+        artistAvailabilityRepository.deleteAll();
+        showDateSkillRequirementRepository.deleteAll();
+        showDateRepository.deleteAll();
+        companyMemberRepository.deleteAll();
+        cabaretCompanyRepository.deleteAll();
+        violetteUserRepository.deleteAll();
+        violetteUserRepository.flush();
+
+        JwtPrincipalInfo principal = new JwtPrincipalInfo("uid-manager-company", "manager-company@example.com", "");
+        CreateUserRequestDto request = new CreateUserRequestDto(
+                "Mona",
+                "Manager",
+                Set.of(UserRole.MANAGER)
+        );
+
+        VioletteUserDto dto = violetteUserService.createUser(principal, request);
+        VioletteUserEntity manager = violetteUserRepository.findByFirebaseUid(dto.firebaseUid()).orElseThrow();
+
+        CabaretCompanyEntity company = cabaretCompanyRepository.findByName(CabaretCompanyService.DEFAULT_COMPANY_NAME)
+                .orElseThrow();
+
+        assertEquals(manager.getId(), company.getManager().getId());
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("createUser — un ARTIST est rattaché automatiquement à Dream's Production")
+    void createUser_whenArtistRoleProvided_attachesArtistToDefaultCompany() {
+        artistBookingRepository.deleteAll();
+        artistAvailabilityRepository.deleteAll();
+        showDateSkillRequirementRepository.deleteAll();
+        showDateRepository.deleteAll();
+        companyMemberRepository.deleteAll();
+        cabaretCompanyRepository.deleteAll();
+        violetteUserRepository.deleteAll();
+        violetteUserRepository.flush();
+
+        VioletteUserEntity manager = persistUser(
+                "uid-seed-manager",
+                "seed-manager@example.com",
+                "Seed",
+                "Manager",
+                Set.of(UserRole.MANAGER)
+        );
+        CabaretCompanyEntity defaultCompany = new CabaretCompanyEntity();
+        defaultCompany.setName(CabaretCompanyService.DEFAULT_COMPANY_NAME);
+        defaultCompany.setDescription("Compagnie unique v0.4.0");
+        defaultCompany.setManager(manager);
+        cabaretCompanyRepository.persistAndFlush(defaultCompany);
+
+        JwtPrincipalInfo principal = new JwtPrincipalInfo("uid-artist-no-company", "artist-no-company@example.com", "");
+        CreateUserRequestDto request = new CreateUserRequestDto(
+                "Aria",
+                "Artist",
+                Set.of(UserRole.ARTIST)
+        );
+
+        VioletteUserDto dto = violetteUserService.createUser(principal, request);
+        VioletteUserEntity artist = violetteUserRepository.findByFirebaseUid(dto.firebaseUid()).orElseThrow();
+
+        CabaretCompanyEntity company = cabaretCompanyRepository.findByName(CabaretCompanyService.DEFAULT_COMPANY_NAME)
+                .orElseThrow();
+        List<CompanyMemberEntity> memberships = companyMemberRepository.findByArtistId(artist.getId());
+
+        assertAll(
+                () -> assertEquals(1, memberships.size()),
+                () -> assertEquals(company.getId(), memberships.getFirst().getCompany().getId()),
+                () -> assertEquals(artist.getId(), memberships.getFirst().getArtist().getId())
+        );
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("createUser — un utilisateur MANAGER+ARTIST est rattaché une seule fois comme membre")
+    void createUser_whenManagerAndArtistRolesProvided_createsSingleMembership() {
+        artistBookingRepository.deleteAll();
+        artistAvailabilityRepository.deleteAll();
+        showDateSkillRequirementRepository.deleteAll();
+        showDateRepository.deleteAll();
+        companyMemberRepository.deleteAll();
+        cabaretCompanyRepository.deleteAll();
+        violetteUserRepository.deleteAll();
+        violetteUserRepository.flush();
+
+        JwtPrincipalInfo principal = new JwtPrincipalInfo("uid-manager-artist", "manager-artist@example.com", "");
+        CreateUserRequestDto request = new CreateUserRequestDto(
+                "Mika",
+                "DualRole",
+                Set.of(UserRole.MANAGER, UserRole.ARTIST)
+        );
+
+        VioletteUserDto dto = violetteUserService.createUser(principal, request);
+        VioletteUserEntity user = violetteUserRepository.findByFirebaseUid(dto.firebaseUid()).orElseThrow();
+        CabaretCompanyEntity company = cabaretCompanyRepository.findByName(CabaretCompanyService.DEFAULT_COMPANY_NAME)
+                .orElseThrow();
+
+        List<CompanyMemberEntity> memberships = companyMemberRepository.findByArtistId(user.getId());
+
+        assertAll(
+                () -> assertEquals(user.getId(), company.getManager().getId()),
+                () -> assertEquals(1, memberships.size()),
+                () -> assertEquals(company.getId(), memberships.getFirst().getCompany().getId())
         );
     }
 

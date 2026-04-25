@@ -11,6 +11,7 @@ import 'package:violette_front/repositories/availability_repository.dart';
 import 'package:violette_front/repositories/booking_repository.dart';
 import 'package:violette_front/repositories/show_date_repository.dart';
 import 'package:violette_front/ui/views/manager_date_detail/manager_date_detail_viewmodel.dart';
+import 'package:stacked_services/stacked_services.dart';
 
 import '../helpers/test_helpers.dart';
 
@@ -355,6 +356,114 @@ void main() {
             viewModel.bookings.first.status, BookingStatus.pendingConfirmation);
         verify(() => bookingRepository.sendConfirmationRequests('7')).called(1);
         verify(() => showDateRepository.getShowDateById('7')).called(2);
+      });
+    });
+
+    group('changeShowDateStatus -', () {
+      test('appelle le repository et recharge le détail après succès', () async {
+        final showDateRepository =
+            locator<ShowDateRepository>() as MockShowDateRepository;
+        final bookingRepository =
+            locator<BookingRepository>() as MockBookingRepository;
+        final availabilityRepository =
+            locator<AvailabilityRepository>() as MockAvailabilityRepository;
+
+        final initialShowDate = ShowDate(
+          id: 'date-99',
+          title: 'Date initiale',
+          date: DateTime(2026, 1, 1),
+          meetingTimeMinutes: 540,
+          address: 'Adresse',
+          totalRequiredArtists: 2,
+          status: ShowDateStatus.inquiry,
+        );
+        final updatedShowDate = ShowDate(
+          id: 'date-99',
+          title: 'Date option',
+          date: DateTime(2026, 1, 1),
+          meetingTimeMinutes: 540,
+          address: 'Adresse',
+          totalRequiredArtists: 2,
+          status: ShowDateStatus.option,
+        );
+
+        when(() => showDateRepository.getShowDateById('date-99'))
+            .thenAnswer((_) async => initialShowDate);
+        when(() => bookingRepository.getBookingsForDate('date-99'))
+            .thenAnswer((_) async => []);
+        when(() => availabilityRepository.getAvailabilitiesForDate('date-99'))
+            .thenAnswer((_) async => []);
+
+        final viewModel = ManagerDateDetailViewModel(showDate: initialShowDate);
+        await viewModel.initialize();
+
+        when(() => showDateRepository.updateShowDateStatus(
+              'date-99',
+              ShowDateStatus.option,
+            )).thenAnswer((_) async {});
+        when(() => showDateRepository.getShowDateById('date-99'))
+            .thenAnswer((_) async => updatedShowDate);
+
+        await viewModel.changeShowDateStatus(ShowDateStatus.option);
+
+        verify(() => showDateRepository.updateShowDateStatus(
+              'date-99',
+              ShowDateStatus.option,
+            )).called(1);
+        expect(viewModel.displayedShowDate.status, ShowDateStatus.option);
+      });
+
+      test("en cas d'erreur, n'applique pas de faux succès", () async {
+        final showDateRepository =
+            locator<ShowDateRepository>() as MockShowDateRepository;
+        final bookingRepository =
+            locator<BookingRepository>() as MockBookingRepository;
+        final availabilityRepository =
+            locator<AvailabilityRepository>() as MockAvailabilityRepository;
+        final dialogService = locator<DialogService>() as MockDialogService;
+
+        final initialShowDate = ShowDate(
+          id: 'date-100',
+          title: 'Date initiale',
+          date: DateTime(2026, 1, 1),
+          meetingTimeMinutes: 540,
+          address: 'Adresse',
+          totalRequiredArtists: 2,
+          status: ShowDateStatus.inquiry,
+        );
+
+        when(() => showDateRepository.getShowDateById('date-100'))
+            .thenAnswer((_) async => initialShowDate);
+        when(() => bookingRepository.getBookingsForDate('date-100'))
+            .thenAnswer((_) async => []);
+        when(() => availabilityRepository.getAvailabilitiesForDate('date-100'))
+            .thenAnswer((_) async => []);
+        when(() => showDateRepository.updateShowDateStatus(
+              'date-100',
+              ShowDateStatus.option,
+            )).thenThrow(Exception('boom'));
+        when(() => dialogService.showDialog(
+              title: any(named: 'title'),
+              description: any(named: 'description'),
+              buttonTitle: any(named: 'buttonTitle'),
+              cancelTitle: any(named: 'cancelTitle'),
+              dialogPlatform: any(named: 'dialogPlatform'),
+              barrierDismissible: any(named: 'barrierDismissible'),
+            )).thenAnswer((_) async => DialogResponse());
+
+        final viewModel = ManagerDateDetailViewModel(showDate: initialShowDate);
+        await viewModel.initialize();
+        await viewModel.changeShowDateStatus(ShowDateStatus.option);
+
+        expect(viewModel.displayedShowDate.status, ShowDateStatus.inquiry);
+        verify(() => dialogService.showDialog(
+              title: 'Changement de statut impossible',
+              description: any(named: 'description'),
+              buttonTitle: any(named: 'buttonTitle'),
+              cancelTitle: any(named: 'cancelTitle'),
+              dialogPlatform: any(named: 'dialogPlatform'),
+              barrierDismissible: any(named: 'barrierDismissible'),
+            )).called(1);
       });
     });
 

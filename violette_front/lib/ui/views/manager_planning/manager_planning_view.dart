@@ -46,8 +46,9 @@ class ManagerPlanningView extends StackedView<ManagerPlanningViewModel> {
                       onTap: () =>
                           viewModel.toggleExpanded(viewModel.showDatePicked!),
                     ),
-                    AnimatedSwitcher(
+                    AnimatedSize(
                       duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeInOut,
                       child: viewModel.isExpanded(viewModel.showDatePicked!)
                           ? ManagerShowDateInlineDetail(
                               showDate: viewModel.showDatePicked!,

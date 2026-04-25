@@ -1,4 +1,5 @@
 import 'package:stacked/stacked.dart';
+import 'package:dio/dio.dart';
 import 'package:stacked_firebase_auth/stacked_firebase_auth.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -41,7 +42,7 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
 
   Future<void> loadShowDates() async {
     // runBusyFuture sert à faire un setBusy true + await + setBusy false.
-    showDates = await runBusyFuture(_showDateRepository.getAllShowDates());
+    showDates = await runBusyFuture(_showDateRepository.getMyAvailableShowDates());
     await _loadMyAvailabilities();
     rebuildUi();
   }
@@ -57,17 +58,18 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
       if (showDateId.isEmpty) continue;
 
       try {
-        final availabilities =
-            await _availabilityRepository.getAvailabilitiesForDate(showDateId);
-        for (final availability in availabilities) {
-          // Le lien métier se fait désormais via le Firebase UID fourni par l'API.
-          if (availability.artistFirebaseUid == currentUser.uid) {
-            _myAvailabilityByShowDateId[showDateId] = availability.status;
-            break;
-          }
+        final availability =
+            await _availabilityRepository.getMyAvailabilityForDate(showDateId);
+        _myAvailabilityByShowDateId[showDateId] = availability.status;
+      } on DioException catch (e) {
+        if (e.response?.statusCode == 403) {
+          _snackbarService.showSnackbar(
+            message: 'Accès refusé pour charger votre disponibilité.',
+            duration: const Duration(seconds: 3),
+          );
         }
       } catch (_) {
-        // Toléré en phase de migration : on garde l'affichage "pending".
+        // On conserve le statut PENDING en cas d'erreur réseau ponctuelle.
       }
     }
   }
