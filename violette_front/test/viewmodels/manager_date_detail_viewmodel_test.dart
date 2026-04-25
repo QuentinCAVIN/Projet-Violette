@@ -134,6 +134,7 @@ void main() {
           meetingTimeMinutes: 540,
           address: 'Adresse',
           totalRequiredArtists: 2,
+          status: ShowDateStatus.confirmed,
         );
 
         final existingBooking = ArtistBooking(
@@ -282,6 +283,38 @@ void main() {
 
     group('sendConfirmation -', () {
       test(
+        'sendConfirmation_whenShowDateIsNotConfirmed_doesNotCallRepository',
+        () async {
+          final bookingRepository =
+              locator<BookingRepository>() as MockBookingRepository;
+          final dialogService = locator<DialogService>() as MockDialogService;
+
+          final showDate = ShowDate(
+            id: '7',
+            title: 'Test',
+            date: DateTime(2026, 1, 1),
+            meetingTimeMinutes: 540,
+            address: 'Adresse',
+            totalRequiredArtists: 2,
+            status: ShowDateStatus.option,
+          );
+
+          final viewModel = ManagerDateDetailViewModel(showDate: showDate);
+          when(() => dialogService.showDialog(
+                title: any(named: 'title'),
+                description: any(named: 'description'),
+                buttonTitle: any(named: 'buttonTitle'),
+                cancelTitle: any(named: 'cancelTitle'),
+                dialogPlatform: any(named: 'dialogPlatform'),
+                barrierDismissible: any(named: 'barrierDismissible'),
+              )).thenAnswer((_) async => DialogResponse());
+          await viewModel.sendConfirmation();
+
+          verifyNever(() => bookingRepository.sendConfirmationRequests(any()));
+        },
+      );
+
+      test(
           'sendConfirmation_whenDateIdIsNull_doesNotCallRepository',
           () async {
         final bookingRepository =
@@ -320,6 +353,7 @@ void main() {
           meetingTimeMinutes: 540,
           address: 'Adresse',
           totalRequiredArtists: 2,
+          status: ShowDateStatus.confirmed,
         );
 
         final bookingApresEnvoi = ArtistBooking(

@@ -71,6 +71,8 @@ class ManagerDateDetailBody extends ViewModelWidget<ManagerDateDetailViewModel> 
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // TODO(v0.5.0): distinguer plus explicitement en UI
+                // "disponible", "préselectionné" et "confirmé" côté manager.
                 if (booking != null)
                   BookingStatusPill(
                     status: booking.status,

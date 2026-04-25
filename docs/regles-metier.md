@@ -121,3 +121,10 @@ La différence principale est l'engagement : une présélection aide le gérant 
 - Le backend utilise ses identifiants SQL (`id`) comme identifiants métier principaux.
 - `firebaseUid` identifie l'utilisateur Firebase et sert à relier le JWT au profil backend.
 - Pendant les transitions historiques, certains mappers peuvent encore défendre des cas où une donnée legacy contient un `firebaseUid`; cette compatibilité doit disparaître quand les données legacy ne sont plus utiles.
+
+---
+
+### À traiter en v0.5.0
+- Clarifier l’affichage de la présélection côté manager et côté artiste.
+- Distinguer visuellement les artistes disponibles, présélectionnés et confirmés.
+- Déterminer si la présélection en OPTION doit être visible par l’artiste ou rester interne au gérant.

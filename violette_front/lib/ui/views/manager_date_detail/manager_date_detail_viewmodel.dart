@@ -41,6 +41,7 @@ class ManagerDateDetailViewModel extends BaseViewModel {
       currentShowDate?.selectedCount ?? showDate.selectedCount;
 
   bool get canSendConfirmation =>
+      displayedShowDate.status == ShowDateStatus.confirmed &&
       bookings.any((b) => b.status == BookingStatus.preselected);
 
   /// Méthode d'initialisation appelée à l'ouverture de la vue.
@@ -230,7 +231,9 @@ class ManagerDateDetailViewModel extends BaseViewModel {
     }
 
     // Quand aucun besoin n'est encore configuré (0), on n'applique pas
-    // de plafond bloquant côté UI pour permettre le parcours v0.4.0.
+    // de plafond bloquant côté UI pour ne pas bloquer le gérant dans sa réservation
+    //TODO : Que se passe t il si le plafond est congiguré avec un montant inférieur
+    // au nombre d'artistes sélectionnés ? 
     if (currentShowDate.totalRequiredArtists > 0 &&
         currentShowDate.selectedCount >= currentShowDate.totalRequiredArtists) {
       return false;
@@ -292,6 +295,15 @@ class ManagerDateDetailViewModel extends BaseViewModel {
       _snackbarService.showSnackbar(
         message: "Identifiant de date manquant.",
         duration: const Duration(seconds: 2),
+      );
+      return;
+    }
+
+    if (displayedShowDate.status != ShowDateStatus.confirmed) {
+      _dialogService.showDialog(
+        title: 'Envoi impossible',
+        description:
+            "Passe d'abord la date au statut Confirmé avant d'envoyer les demandes.",
       );
       return;
     }
