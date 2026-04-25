@@ -21,6 +21,7 @@ Tag v*.*.*
     │
     ├─► deploy.yml — Job : deploy-backend
     │       │
+    │       ├─ mvn versions:set depuis le tag (vX.Y.Z → X.Y.Z)
     │       ├─ mvnw clean verify -B
     │       ├─ docker build + push GHCR       (tag vX.Y.Z + latest)
     │       ├─ flyctl deploy → violette-back.fly.dev   ← déploiement prod
@@ -55,6 +56,7 @@ Cette séparation entre `push main` et `tag v*.*.*` permet de sécuriser les dé
 
 ### Tag `v*.*.*`
 
+- Aligner la version Maven du backend sur le tag Git (ex: `v0.3.2` → `0.3.2`) pendant le job CI
 - Exécuter les tests Maven
 - Construire et publier l'image Docker sur GHCR
 - Déployer le backend sur Fly.io
@@ -337,6 +339,7 @@ flyctl deploy
 ## Checklist pré-soutenance
 
 - [ ] `curl https://violette-back.fly.dev/api/ping` répond `pong` et un champ `version` identique à la `<version>` du `violette-back/pom.xml` utilisé pour builder l’image déployée (et cohérente avec le tag de release, ex. sans `-SNAPSHOT` en prod)
+- [ ] Swagger (`/swagger-ui`) affiche la même version de release que le tag déployé (ex. `0.3.2`)
 - [ ] Swagger UI accessible : `https://violette-back.fly.dev/swagger-ui`
 - [ ] `flyctl status --app violette-back` affiche **1 machine running**
 - [ ] Dernier déploiement listé : `flyctl releases --app violette-back`
