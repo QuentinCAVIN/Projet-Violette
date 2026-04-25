@@ -84,8 +84,6 @@ class HomeViewModel extends BaseViewModel {
   }
 
   /// Charge les demandes de confirmation en attente (REST `GET .../me/pending`).
-  ///
-  /// Remplace l’ancien flux temps réel Firestore (`watchPendingRequestsForArtist`).
   Future<void> _loadPendingRequests(String artistId) async {
     try {
       pendingRequests =
