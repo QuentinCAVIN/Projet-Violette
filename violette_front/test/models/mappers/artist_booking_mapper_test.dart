@@ -208,6 +208,20 @@ void main() {
         );
       });
 
+      test('toArtistBooking_whenStatusIsCancelled_returnsCancelled', () {
+        // CANCELLED : booking non actif pour les actions opérationnelles.
+        final json = <String, dynamic>{
+          'id': 1,
+          'artistId': 3,
+          'showDateId': 2,
+          'status': 'CANCELLED',
+        };
+        expect(
+          ArtistBookingMapper.toArtistBooking(json)!.status,
+          BookingStatus.cancelled,
+        );
+      });
+
       test('retourne null si le statut est absent', () {
         final json = <String, dynamic>{
           'id': 1,

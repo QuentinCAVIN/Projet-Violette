@@ -147,6 +147,8 @@ class ArtistBookingMapper {
         return BookingStatus.confirmed;
       case 'REFUSED':
         return BookingStatus.refused;
+      case 'CANCELLED':
+        return BookingStatus.cancelled;
       default:
         return null;
     }

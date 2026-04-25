@@ -455,6 +455,34 @@ void main() {
       });
 
       test(
+        'isSelectionEnabled_whenAvailabilityIsIfNeeded_returnsFalse',
+        () {
+          // IF_NEEDED : disponibilité possible mais non prioritaire pour la présélection.
+          final currentShowDate = ShowDate(
+            id: 'date-1',
+            title: 'Test',
+            date: DateTime(2026, 1, 1),
+            meetingTimeMinutes: 540,
+            address: 'Adresse test',
+            totalRequiredArtists: 2,
+            status: ShowDateStatus.option,
+          );
+
+          final viewModel = ManagerDateDetailViewModel(showDate: currentShowDate);
+          viewModel.availabilities = [
+            Availability(
+              artistId: 'artist1',
+              status: AvailabilityStatus.ifNeeded,
+            ),
+          ];
+          viewModel.bookings = [];
+
+          final canSelect = viewModel.isSelectionEnabled(currentShowDate, 'artist1');
+          expect(canSelect, isFalse);
+        },
+      );
+
+      test(
           'devrait refuser la sélection si le plafond artistsCount est atteint',
           () {
         final currentShowDate = ShowDate(
@@ -591,7 +619,8 @@ void main() {
     });
 
     group('isBookingCheckboxChecked -', () {
-      test('retourne false sans booking ou si refused', () {
+      test('isBookingCheckboxChecked_whenBookingIsNullRefusedOrCancelled_returnsFalse', () {
+        // CANCELLED : un booking annulé n'est pas considéré comme actif.
         final viewModel = ManagerDateDetailViewModel(
           showDate: ShowDate(
             id: 'date-1',
@@ -609,6 +638,15 @@ void main() {
             ArtistBooking(
               artistId: 'a',
               status: BookingStatus.refused,
+            ),
+          ),
+          isFalse,
+        );
+        expect(
+          viewModel.isBookingCheckboxChecked(
+            ArtistBooking(
+              artistId: 'a',
+              status: BookingStatus.cancelled,
             ),
           ),
           isFalse,

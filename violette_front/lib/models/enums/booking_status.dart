@@ -30,7 +30,10 @@ enum BookingStatus {
   /// L’artiste a refusé la demande.
   ///
   /// La place est libérée et peut être proposée à un autre artiste.
-  refused;
+  refused,
+
+  /// Le booking a été annulé côté backend (ex. annulation de date).
+  cancelled;
 }
 
 
@@ -47,6 +50,8 @@ extension BookingStatusDisplay on BookingStatus {
         return 'Confirmé';
       case BookingStatus.refused:
         return 'Refusé';
+      case BookingStatus.cancelled:
+        return 'Annulé';
     }
   }
 
@@ -61,6 +66,8 @@ extension BookingStatusDisplay on BookingStatus {
         return Colors.green;
       case BookingStatus.refused:
         return Colors.red;
+      case BookingStatus.cancelled:
+        return Colors.grey;
     }
   }
 }
