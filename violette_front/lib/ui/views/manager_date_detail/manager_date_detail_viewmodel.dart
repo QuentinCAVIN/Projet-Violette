@@ -101,7 +101,6 @@ class ManagerDateDetailViewModel extends BaseViewModel {
 
   /// Charge les bookings depuis le backend (one-shot REST).
   ///
-  /// Remplace la précédente subscription Firestore (`watchBookingsForDate`).
   /// Appelé à l'initialisation et après chaque mutation réussie.
   Future<void> _loadBookings(String dateId) async {
     try {
