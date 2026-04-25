@@ -3,14 +3,15 @@ package io.violette.artistbooking.model;
 /**
  * Cycle de vie d'une réservation artiste.
  *
- * <p>La disponibilité de l'artiste sur une date relève d'{@code ArtistAvailability} ;
- * ce statut décrit l'état du <em>booking</em> une fois le gérant et l'artiste engagés
- * dans le processus de réservation.
+ * <p>À ne pas confondre avec la disponibilité :
+ * {@code ArtistAvailability} indique si l'artiste peut être sollicité,
+ * tandis que {@code BookingStatus} décrit l'état de la réservation
+ * une fois le processus de sélection ou de confirmation engagé.
  */
 public enum BookingStatus {
 
     /**
-     * Présélection par le gérant, sans engagement ferme pour l'artiste.
+     * Présélection par le gérant, sans engagement pour l'artiste.
      */
     SELECTED,
 
@@ -30,7 +31,7 @@ public enum BookingStatus {
     REFUSED,
 
     /**
-     * Booking annulé suite à l'annulation de la date de spectacle.
+     * Booking annulé (ex. annulation de la date de spectacle).
      */
     CANCELLED
 }

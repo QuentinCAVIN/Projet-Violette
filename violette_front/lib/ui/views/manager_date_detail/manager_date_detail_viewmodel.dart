@@ -197,7 +197,8 @@ class ManagerDateDetailViewModel extends BaseViewModel {
   /// Refus : décochée. Sinon (sélectionné, en attente de réponse, confirmé) : cochée.
   bool isBookingCheckboxChecked(ArtistBooking? booking) {
     if (booking == null) return false;
-    return booking.status != BookingStatus.refused;
+    return booking.status != BookingStatus.refused &&
+        booking.status != BookingStatus.cancelled;
   }
 
   /// Détermine si la checkbox de sélection est activée pour un artiste donné.

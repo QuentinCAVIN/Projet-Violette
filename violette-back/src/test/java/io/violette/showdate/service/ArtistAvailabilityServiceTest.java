@@ -101,6 +101,7 @@ class ArtistAvailabilityServiceTest {
         assertAll(
                 () -> assertEquals(fx.showDate.getId(), dto.showDateId()),
                 () -> assertEquals(artist.getId(), dto.artistId()),
+                () -> assertEquals(artist.getFirebaseUid(), dto.artistFirebaseUid()),
                 () -> assertEquals(AvailabilityStatus.AVAILABLE, dto.status()),
                 () -> assertEquals("User", dto.artistFirstName()),
                 () -> assertEquals("Test", dto.artistLastName())

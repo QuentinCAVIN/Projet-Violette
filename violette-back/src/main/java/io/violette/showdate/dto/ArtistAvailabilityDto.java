@@ -11,6 +11,7 @@ import java.time.Instant;
 public record ArtistAvailabilityDto(
         Long showDateId,
         Long artistId,
+        String artistFirebaseUid,
         String artistFirstName,
         String artistLastName,
         AvailabilityStatus status,

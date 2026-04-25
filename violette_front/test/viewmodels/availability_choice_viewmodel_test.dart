@@ -16,7 +16,7 @@ void main() {
 
     group('getStatusForDay -', () {
       test(
-          'When no show date exists for the given day, should return null (no color)',
+          'getStatusForDay_whenNoShowDateExists_returnsNull',
           () {
         // Le service mocké renvoie une liste vide
         final showDateRepo = getAndRegisterShowDateRepository();
@@ -34,7 +34,7 @@ void main() {
                 "Un jour libre ne doit PAS avoir de statut (donc pas de couleur par défaut)");
       });
 
-      test('When show date exists, should return correct status from ShowDate',
+      test('getStatusForDay_whenShowDateExists_returnsAvailabilityStatus',
           () async {
         final showDateRepo = getAndRegisterShowDateRepository();
         final availabilityRepo = getAndRegisterAvailabilityRepository();
@@ -57,7 +57,8 @@ void main() {
         ).thenAnswer(
           (_) => Future.value([
             Availability(
-              artistId: 'uid-123',
+              artistId: '42',
+              artistFirebaseUid: 'uid-123',
               status: AvailabilityStatus.available,
             ),
           ]),
@@ -72,6 +73,127 @@ void main() {
         final status = viewModel.getStatusForDay(cleanDate);
         expect(status, AvailabilityStatus.available);
       });
+
+      test(
+        'getStatusForDay_whenArtistFirebaseUidMatchesCurrentUser_returnsAvailabilityStatus',
+        () async {
+          final showDateRepo = getAndRegisterShowDateRepository();
+          final availabilityRepo = getAndRegisterAvailabilityRepository();
+          final authService = getAndRegisterFirebaseAuthenticationService();
+
+          final cleanDate = DateTime(2025, 10, 11);
+          final dummyShowDate = ShowDate(
+            id: 'show-date-2',
+            title: 'Test mismatch id',
+            date: cleanDate,
+            meetingTimeMinutes: 0,
+            address: 'Lyon',
+            totalRequiredArtists: 1,
+          );
+
+          when(() => showDateRepo.getAllShowDates())
+              .thenAnswer((_) => Future.value([dummyShowDate]));
+          when(() => availabilityRepo.getAvailabilitiesForDate('show-date-2'))
+              .thenAnswer(
+            (_) => Future.value([
+              Availability(
+                artistId: '42', // id backend numérique conservé pour les usages métier manager
+                artistFirebaseUid: 'firebase-uid-artist',
+                status: AvailabilityStatus.available,
+              ),
+            ]),
+          );
+          when(() => authService.currentUser).thenReturn(
+            MockUser(uid: 'firebase-uid-artist'),
+          );
+
+          final viewModel = AvailabilityChoiceViewModel();
+
+          await viewModel.loadShowDates();
+
+          final status = viewModel.getStatusForDay(cleanDate);
+          expect(status, AvailabilityStatus.available);
+        },
+      );
+
+      test(
+        'getStatusForDay_whenArtistFirebaseUidIsMissing_returnsPending',
+        () async {
+          // Garde-fou défensif: si le backend ne fournit pas le Firebase UID, on évite toute mauvaise attribution.
+          final showDateRepo = getAndRegisterShowDateRepository();
+          final availabilityRepo = getAndRegisterAvailabilityRepository();
+          final authService = getAndRegisterFirebaseAuthenticationService();
+
+          final cleanDate = DateTime(2025, 10, 13);
+          final dummyShowDate = ShowDate(
+            id: 'show-date-4',
+            title: 'Test missing firebase uid',
+            date: cleanDate,
+            meetingTimeMinutes: 0,
+            address: 'Lyon',
+            totalRequiredArtists: 1,
+          );
+
+          when(() => showDateRepo.getAllShowDates())
+              .thenAnswer((_) => Future.value([dummyShowDate]));
+          when(() => availabilityRepo.getAvailabilitiesForDate('show-date-4'))
+              .thenAnswer(
+            (_) => Future.value([
+              Availability(
+                artistId: '42',
+                status: AvailabilityStatus.available,
+              ),
+            ]),
+          );
+          when(() => authService.currentUser).thenReturn(
+            MockUser(uid: 'firebase-uid-artist'),
+          );
+
+          final viewModel = AvailabilityChoiceViewModel();
+          await viewModel.loadShowDates();
+
+          expect(viewModel.getStatusForDay(cleanDate), AvailabilityStatus.pending);
+        },
+      );
+
+      test(
+        'getStatusForDay_whenMatchedAvailabilityIsIfNeeded_returnsIfNeeded',
+        () async {
+          final showDateRepo = getAndRegisterShowDateRepository();
+          final availabilityRepo = getAndRegisterAvailabilityRepository();
+          final authService = getAndRegisterFirebaseAuthenticationService();
+
+          final cleanDate = DateTime(2025, 10, 12);
+          final dummyShowDate = ShowDate(
+            id: 'show-date-3',
+            title: 'Test if needed',
+            date: cleanDate,
+            meetingTimeMinutes: 0,
+            address: 'Marseille',
+            totalRequiredArtists: 1,
+          );
+
+          when(() => showDateRepo.getAllShowDates())
+              .thenAnswer((_) => Future.value([dummyShowDate]));
+          when(() => availabilityRepo.getAvailabilitiesForDate('show-date-3'))
+              .thenAnswer(
+            (_) => Future.value([
+              Availability(
+                artistId: '77',
+                artistFirebaseUid: 'uid-artist-if-needed',
+                status: AvailabilityStatus.ifNeeded,
+              ),
+            ]),
+          );
+          when(() => authService.currentUser)
+              .thenReturn(MockUser(uid: 'uid-artist-if-needed'));
+
+          final viewModel = AvailabilityChoiceViewModel();
+          await viewModel.loadShowDates();
+
+          expect(viewModel.getStatusForDay(cleanDate), AvailabilityStatus.ifNeeded);
+        },
+      );
     });
   });
 }

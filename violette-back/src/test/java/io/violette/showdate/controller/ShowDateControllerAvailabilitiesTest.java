@@ -105,6 +105,7 @@ class ShowDateControllerAvailabilitiesTest {
                     .statusCode(200)
                     .body("showDateId", equalTo(fx.showDateId.intValue()))
                     .body("artistId", equalTo(fx.artistId.intValue()))
+                    .body("artistFirebaseUid", equalTo(artist.getFirebaseUid()))
                     .body("status", equalTo("AVAILABLE"));
         } finally {
             deleteFixture(fx);

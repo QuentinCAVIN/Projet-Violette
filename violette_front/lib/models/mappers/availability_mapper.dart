@@ -16,10 +16,13 @@ class AvailabilityMapper {
     final artistId = rawArtist == null
         ? ''
         : (rawArtist is String ? rawArtist : rawArtist.toString());
+    final rawArtistFirebaseUid = json['artistFirebaseUid'];
+    final artistFirebaseUid = rawArtistFirebaseUid?.toString();
     final rawStatus = json['status'];
     final statusStr = rawStatus == null ? '' : rawStatus.toString();
     return Availability(
       artistId: artistId,
+      artistFirebaseUid: artistFirebaseUid,
       status: fromApiStatus(statusStr),
     );
   }

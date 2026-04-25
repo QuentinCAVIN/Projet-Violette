@@ -14,6 +14,7 @@ public interface ArtistAvailabilityMapper {
 
     @Mapping(target = "showDateId",      source = "id.showDateId")
     @Mapping(target = "artistId",        source = "id.artistId")
+    @Mapping(target = "artistFirebaseUid", source = "artist.firebaseUid")
     @Mapping(target = "artistFirstName", source = "artist.firstName")
     @Mapping(target = "artistLastName",  source = "artist.lastName")
     ArtistAvailabilityDto toDto(ArtistAvailabilityEntity entity);

@@ -60,7 +60,8 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
         final availabilities =
             await _availabilityRepository.getAvailabilitiesForDate(showDateId);
         for (final availability in availabilities) {
-          if (availability.artistId == currentUser.uid) {
+          // Le lien métier se fait désormais via le Firebase UID fourni par l'API.
+          if (availability.artistFirebaseUid == currentUser.uid) {
             _myAvailabilityByShowDateId[showDateId] = availability.status;
             break;
           }
