@@ -2,6 +2,20 @@
 
 Application Flutter de la plateforme **Violette**.
 
+## Architecture frontend
+
+Le frontend utilise Flutter avec Stacked (MVVM).
+
+```text
+View -> ViewModel -> Repository -> RemoteDataSource -> Dio / client généré
+                                      |
+                                    Mapper
+```
+
+Firebase Auth reste responsable de la connexion et du JWT. Les domaines métier migrés (`user`, `availability`, `showDate`, `booking`) passent par le backend REST.
+
+Le domaine `user` utilise le client `violette_api_client` généré depuis OpenAPI. Les autres domaines REST utilisent aujourd'hui Dio et des mappers manuels, en gardant la même frontière : les ViewModels consomment des repositories et ne manipulent pas de JSON brut.
+
 ## Configuration des environnements (URL du backend REST)
 
 Le client HTTP est centralisé dans `DioClient` (`lib/core/network/dio_client.dart`).  
@@ -26,6 +40,12 @@ Cette section décrit **comment pointer l’application vers le bon backend** se
   Cela permet de **changer l’URL sans modifier le code** entre le développement local, les tests sur appareil et la production, et d’éviter de versionner des secrets ou des URLs figées dans les sources.
 
 - **Valeur par défaut** : `http://127.0.0.1:8080` — adaptée au scénario **téléphone Android physique + USB + `adb reverse`** (voir ci-dessous).
+
+### Variables utiles
+
+| Variable | Obligatoire | Rôle |
+|---|---:|---|
+| `API_BASE_URL` | Non, sauf cible non standard | URL du backend REST injectée via `--dart-define` |
 
 ---
 
@@ -126,7 +146,14 @@ flutter build apk --release --dart-define=API_BASE_URL=https://violette-back.fly
 
 ## Golden tests
 
-Les golden tests sont déjà en place. Pour lancer les tests et mettre à jour les fichiers de référence :
+Pour lancer l'analyse et les tests frontend :
+
+```bash
+flutter analyze
+flutter test
+```
+
+Les golden tests sont déjà en place. Pour mettre à jour les fichiers de référence :
 
 ```bash
 flutter test --update-goldens

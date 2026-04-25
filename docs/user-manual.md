@@ -62,7 +62,7 @@ Pour chaque date, vous pouvez indiquer les **compétences nécessaires** (danse,
 Avant de sélectionner les artistes, consultez les **disponibilités** déclarées pour la date :
 
 - **Disponible** : l'artiste peut être retenu.
-- **Incertain** : à prendre en compte avec précaution.
+- **Si besoin** : l'artiste peut venir, mais n'est pas prioritaire.
 - **Indisponible** : l'artiste ne peut pas être sélectionné pour cette date.
 
 #### Sélectionner les artistes
@@ -86,7 +86,7 @@ En tant qu'artiste, vous gérez vos disponibilités et répondez aux demandes du
 Pour chaque date de spectacle à venir, indiquez votre statut :
 
 - **Disponible** : vous pouvez être retenu pour cette date.
-- **Incertain** : votre présence n'est pas assurée.
+- **Si besoin** : vous êtes disponible si l'équipe a besoin de vous, mais vous n'êtes pas prioritaire.
 - **Indisponible** : vous ne pouvez pas participer à cette date.
 
 Il est conseillé de mettre à jour vos disponibilités régulièrement pour que le gérant dispose d'informations à jour.

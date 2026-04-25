@@ -2,7 +2,10 @@
 
 ## Contexte
 
-Le domaine `user` a été le premier domaine migré de Firebase Firestore vers le backend Quarkus REST.
+Le domaine `user` a été le premier domaine migré de Firebase Firestore vers le backend Quarkus REST. Depuis la préparation de `v0.4.0`, les domaines `availability`, `showDate` et `booking` sont également raccordés au backend REST côté code métier frontend.
+
+Ce document reste centré sur l'historique et les choix d'intégration du domaine `user`. Pour l'état global de la migration REST, voir le README racine et la documentation d'architecture.
+
 Firebase Auth reste la source d'identité (création de compte, authentification, JWT).
 Le backend Quarkus gère désormais les profils utilisateurs (prénom, nom, rôles, compétences).
 
@@ -197,7 +200,13 @@ flutter run -d <DEVICE_ID>
 | Téléphone USB + adb reverse | `http://127.0.0.1:8080` (défaut actuel) |
 | Émulateur Android | `http://10.0.2.2:8080` |
 | Téléphone sur Wi-Fi | `http://<IP_locale_PC>:8080` (ex: `ipconfig` sur Windows) |
-| Production | URL HTTPS du backend déployé |
+| Production | `https://violette-back.fly.dev` |
+
+Pour les environnements non standards, passer explicitement l'URL au lancement :
+
+```bash
+flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8080
+```
 
 ---
 
@@ -209,5 +218,5 @@ flutter run -d <DEVICE_ID>
 | `LoginViewModel` ne vérifie pas l'existence du profil backend avant de naviguer vers Home | Edge case : un utilisateur Firebase sans profil backend pourrait atteindre Home ; `HomeViewModel.loadUser()` le détecte et effectue un logout | Couvert défensivement ; acceptable |
 | `Future.delayed(2s)` dans `StartupViewModel` | La vérification du profil backend est retardée de 2s à chaque démarrage | Cosmétique ; le délai est intentionnel pour le splash |
 | `RegisterViewModel` n'appelle pas `setBusy` pendant l'async | Le bouton de soumission reste cliquable pendant `createAccountWithEmail` + `addUser` | UX ; à corriger lors d'une passe UI |
-| `DioClient._baseUrl` est une constante en dur | Pas d'environnement configurable (dev/prod) | À remplacer par une configuration d'environnement lors du déploiement |
+| Tester et documenter tous les domaines REST de façon homogène | `user` utilise le client généré OpenAPI, tandis que `showDate`, `availability` et `booking` utilisent Dio + Maps + mappers manuels | À consolider dans la documentation d'architecture frontend |
 | Tests du client REST non écrits côté Flutter | `UserRemoteDataSource` et `RestUserRepository` ne sont pas couverts par des tests | À ajouter lors de la stabilisation des domaines suivants |

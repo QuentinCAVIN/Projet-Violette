@@ -29,7 +29,7 @@ Tag v*.*.*
     │
     └─► deploy.yml — Job : release-apk        (après succès deploy-backend)
             │
-            ├─ flutter build apk --release
+            ├─ flutter build apk --release --dart-define=API_BASE_URL=https://violette-back.fly.dev
             └─ upload app-release.apk → GitHub Release vX.Y.Z
 ```
 
@@ -61,7 +61,7 @@ Cette séparation entre `push main` et `tag v*.*.*` permet de sécuriser les dé
 - Construire et publier l'image Docker sur GHCR
 - Déployer le backend sur Fly.io
 - Créer la GitHub Release
-- Construire l'APK Flutter
+- Construire l'APK Flutter avec `API_BASE_URL=https://violette-back.fly.dev`
 - Publier l'APK sur la GitHub Release
 
 | Déclencheur | Backend | GHCR | Fly.io | GitHub Release | APK |
@@ -112,6 +112,8 @@ Projet-Violette/
 | `ANDROID_KEYSTORE_PASSWORD` | Ouvrir le keystore Android | `deploy.yml` → job `release-apk` |
 | `ANDROID_KEY_ALIAS` | Sélectionner l'alias de signature | `deploy.yml` → job `release-apk` |
 | `ANDROID_KEY_PASSWORD` | Déverrouiller la clé de signature | `deploy.yml` → job `release-apk` |
+
+> Le job APK utilise JDK 17 pour l'Android Gradle Plugin. Le backend reste construit avec Java 21.
 
 ### Secrets Fly.io
 
@@ -338,8 +340,8 @@ flyctl deploy
 
 ## Checklist pré-soutenance
 
-- [ ] `curl https://violette-back.fly.dev/api/ping` répond `pong` et un champ `version` identique à la `<version>` du `violette-back/pom.xml` utilisé pour builder l’image déployée (et cohérente avec le tag de release, ex. sans `-SNAPSHOT` en prod)
-- [ ] Swagger (`/swagger-ui`) affiche la même version de release que le tag déployé (ex. `0.3.2`)
+- [ ] `curl https://violette-back.fly.dev/api/ping` répond `pong` et un champ `version` identique à la version du tag de release (ex. `0.4.0`, sans `-SNAPSHOT` en prod)
+- [ ] Swagger (`/swagger-ui`) affiche la même version de release que le tag déployé (ex. `0.4.0`)
 - [ ] Swagger UI accessible : `https://violette-back.fly.dev/swagger-ui`
 - [ ] `flyctl status --app violette-back` affiche **1 machine running**
 - [ ] Dernier déploiement listé : `flyctl releases --app violette-back`
@@ -349,6 +351,8 @@ flyctl deploy
 - [ ] APK installé et fonctionnel sur l'appareil de démo
 - [ ] Authentification Firebase opérationnelle sur l'APK de release
 - [ ] Secret `FLY_API_TOKEN` présent dans GitHub Actions
+- [ ] APK construit avec `--dart-define=API_BASE_URL=https://violette-back.fly.dev`
+- [ ] Documentation release relue : README racine, règles métier, architecture, tests, déploiement
 
 ---
 
@@ -374,4 +378,10 @@ flyctl deploy
 | `QUARKUS_LOG_LEVEL` | `INFO` |
 
 > **`QUARKUS_OIDC_ENABLED`** n'est pas dans `fly.toml` : propriété build-time fixée. Activée via `%prod.quarkus.oidc.enabled=true` dans `application.properties` au moment du build de l'image Docker. Les variables ci-dessus sont des paramètres runtime OIDC injectés au démarrage du conteneur.
+
+### Variable Flutter de build
+
+| Variable | Où | Rôle |
+|---|---|---|
+| `API_BASE_URL` | `flutter run` / `flutter build apk --dart-define` | URL du backend REST compilée dans l'application Flutter |
 
