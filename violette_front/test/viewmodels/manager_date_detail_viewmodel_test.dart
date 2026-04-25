@@ -621,6 +621,34 @@ void main() {
       });
 
       test(
+        'devrait autoriser la sélection quand totalRequiredArtists vaut 0',
+        () {
+          final currentShowDate = ShowDate(
+            id: 'date-1',
+            title: 'Test',
+            date: DateTime(2026, 1, 1),
+            meetingTimeMinutes: 540,
+            address: 'Adresse test',
+            totalRequiredArtists: 0,
+            selectedCount: 0,
+            status: ShowDateStatus.option,
+          );
+
+          final viewModel = ManagerDateDetailViewModel(showDate: currentShowDate);
+          viewModel.availabilities = [
+            Availability(
+              artistId: 'artist1',
+              status: AvailabilityStatus.available,
+            ),
+          ];
+          viewModel.bookings = [];
+
+          final canSelect = viewModel.isSelectionEnabled(currentShowDate, 'artist1');
+          expect(canSelect, isTrue);
+        },
+      );
+
+      test(
         'devrait refuser une nouvelle sélection si le statut de date est inquiry',
         () {
           final currentShowDate = ShowDate(

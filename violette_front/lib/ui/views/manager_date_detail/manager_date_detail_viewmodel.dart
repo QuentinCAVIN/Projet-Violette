@@ -229,8 +229,10 @@ class ManagerDateDetailViewModel extends BaseViewModel {
       return false;
     }
 
-    if (currentShowDate.selectedCount >=
-        currentShowDate.totalRequiredArtists) {
+    // Quand aucun besoin n'est encore configuré (0), on n'applique pas
+    // de plafond bloquant côté UI pour permettre le parcours v0.4.0.
+    if (currentShowDate.totalRequiredArtists > 0 &&
+        currentShowDate.selectedCount >= currentShowDate.totalRequiredArtists) {
       return false;
     }
 

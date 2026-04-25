@@ -18,6 +18,9 @@ class ManagerDateDetailBody extends ViewModelWidget<ManagerDateDetailViewModel> 
     final theme = Theme.of(context);
     final currentShowDate = viewModel.displayedShowDate;
     final availableNextStatuses = viewModel.getAvailableNextStatuses();
+    final selectionLabel = currentShowDate.totalRequiredArtists > 0
+        ? "Sélection : ${currentShowDate.selectedCount} / ${currentShowDate.totalRequiredArtists}"
+        : "Sélection libre : besoins artistes non configurés";
 
     final listView = ListView.builder(
       shrinkWrap: isInline,
@@ -95,7 +98,7 @@ class ManagerDateDetailBody extends ViewModelWidget<ManagerDateDetailViewModel> 
               children: [
                 Expanded(
                   child: Text(
-                    "Sélection : ${currentShowDate.selectedCount} / ${currentShowDate.totalRequiredArtists}",
+                    selectionLabel,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.onSurfaceVariant,

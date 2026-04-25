@@ -124,6 +124,9 @@ class CreateShowDateViewModel extends FormViewModel {
       ),
       meetingTimeMinutes: _timeOfDayToMinutes(selectedStartTime!),
       address: addressValue!,
+      // TODO(v0.5.0): raccorder totalRequiredArtists a l'API de creation.
+      // Le formulaire capture deja artistsCount, mais POST /api/show-dates
+      // (CreateShowDateRequestDto) n'expose pas encore ce champ.
       totalRequiredArtists: int.parse(artistsCountValue!),
       description: descriptionValue,
       clientContactName: clientContactNameController.text.trim(),
