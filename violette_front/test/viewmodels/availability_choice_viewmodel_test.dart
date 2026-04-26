@@ -3,6 +3,8 @@ import 'package:dio/dio.dart';
 import 'package:violette_front/app/app.locator.dart';
 import 'package:violette_front/app/app.router.dart';
 import 'package:violette_front/models/availability.dart';
+import 'package:violette_front/models/artist_booking.dart';
+import 'package:violette_front/models/enums/booking_status.dart';
 import 'package:violette_front/ui/views/availability_choice/availability_choice_viewmodel.dart';
 import 'package:violette_front/models/show_date.dart';
 import 'package:violette_front/models/enums/availability_status.dart';
@@ -246,6 +248,314 @@ void main() {
                 mainButtonTitle: any(named: 'mainButtonTitle'),
                 onTap: any(named: 'onTap'),
               )).called(1);
+        },
+      );
+    });
+
+    group('plusieurs ShowDate le même jour -', () {
+      test(
+        'onDaySelected_whenTwoShowDatesOnSameDay_setsSelectedShowDatesWithBoth',
+        () async {
+          final showDateRepo = getAndRegisterShowDateRepository();
+          final availabilityRepo = getAndRegisterAvailabilityRepository();
+          final authService = getAndRegisterFirebaseAuthenticationService();
+
+          final day = DateTime(2025, 6, 15);
+          final sd1 = ShowDate(
+            id: 'same-day-1',
+            title: 'Matin',
+            date: day,
+            meetingTimeMinutes: 480,
+            address: 'Paris',
+            totalRequiredArtists: 2,
+          );
+          final sd2 = ShowDate(
+            id: 'same-day-2',
+            title: 'Soir',
+            date: day,
+            meetingTimeMinutes: 1200,
+            address: 'Paris',
+            totalRequiredArtists: 3,
+          );
+
+          when(() => showDateRepo.getMyAvailableShowDates())
+              .thenAnswer((_) async => [sd1, sd2]);
+          when(() => availabilityRepo.getMyAvailabilityForDate(any()))
+              .thenAnswer(
+            (_) async => Availability(
+              artistId: '1',
+              status: AvailabilityStatus.pending,
+            ),
+          );
+          when(() => authService.currentUser).thenReturn(MockUser(uid: 'uid-1'));
+
+          final viewModel = AvailabilityChoiceViewModel();
+          await viewModel.loadShowDates();
+
+          await viewModel.onDaySelected(day, day);
+
+          expect(viewModel.selectedShowDates, hasLength(2));
+          expect(
+            viewModel.selectedShowDates.map((e) => e.id).toSet(),
+            {'same-day-1', 'same-day-2'},
+          );
+        },
+      );
+
+      test(
+        'getStatusForDay_whenTwoShowDatesWithMixedStatus_returnsMostFavorableForCalendar',
+        () async {
+          final showDateRepo = getAndRegisterShowDateRepository();
+          final availabilityRepo = getAndRegisterAvailabilityRepository();
+          final authService = getAndRegisterFirebaseAuthenticationService();
+
+          final day = DateTime(2025, 7, 20);
+          final sd1 = ShowDate(
+            id: 'mix-1',
+            title: 'A',
+            date: day,
+            meetingTimeMinutes: 0,
+            address: 'Lyon',
+            totalRequiredArtists: 1,
+          );
+          final sd2 = ShowDate(
+            id: 'mix-2',
+            title: 'B',
+            date: day,
+            meetingTimeMinutes: 0,
+            address: 'Lyon',
+            totalRequiredArtists: 1,
+          );
+
+          when(() => showDateRepo.getMyAvailableShowDates())
+              .thenAnswer((_) async => [sd1, sd2]);
+          when(() => availabilityRepo.getMyAvailabilityForDate('mix-1'))
+              .thenAnswer(
+            (_) async => Availability(
+              artistId: '1',
+              status: AvailabilityStatus.pending,
+            ),
+          );
+          when(() => availabilityRepo.getMyAvailabilityForDate('mix-2'))
+              .thenAnswer(
+            (_) async => Availability(
+              artistId: '1',
+              status: AvailabilityStatus.available,
+            ),
+          );
+          when(() => authService.currentUser).thenReturn(MockUser(uid: 'uid-1'));
+
+          final viewModel = AvailabilityChoiceViewModel();
+          await viewModel.loadShowDates();
+
+          expect(viewModel.getStatusForDay(day), AvailabilityStatus.available);
+        },
+      );
+
+      test(
+        'cycleAvailabilityForShowDate_whenTwoDatesSameDay_updatesOnlyTargetShowDate',
+        () async {
+          final showDateRepo = getAndRegisterShowDateRepository();
+          final availabilityRepo = getAndRegisterAvailabilityRepository();
+          final authService = getAndRegisterFirebaseAuthenticationService();
+
+          final day = DateTime(2025, 8, 1);
+          final sd1 = ShowDate(
+            id: 'cyc-1',
+            title: 'Un',
+            date: day,
+            meetingTimeMinutes: 0,
+            address: 'Marseille',
+            totalRequiredArtists: 1,
+          );
+          final sd2 = ShowDate(
+            id: 'cyc-2',
+            title: 'Deux',
+            date: day,
+            meetingTimeMinutes: 0,
+            address: 'Marseille',
+            totalRequiredArtists: 1,
+          );
+
+          when(() => showDateRepo.getMyAvailableShowDates())
+              .thenAnswer((_) async => [sd1, sd2]);
+          when(() => availabilityRepo.getMyAvailabilityForDate('cyc-1'))
+              .thenAnswer(
+            (_) async => Availability(
+              artistId: '1',
+              status: AvailabilityStatus.pending,
+            ),
+          );
+          when(() => availabilityRepo.getMyAvailabilityForDate('cyc-2'))
+              .thenAnswer(
+            (_) async => Availability(
+              artistId: '1',
+              status: AvailabilityStatus.pending,
+            ),
+          );
+          when(
+            () => availabilityRepo.upsertMyAvailability(
+              showDateId: 'cyc-1',
+              status: AvailabilityStatus.available,
+            ),
+          ).thenAnswer((_) async {});
+
+          when(() => authService.currentUser).thenReturn(MockUser(uid: 'uid-1'));
+
+          final viewModel = AvailabilityChoiceViewModel();
+          await viewModel.loadShowDates();
+
+          await viewModel.cycleAvailabilityForShowDate(sd1);
+
+          expect(
+            viewModel.getStatusForShowDateId('cyc-1'),
+            AvailabilityStatus.available,
+          );
+          expect(
+            viewModel.getStatusForShowDateId('cyc-2'),
+            AvailabilityStatus.pending,
+          );
+        },
+      );
+    });
+
+    group('booking confirmé -', () {
+      test(
+        'cycleAvailabilityForShowDate_whenBookingIsConfirmed_blocksAvailabilityUpdate',
+        () async {
+          final showDateRepo = getAndRegisterShowDateRepository();
+          final availabilityRepo = getAndRegisterAvailabilityRepository();
+          final bookingRepo = getAndRegisterBookingRepository();
+          final authService = getAndRegisterFirebaseAuthenticationService();
+          final snackbarService = getAndRegisterSnackbarService();
+
+          final showDate = ShowDate(
+            id: 'confirmed-date',
+            title: 'Date confirmée',
+            date: DateTime(2026, 2, 3),
+            meetingTimeMinutes: 900,
+            address: 'Paris',
+            totalRequiredArtists: 1,
+          );
+
+          when(() => showDateRepo.getMyAvailableShowDates())
+              .thenAnswer((_) async => [showDate]);
+          when(() => availabilityRepo.getMyAvailabilityForDate('confirmed-date'))
+              .thenAnswer(
+            (_) async => Availability(
+              artistId: '1',
+              status: AvailabilityStatus.available,
+            ),
+          );
+          when(() => bookingRepo.getMyBookings()).thenAnswer(
+            (_) async => [
+              ArtistBooking(
+                artistId: '1',
+                dateId: 'confirmed-date',
+                status: BookingStatus.confirmed,
+              ),
+            ],
+          );
+          when(() => authService.currentUser).thenReturn(MockUser(uid: 'uid-1'));
+          when(() => snackbarService.showSnackbar(
+                message: any(named: 'message'),
+                title: any(named: 'title'),
+                duration: any(named: 'duration'),
+                mainButtonTitle: any(named: 'mainButtonTitle'),
+                onTap: any(named: 'onTap'),
+              )).thenReturn(null);
+
+          final viewModel = AvailabilityChoiceViewModel();
+          await viewModel.loadShowDates();
+
+          expect(viewModel.isShowDateConfirmedByBooking('confirmed-date'), true);
+          expect(
+            viewModel.confirmedBookingLockMessage,
+            'Confirmé — contactez le gérant pour modifier',
+          );
+
+          await viewModel.cycleAvailabilityForShowDate(showDate);
+
+          verifyNever(
+            () => availabilityRepo.upsertMyAvailability(
+              showDateId: 'confirmed-date',
+              status: AvailabilityStatus.ifNeeded,
+            ),
+          );
+          verify(() => snackbarService.showSnackbar(
+                message: 'Confirmé — contactez le gérant pour modifier',
+                title: any(named: 'title'),
+                duration: any(named: 'duration'),
+                mainButtonTitle: any(named: 'mainButtonTitle'),
+                onTap: any(named: 'onTap'),
+              )).called(1);
+          expect(
+            viewModel.getStatusForShowDateId('confirmed-date'),
+            AvailabilityStatus.available,
+          );
+        },
+      );
+
+      test(
+        'cycleAvailabilityForShowDate_whenBookingIsNotConfirmed_updatesAvailability',
+        () async {
+          final showDateRepo = getAndRegisterShowDateRepository();
+          final availabilityRepo = getAndRegisterAvailabilityRepository();
+          final bookingRepo = getAndRegisterBookingRepository();
+          final authService = getAndRegisterFirebaseAuthenticationService();
+
+          final showDate = ShowDate(
+            id: 'free-date',
+            title: 'Date libre',
+            date: DateTime(2026, 2, 4),
+            meetingTimeMinutes: 900,
+            address: 'Lyon',
+            totalRequiredArtists: 1,
+          );
+
+          when(() => showDateRepo.getMyAvailableShowDates())
+              .thenAnswer((_) async => [showDate]);
+          when(() => availabilityRepo.getMyAvailabilityForDate('free-date'))
+              .thenAnswer(
+            (_) async => Availability(
+              artistId: '1',
+              status: AvailabilityStatus.pending,
+            ),
+          );
+          when(() => bookingRepo.getMyBookings()).thenAnswer(
+            (_) async => [
+              ArtistBooking(
+                artistId: '1',
+                dateId: 'free-date',
+                status: BookingStatus.pendingConfirmation,
+              ),
+            ],
+          );
+          when(
+            () => availabilityRepo.upsertMyAvailability(
+              showDateId: 'free-date',
+              status: AvailabilityStatus.available,
+            ),
+          ).thenAnswer((_) async {});
+          when(() => authService.currentUser).thenReturn(MockUser(uid: 'uid-1'));
+
+          final viewModel = AvailabilityChoiceViewModel();
+          await viewModel.loadShowDates();
+
+          expect(viewModel.isShowDateConfirmedByBooking('free-date'), false);
+
+          await viewModel.cycleAvailabilityForShowDate(showDate);
+
+          verify(
+            () => availabilityRepo.upsertMyAvailability(
+              showDateId: 'free-date',
+              status: AvailabilityStatus.available,
+            ),
+          ).called(1);
+          expect(
+            viewModel.getStatusForShowDateId('free-date'),
+            AvailabilityStatus.available,
+          );
         },
       );
     });

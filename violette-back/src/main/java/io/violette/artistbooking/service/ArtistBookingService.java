@@ -361,6 +361,27 @@ public class ArtistBookingService {
                 .toList();
     }
 
+    /**
+     * Retourne tous les bookings de l'artiste authentifié.
+     * Utilisé côté frontend pour distinguer disponibilité déclarée et engagement réel.
+     *
+     * @param principal principal JWT de l'artiste
+     * @throws UserNotFoundException si le principal n'a pas de profil backend
+     */
+    public List<ArtistBookingDto> getBookingsForCurrentArtist(JwtPrincipalInfo principal) {
+        LOG.debug("Récupération des bookings pour firebaseUid={}", principal.firebaseUid());
+
+        VioletteUserEntity artist = violetteUserRepository
+                .findByFirebaseUid(principal.firebaseUid())
+                .orElseThrow(UserNotFoundException::new);
+
+        return artistBookingRepository
+                .findByArtistId(artist.getId())
+                .stream()
+                .map(artistBookingMapper::toDto)
+                .toList();
+    }
+
     // ------------------------------------------------------------------
     // Lecture — manager
     // ------------------------------------------------------------------

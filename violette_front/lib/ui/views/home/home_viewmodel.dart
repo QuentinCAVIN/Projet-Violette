@@ -24,7 +24,13 @@ class HomeViewModel extends BaseViewModel {
   VioletteUser? currentUser;
 
   List<ArtistBooking> pendingRequests = [];
-  Map<String, ShowDate> requestsShowDates = {};
+  /// Détail affichable par identifiant de date (`null` = détail non chargé, pas de données factices).
+  Map<String, ShowDate?> requestsShowDates = {};
+
+  /// True pendant l’appel REST de réponse à une demande (évite les doubles envois).
+  bool _respondingToBookingRequest = false;
+
+  bool get isRespondingToBookingRequest => _respondingToBookingRequest;
 
   Future<void> logOut() async {
     await _authenticationService.logout();
@@ -88,7 +94,7 @@ class HomeViewModel extends BaseViewModel {
     try {
       pendingRequests =
           await _bookingRepository.getPendingRequestsForArtist(artistId);
-      await _loadShowDatesForRequests();
+      await loadShowDatesForPendingRequests();
     } catch (_) {
       pendingRequests = [];
       _snackbarService.showSnackbar(
@@ -99,27 +105,60 @@ class HomeViewModel extends BaseViewModel {
     rebuildUi();
   }
 
-  /// Charge les ShowDates manquants associés aux demandes en attente.
-  Future<void> _loadShowDatesForRequests() async {
+  /// Résout les fiches [ShowDate] pour les demandes en attente.
+  ///
+  /// L’artiste n’a en général pas accès à `GET /show-dates/{id}` (réservé gérant) :
+  /// on s’appuie d’abord sur [ShowDateRepository.getMyAvailableShowDates], puis
+  /// repli sur [getShowDateById]. Si aucun détail n’est disponible, la valeur est
+  /// [null] : l’UI affiche un libellé dédié sans inventer de date.
+  Future<void> loadShowDatesForPendingRequests() async {
+    final validIds =
+        pendingRequests.map((b) => b.dateId).whereType<String>().toSet();
+
+    if (validIds.isEmpty) {
+      requestsShowDates = {};
+      return;
+    }
+
+    final Map<String, ShowDate?> byId = {};
+    final Map<String, ShowDate> availableById = {};
+
+    try {
+      final mine = await _showDateRepository.getMyAvailableShowDates();
+      for (final sd in mine) {
+        if (sd.id.isNotEmpty) {
+          availableById[sd.id] = sd;
+        }
+      }
+    } catch (_) {}
+
     for (final booking in pendingRequests) {
       final dateId = booking.dateId;
-
       if (dateId == null || dateId.isEmpty) continue;
 
-      if (requestsShowDates.containsKey(dateId)) continue;
+      if (byId.containsKey(dateId)) continue;
+
+      final fromArtistList = availableById[dateId];
+      if (fromArtistList != null) {
+        byId[dateId] = fromArtistList;
+        continue;
+      }
 
       try {
         final showDate = await _showDateRepository.getShowDateById(dateId);
         if (showDate != null) {
-          requestsShowDates[dateId] = showDate;
+          byId[dateId] = showDate;
+          continue;
         }
       } catch (_) {}
+
+      byId[dateId] = null;
     }
 
-    final validIds =
-        pendingRequests.map((b) => b.dateId).whereType<String>().toSet();
-
-    requestsShowDates.removeWhere((key, _) => !validIds.contains(key));
+    requestsShowDates = {
+      for (final e in byId.entries)
+        if (validIds.contains(e.key)) e.key: e.value,
+    };
   }
 
   /// Répond à une demande de confirmation (acceptation ou refus).
@@ -129,6 +168,10 @@ class HomeViewModel extends BaseViewModel {
   Future<void> respondToRequest(ArtistBooking booking, bool accept) async {
     final dateId = booking.dateId;
     if (dateId == null) return;
+    if (_respondingToBookingRequest) return;
+
+    _respondingToBookingRequest = true;
+    rebuildUi();
 
     try {
       await _bookingRepository.respondToRequest(
@@ -154,6 +197,9 @@ class HomeViewModel extends BaseViewModel {
         title: 'Erreur',
         description: e.toString(),
       );
+    } finally {
+      _respondingToBookingRequest = false;
+      rebuildUi();
     }
   }
 

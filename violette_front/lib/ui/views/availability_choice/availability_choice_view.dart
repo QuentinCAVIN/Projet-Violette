@@ -40,13 +40,45 @@ class AvailabilityChoiceView extends StackedView<AvailabilityChoiceViewModel> {
                   selectedDayPredicate: viewModel.isSelectedDay,
                   onDaySelected: viewModel.onDaySelected,
                   onPageChanged: viewModel.onPageChange,
-                  dayColorBuilder: (day) => viewModel.getStatusForDay(day)?.color,
+                  dayColorBuilder: viewModel.getColorForDay,
                 ),
-                if (viewModel.showDatePicked != null)
-                  ShowDateDetail(
-                      showDate: viewModel.showDatePicked!,
-                      status: viewModel.getStatusForDay(viewModel.selectedDay!) ??
-                          AvailabilityStatus.pending),
+                if (viewModel.selectedShowDates.isNotEmpty) ...[
+                  for (final sd in viewModel.selectedShowDates) ...[
+                    ShowDateDetail(
+                      showDate: sd,
+                      status: viewModel.getStatusForShowDateId(sd.id) ??
+                          AvailabilityStatus.pending,
+                    ),
+                    if (viewModel.isShowDateConfirmedByBooking(sd.id))
+                      Card(
+                        child: ListTile(
+                          leading: Icon(
+                            Icons.lock,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          title: Text(viewModel.confirmedBookingLockMessage),
+                        ),
+                      ),
+                    if (viewModel.selectedShowDates.length > 1)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton(
+                            onPressed: viewModel.isBusy ||
+                                    viewModel.isShowDateConfirmedByBooking(sd.id)
+                                ? null
+                                : () => viewModel.cycleAvailabilityForShowDate(sd),
+                            child: Text(
+                              viewModel.isShowDateConfirmedByBooking(sd.id)
+                                  ? 'Disponibilité verrouillée'
+                                  : 'Mettre à jour ma disponibilité',
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ],
                 const SizedBox(height: 30),
                 SizedBox(
                   width: double.infinity,

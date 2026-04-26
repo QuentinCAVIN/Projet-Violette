@@ -97,6 +97,7 @@ Pour éviter de bloquer la démo et les tests de création de date (`POST /api/s
 - une action manager minimale permet de changer manuellement le statut d'une date pour tester le flux `INQUIRY -> OPTION -> CONFIRMED` (et `CONFIRMED -> STAFFED`) en v0.4.0.
 - le champ frontend **Artistes nécessaires** du formulaire de création est temporairement informatif : la valeur n'est pas persistée par `POST /api/show-dates` en v0.4.0.
 - dans le planning manager, un jour peut afficher plusieurs `ShowDate` ; la pastille du calendrier applique une priorité de statut simple (`CONFIRMED > OPTION > INQUIRY > STAFFED > CANCELLED > ARCHIVED`) en cas de statuts mixtes.
+- côté artiste, un booking `CONFIRMED` verrouille la modification de disponibilité sur la date concernée ; l'artiste doit contacter le gérant pour se désister ou modifier son engagement.
 
 Conséquence :
 
@@ -109,5 +110,6 @@ Hors périmètre v0.4.0 :
 - la gestion multi-compagnies ;
 - le choix explicite de la compagnie active.
 - le raccord du champ **Artistes nécessaires** à la création REST (modèle orienté `ShowDateSkillRequirement`).
+- la gestion autonome du désistement artiste après confirmation.
 
 Ces fonctionnalités sont prévues pour `v0.5.0`.

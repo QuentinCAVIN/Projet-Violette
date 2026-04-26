@@ -16,6 +16,9 @@ class RestBookingRepository implements BookingRepository {
       _remote.getBookingsForDate(dateId);
 
   @override
+  Future<List<ArtistBooking>> getMyBookings() => _remote.getMyBookings();
+
+  @override
   Future<List<ArtistBooking>> getPendingRequestsForArtist(String artistId) =>
       _remote.getPendingRequestsForArtist();
 

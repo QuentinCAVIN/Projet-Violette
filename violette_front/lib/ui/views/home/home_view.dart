@@ -52,15 +52,22 @@ class HomeView extends StackedView<HomeViewModel> {
                       ),
                       const SizedBox(height: 8),
                       ...viewModel.pendingRequests.map((booking) {
-                        final showDate = viewModel.requestsShowDates[booking.dateId];
-                        if (showDate == null) return const SizedBox.shrink();
-                        
+                        final dateId = booking.dateId;
+                        if (dateId == null || dateId.isEmpty) {
+                          return const SizedBox.shrink();
+                        }
+                        final showDate =
+                            viewModel.requestsShowDates[dateId];
+
                         return BookingRequestCard(
                           booking: booking,
                           showDate: showDate,
-                          isBusy: viewModel.isBusy,
-                          onAccept: () => viewModel.respondToRequest(booking, true),
-                          onRefuse: () => viewModel.respondToRequest(booking, false),
+                          isBusy: viewModel.isBusy ||
+                              viewModel.isRespondingToBookingRequest,
+                          onAccept: () =>
+                              viewModel.respondToRequest(booking, true),
+                          onRefuse: () =>
+                              viewModel.respondToRequest(booking, false),
                         );
                       }),
                       verticalSpaceMedium,

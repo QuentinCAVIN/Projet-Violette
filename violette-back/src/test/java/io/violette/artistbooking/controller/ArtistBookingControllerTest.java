@@ -132,6 +132,27 @@ class ArtistBookingControllerTest {
         verify(artistBookingService).getPendingBookingsForCurrentArtist(principal);
     }
 
+    @Test
+    @TestSecurity(user = "ctrl-booking-artist-me", roles = {"ARTIST"})
+    @DisplayName("GET /artist-bookings/me avec principal retourne les réservations de l'artiste")
+    void getMyBookings_whenPrincipalExists_returns200AndList() {
+        JwtPrincipalInfo principal = new JwtPrincipalInfo("firebase-artist-3", "artist3@test.com", "Artiste 3");
+        when(currentUserContextProvider.getCurrentPrincipal()).thenReturn(Optional.of(principal));
+        when(artistBookingService.getBookingsForCurrentArtist(principal))
+                .thenReturn(List.of(dto(45L, 301L, 401L, BookingStatus.CONFIRMED)));
+
+        given()
+                .when().get("/api/artist-bookings/me")
+                .then()
+                .statusCode(200)
+                .body("$", hasSize(1))
+                .body("[0].id", equalTo(45))
+                .body("[0].showDateId", equalTo(301))
+                .body("[0].status", equalTo("CONFIRMED"));
+
+        verify(artistBookingService).getBookingsForCurrentArtist(principal);
+    }
+
     private static ArtistBookingDto dto(Long id, Long showDateId, Long artistId, BookingStatus status) {
         return new ArtistBookingDto(
                 id,

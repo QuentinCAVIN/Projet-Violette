@@ -7,11 +7,17 @@ import 'package:violette_front/models/artist_booking.dart';
 /// | Méthode                       | Implémentation active | Statut         |
 /// |-------------------------------|----------------------|----------------|
 /// | `getBookingsForDate`          | REST                 | ✓ migré        |
+/// | `getMyBookings`               | REST                 | ✓ migré        |
 /// | `getPendingRequestsForArtist` | REST                 | ✓ migré        |
 /// | `toggleSelection`             | REST                 | ✓ migré        |
 /// | `sendConfirmationRequests`    | REST                 | ✓ migré        |
 /// | `respondToRequest`            | REST                 | ✓ migré        |
 abstract class BookingRepository {
+  /// Toutes les réservations de l'artiste connecté (one-shot REST).
+  ///
+  /// Implémentation : `GET /api/artist-bookings/me` (JWT).
+  Future<List<ArtistBooking>> getMyBookings();
+
   /// Demandes de confirmation en attente pour l'artiste connecté (one-shot REST).
   ///
   /// Implémentation : `GET /api/artist-bookings/me/pending` (JWT).
