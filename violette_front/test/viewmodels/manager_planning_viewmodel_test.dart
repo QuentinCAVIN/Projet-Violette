@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:violette_front/app/app.locator.dart';
 import 'package:violette_front/models/availability.dart';
+import 'package:violette_front/models/enums/show_date_status.dart';
+import 'package:violette_front/models/show_date.dart';
 import 'package:violette_front/ui/views/manager_planning/manager_planning_viewmodel.dart';
 import 'package:violette_front/models/enums/availability_status.dart';
 import 'package:mocktail/mocktail.dart';
@@ -26,8 +28,9 @@ void main() {
         final testDate = DateTime(2026, 2, 15);
         await viewModel.onDaySelected(testDate, testDate);
 
-        expect(viewModel.selectedDay, null);
+        expect(viewModel.selectedDay, testDate);
         expect(viewModel.showDatePicked, null);
+        expect(viewModel.selectedShowDates, isEmpty);
         expect(viewModel.artists, isEmpty);
       });
 
@@ -85,6 +88,7 @@ void main() {
         await viewModel.onDaySelected(testDate, testDate);
 
         expect(viewModel.showDatePicked, showDate);
+        expect(viewModel.selectedShowDates, [showDate]);
         expect(viewModel.artists.length, 2);
         expect(viewModel.artists, contains(artist1));
         expect(viewModel.artists, contains(artist2));
@@ -125,6 +129,46 @@ void main() {
         await viewModel.onDaySelected(testDate, testDate);
 
         expect(viewModel.artists, isEmpty);
+      });
+
+      test('plusieurs dates le même jour : devrait exposer toute la liste du jour',
+          () async {
+        final showDateRepo = getAndRegisterShowDateRepository();
+        final userRepo = getAndRegisterUserRepository();
+        final availabilityRepo = getAndRegisterAvailabilityRepository();
+
+        final testDate = DateTime(2026, 2, 15);
+        final firstShowDate = TestDataBuilders.createTestShowDate(
+          id: 'date-1',
+          date: testDate,
+        );
+        final secondShowDate = TestDataBuilders.createTestShowDate(
+          id: 'date-2',
+          date: testDate,
+        );
+
+        when(() => showDateRepo.getAllShowDates())
+            .thenAnswer((_) => Future.value([firstShowDate, secondShowDate]));
+        when(() => availabilityRepo.getAvailabilitiesForDate(firstShowDate.id))
+            .thenAnswer((_) => Future.value([
+                  Availability(
+                    artistId: 'artist1',
+                    status: AvailabilityStatus.available,
+                  ),
+                ]));
+        when(() => userRepo.getUser('artist1')).thenAnswer(
+          (_) => Future.value(
+            TestDataBuilders.createTestUser(uid: 'artist1'),
+          ),
+        );
+
+        final viewModel = ManagerPlanningViewModel();
+        await viewModel.loadShowDates();
+        await viewModel.onDaySelected(testDate, testDate);
+
+        expect(viewModel.selectedShowDates.length, 2);
+        expect(viewModel.selectedShowDates, contains(firstShowDate));
+        expect(viewModel.selectedShowDates, contains(secondShowDate));
       });
     });
 
@@ -215,6 +259,57 @@ void main() {
 
         expect(viewModel.expandedShowDateId, isNull);
         expect(viewModel.isExpanded(showDate), isFalse);
+      });
+    });
+
+    group('refreshShowDateAfterStatusChange -', () {
+      test('devrait mettre à jour uniquement la date concernée', () async {
+        final viewModel = ManagerPlanningViewModel();
+        final testDate = DateTime(2026, 2, 15);
+        final unchangedDate = ShowDate(
+          id: 'date-1',
+          title: 'Date 1',
+          date: testDate,
+          meetingTimeMinutes: 540,
+          address: 'Adresse 1',
+          totalRequiredArtists: 1,
+          status: ShowDateStatus.inquiry,
+        );
+        final updatedTargetDate = ShowDate(
+          id: 'date-2',
+          title: 'Date 2',
+          date: testDate,
+          meetingTimeMinutes: 600,
+          address: 'Adresse 2',
+          totalRequiredArtists: 1,
+          status: ShowDateStatus.inquiry,
+        );
+        final newVersionTargetDate = ShowDate(
+          id: 'date-2',
+          title: 'Date 2',
+          date: testDate,
+          meetingTimeMinutes: 600,
+          address: 'Adresse 2',
+          totalRequiredArtists: 1,
+          status: ShowDateStatus.option,
+        );
+
+        viewModel.showDates = [unchangedDate, updatedTargetDate];
+        viewModel.selectedShowDates = [unchangedDate, updatedTargetDate];
+        viewModel.showDatePicked = updatedTargetDate;
+
+        await viewModel.refreshShowDateAfterStatusChange(newVersionTargetDate);
+
+        expect(viewModel.showDates.first.id, 'date-1');
+        expect(viewModel.showDates.first.status, ShowDateStatus.inquiry);
+        expect(viewModel.showDates.last.id, 'date-2');
+        expect(viewModel.showDates.last.status, ShowDateStatus.option);
+        expect(viewModel.selectedShowDates.first.id, 'date-1');
+        expect(viewModel.selectedShowDates.first.status, ShowDateStatus.inquiry);
+        expect(viewModel.selectedShowDates.last.id, 'date-2');
+        expect(viewModel.selectedShowDates.last.status, ShowDateStatus.option);
+        expect(viewModel.showDatePicked?.id, 'date-2');
+        expect(viewModel.showDatePicked?.status, ShowDateStatus.option);
       });
     });
   });

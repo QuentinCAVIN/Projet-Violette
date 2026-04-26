@@ -96,6 +96,7 @@ Pour éviter de bloquer la démo et les tests de création de date (`POST /api/s
 - l'exposition des dates côté artiste passe par des endpoints dédiés (`/api/show-dates/me/available` et `/api/show-dates/{id}/availabilities/me`) pour ne pas exposer les disponibilités des autres artistes.
 - une action manager minimale permet de changer manuellement le statut d'une date pour tester le flux `INQUIRY -> OPTION -> CONFIRMED` (et `CONFIRMED -> STAFFED`) en v0.4.0.
 - le champ frontend **Artistes nécessaires** du formulaire de création est temporairement informatif : la valeur n'est pas persistée par `POST /api/show-dates` en v0.4.0.
+- dans le planning manager, un jour peut afficher plusieurs `ShowDate` ; la pastille du calendrier applique une priorité de statut simple (`CONFIRMED > OPTION > INQUIRY > STAFFED > CANCELLED > ARCHIVED`) en cas de statuts mixtes.
 
 Conséquence :
 

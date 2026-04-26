@@ -38,29 +38,30 @@ class ManagerPlanningView extends StackedView<ManagerPlanningViewModel> {
                   padding: EdgeInsets.only(top: 20),
                   child: CircularProgressIndicator(),
                 ),
-              if (viewModel.showDatePicked != null)
+              if (viewModel.selectedShowDates.isNotEmpty)
                 Column(
                   children: [
-                    ManagerShowDateSummaryCard(
-                      showDate: viewModel.showDatePicked!,
-                      onTap: () =>
-                          viewModel.toggleExpanded(viewModel.showDatePicked!),
-                    ),
-                    AnimatedSize(
-                      duration: const Duration(milliseconds: 200),
-                      curve: Curves.easeInOut,
-                      child: viewModel.isExpanded(viewModel.showDatePicked!)
-                          ? ManagerShowDateInlineDetail(
-                              showDate: viewModel.showDatePicked!,
-                              onShowDateUpdated:
-                                  viewModel.refreshShowDateAfterStatusChange,
-                            )
-                          : const SizedBox.shrink(),
-                    ),
+                    for (final selectedShowDate in viewModel.selectedShowDates) ...[
+                      ManagerShowDateSummaryCard(
+                        showDate: selectedShowDate,
+                        onTap: () => viewModel.toggleExpanded(selectedShowDate),
+                      ),
+                      AnimatedSize(
+                        duration: const Duration(milliseconds: 200),
+                        curve: Curves.easeInOut,
+                        child: viewModel.isExpanded(selectedShowDate)
+                            ? ManagerShowDateInlineDetail(
+                                showDate: selectedShowDate,
+                                onShowDateUpdated:
+                                    viewModel.refreshShowDateAfterStatusChange,
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+                    ],
                   ],
                 ),
               if (viewModel.selectedDay != null &&
-                  viewModel.showDatePicked == null)
+                  viewModel.selectedShowDates.isEmpty)
                 const Padding(
                   padding: EdgeInsets.only(top: 20),
                   child: Text("Aucune date prévue ce jour."),
