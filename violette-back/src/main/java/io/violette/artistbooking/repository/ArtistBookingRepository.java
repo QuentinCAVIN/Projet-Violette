@@ -24,6 +24,7 @@ public class ArtistBookingRepository implements PanacheRepository<ArtistBookingE
 
     /**
      * Retourne tous les bookings d'un artiste.
+     * Utilisé par la vue artiste pour connaître ses engagements confirmés.
      */
     public List<ArtistBookingEntity> findByArtistId(Long artistId) {
         return find("artist.id", artistId).list();

@@ -5,6 +5,7 @@ import io.quarkus.test.security.TestSecurity;
 import io.violette.cabaretcompany.model.CabaretCompanyEntity;
 import io.violette.cabaretcompany.repository.CabaretCompanyRepository;
 import io.violette.showdate.model.ShowDateEntity;
+import io.violette.showdate.model.ShowDateStatus;
 import io.violette.showdate.repository.ShowDateRepository;
 import io.violette.violetteuser.model.UserRole;
 import io.violette.violetteuser.model.VioletteUserEntity;
@@ -91,6 +92,53 @@ class ShowDateControllerUpdateTest {
     }
 
     @Test
+    @TestSecurity(user = "ctrl-update-status-mgr", roles = {"MANAGER"})
+    @DisplayName("PATCH /show-dates/{id} en MANAGER peut passer INQUIRY -> OPTION")
+    void patchById_whenManagerUpdatesStatusToOption_returns200AndPersistsStatus() throws Exception {
+        ShowDateFixture fx = persistShowDateFixture("ctrl-upd-status");
+
+        given()
+                .contentType("application/json")
+                .body("""
+                        {
+                          "status": "OPTION"
+                        }
+                        """)
+                .when().patch("/api/show-dates/" + fx.showDateId)
+                .then()
+                .statusCode(200)
+                .body("status", equalTo("OPTION"));
+
+        userTransaction.begin();
+        try {
+            ShowDateEntity entity = showDateRepository.findByIdOptional(fx.showDateId).orElseThrow();
+            assertEquals(ShowDateStatus.OPTION, entity.getStatus());
+            userTransaction.commit();
+        } catch (Exception e) {
+            userTransaction.rollback();
+            throw e;
+        }
+    }
+
+    @Test
+    @TestSecurity(user = "ctrl-update-status-bad", roles = {"MANAGER"})
+    @DisplayName("PATCH /show-dates/{id} en MANAGER refuse INQUIRY -> CONFIRMED en v0.4.0 (400)")
+    void patchById_whenManagerUsesInvalidStatusTransition_returns400() throws Exception {
+        ShowDateFixture fx = persistShowDateFixture("ctrl-upd-status-bad");
+
+        given()
+                .contentType("application/json")
+                .body("""
+                        {
+                          "status": "CONFIRMED"
+                        }
+                        """)
+                .when().patch("/api/show-dates/" + fx.showDateId)
+                .then()
+                .statusCode(400);
+    }
+
+    @Test
     @TestSecurity(user = "ctrl-update-artist", roles = {"ARTIST"})
     @DisplayName("PATCH /show-dates/{id} en ARTIST retourne 403 et ne modifie pas la date")
     void patchById_whenRoleIsArtist_returns403AndDoesNotUpdate() throws Exception {
@@ -107,6 +155,7 @@ class ShowDateControllerUpdateTest {
         try {
             ShowDateEntity entity = showDateRepository.findByIdOptional(fx.showDateId).orElseThrow();
             assertEquals("Paris", entity.getLocation());
+            assertEquals(ShowDateStatus.INQUIRY, entity.getStatus());
             userTransaction.commit();
         } catch (Exception e) {
             userTransaction.rollback();

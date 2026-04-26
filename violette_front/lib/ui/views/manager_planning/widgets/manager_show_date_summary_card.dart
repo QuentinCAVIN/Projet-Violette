@@ -83,6 +83,18 @@ class ManagerShowDateSummaryCard extends StatelessWidget {
                       fontSize: 14,
                     ),
                   ),
+                  if (showDate.address.trim().isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      showDate.address,
+                      style: TextStyle(
+                        color: Colors.grey[700],
+                        fontSize: 12,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                  ],
                 ],
               ),
             ),

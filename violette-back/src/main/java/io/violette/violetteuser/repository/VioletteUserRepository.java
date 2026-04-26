@@ -2,6 +2,7 @@ package io.violette.violetteuser.repository;
 
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import io.quarkus.panache.common.Page;
+import io.violette.violetteuser.model.UserRole;
 import io.violette.violetteuser.model.VioletteUserEntity;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -31,9 +32,11 @@ public class VioletteUserRepository implements PanacheRepository<VioletteUserEnt
 
     /**
      * Liste paginée des utilisateurs, triée par date de création décroissante.
+     * L'id sert de second critère pour stabiliser la pagination quand plusieurs lignes
+     * partagent le même timestamp.
      */
     public List<VioletteUserEntity> findAllOrderByCreatedAtDesc(Page page) {
-        return find("order by createdAt desc").page(page).list();
+        return find("order by createdAt desc, id desc").page(page).list();
     }
 
     /**
@@ -41,5 +44,15 @@ public class VioletteUserRepository implements PanacheRepository<VioletteUserEnt
      */
     public long countAll() {
         return count();
+    }
+
+    /**
+     * Retourne le premier utilisateur ayant le rôle demandé, trié par date de création.
+     */
+    public Optional<VioletteUserEntity> findFirstByRole(UserRole role) {
+        return find(
+                "select u from VioletteUserEntity u join u.roles r where r = ?1 order by u.createdAt asc",
+                role
+        ).firstResultOptional();
     }
 }

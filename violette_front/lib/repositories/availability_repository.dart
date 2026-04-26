@@ -6,6 +6,9 @@ abstract class AvailabilityRepository {
   /// Liste les disponibilités pour une date donnée (vue MANAGER).
   Future<List<Availability>> getAvailabilitiesForDate(String showDateId);
 
+  /// Lit uniquement la disponibilité de l'artiste courant pour une date.
+  Future<Availability> getMyAvailabilityForDate(String showDateId);
+
   /// Met à jour la disponibilité de l'artiste courant pour une date donnée.
   Future<void> upsertMyAvailability({
     required String showDateId,

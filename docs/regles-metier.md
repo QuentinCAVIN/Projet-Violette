@@ -60,6 +60,8 @@ CANCELLED CANCELLED  CANCELLED
 - Après une réponse, le retour à `PENDING` n'est pas une transition normale.
 - `IF_NEEDED` remplace l'ancien vocabulaire `CONDITIONAL`.
 - Une disponibilité ne réserve pas l'artiste et ne bloque pas d'autre engagement.
+- Pour la sélection manager (`SELECTED`) : `AVAILABLE` et `IF_NEEDED` sont sélectionnables ; `UNAVAILABLE` et `PENDING` ne le sont pas en v0.4.0.
+- `IF_NEEDED` signifie "disponible si besoin" : sélection autorisée, mais priorité métier inférieure à `AVAILABLE`.
 
 ---
 
@@ -87,6 +89,8 @@ SELECTED | PENDING_CONFIRMATION | CONFIRMED -> CANCELLED
 - `SELECTED` peut exister en `OPTION` pour préparer une équipe sans engagement.
 - `PENDING_CONFIRMATION` ne doit exister que pour une date `CONFIRMED`.
 - `CONFIRMED` signifie que l'artiste a accepté la demande.
+- Si un artiste possède un booking `CONFIRMED` sur une date, il ne peut plus modifier sa disponibilité sur cette date dans l'application `v0.4.0`.
+- Pour modifier un engagement confirmé ou se désister, l'artiste doit contacter le gérant ; le désistement autonome est hors périmètre `v0.4.0`.
 - `REFUSED` libère la place dans la capacité métier.
 - `CANCELLED` sert à neutraliser un booking devenu inactif.
 
@@ -121,3 +125,10 @@ La différence principale est l'engagement : une présélection aide le gérant 
 - Le backend utilise ses identifiants SQL (`id`) comme identifiants métier principaux.
 - `firebaseUid` identifie l'utilisateur Firebase et sert à relier le JWT au profil backend.
 - Pendant les transitions historiques, certains mappers peuvent encore défendre des cas où une donnée legacy contient un `firebaseUid`; cette compatibilité doit disparaître quand les données legacy ne sont plus utiles.
+
+---
+
+### À traiter en v0.5.0
+- Clarifier l’affichage de la présélection côté manager et côté artiste.
+- Distinguer visuellement les artistes disponibles, présélectionnés et confirmés.
+- Déterminer si la présélection en OPTION doit être visible par l’artiste ou rester interne au gérant.

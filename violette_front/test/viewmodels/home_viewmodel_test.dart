@@ -6,6 +6,8 @@ import 'package:violette_front/models/enums/booking_status.dart';
 import 'package:violette_front/models/enums/role.dart';
 import 'package:violette_front/models/violette_user.dart';
 import 'package:violette_front/repositories/booking_repository.dart';
+import 'package:violette_front/repositories/show_date_repository.dart';
+import 'package:violette_front/models/show_date.dart';
 import 'package:violette_front/ui/views/home/home_viewmodel.dart';
 import 'package:stacked_firebase_auth/stacked_firebase_auth.dart';
 import 'package:stacked_services/stacked_services.dart';
@@ -138,6 +140,105 @@ void main() {
             .called(1);
         expect(viewModel.pendingRequests, isEmpty);
       });
+    });
+
+    group('loadShowDatesForPendingRequests -', () {
+      test(
+        'loadShowDatesForPendingRequests_whenShowDateInMyAvailableList_doesNotCallGetShowDateById',
+        () async {
+          final showDateRepository =
+              locator<ShowDateRepository>() as MockShowDateRepository;
+
+          final sd = ShowDate(
+            id: 'date-artist-list',
+            title: 'Revue',
+            date: DateTime(2026, 4, 10),
+            meetingTimeMinutes: 600,
+            address: 'Nantes',
+            totalRequiredArtists: 4,
+          );
+
+          when(() => showDateRepository.getMyAvailableShowDates())
+              .thenAnswer((_) async => [sd]);
+
+          final viewModel = HomeViewModel();
+          viewModel.pendingRequests = [
+            ArtistBooking(
+              artistId: 'a1',
+              dateId: 'date-artist-list',
+              status: BookingStatus.pendingConfirmation,
+            ),
+          ];
+
+          await viewModel.loadShowDatesForPendingRequests();
+
+          expect(viewModel.requestsShowDates['date-artist-list'], sd);
+          verifyNever(() => showDateRepository.getShowDateById(any()));
+        },
+      );
+
+      test(
+        'loadShowDatesForPendingRequests_whenIdNotInArtistList_usesGetShowDateById',
+        () async {
+          final showDateRepository =
+              locator<ShowDateRepository>() as MockShowDateRepository;
+
+          final sd = ShowDate(
+            id: 'date-by-id',
+            title: 'Fallback',
+            date: DateTime(2026, 5, 1),
+            meetingTimeMinutes: 0,
+            address: 'Brest',
+            totalRequiredArtists: 1,
+          );
+
+          when(() => showDateRepository.getMyAvailableShowDates())
+              .thenAnswer((_) async => []);
+          when(() => showDateRepository.getShowDateById('date-by-id'))
+              .thenAnswer((_) async => sd);
+
+          final viewModel = HomeViewModel();
+          viewModel.pendingRequests = [
+            ArtistBooking(
+              artistId: 'a1',
+              dateId: 'date-by-id',
+              status: BookingStatus.pendingConfirmation,
+            ),
+          ];
+
+          await viewModel.loadShowDatesForPendingRequests();
+
+          verify(() => showDateRepository.getShowDateById('date-by-id'))
+              .called(1);
+          expect(viewModel.requestsShowDates['date-by-id'], sd);
+        },
+      );
+
+      test(
+        'loadShowDatesForPendingRequests_whenDetailUnavailable_mapsNullWithoutFakeShowDate',
+        () async {
+          final showDateRepository =
+              locator<ShowDateRepository>() as MockShowDateRepository;
+
+          when(() => showDateRepository.getMyAvailableShowDates())
+              .thenAnswer((_) async => []);
+          when(() => showDateRepository.getShowDateById('missing'))
+              .thenAnswer((_) async => null);
+
+          final viewModel = HomeViewModel();
+          viewModel.pendingRequests = [
+            ArtistBooking(
+              artistId: 'a1',
+              dateId: 'missing',
+              status: BookingStatus.pendingConfirmation,
+            ),
+          ];
+
+          await viewModel.loadShowDatesForPendingRequests();
+
+          expect(viewModel.requestsShowDates['missing'], isNull);
+        },
+      );
     });
   });
 }

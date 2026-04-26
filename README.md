@@ -113,6 +113,7 @@ La documentation technique backend reste détaillée dans le README du backend :
 | **Migration domaine user** | Setup OpenAPI Generator, client Dart généré, flux REST user, adb reverse, dette résiduelle | [docs/migration-domaine-user.md](docs/migration-domaine-user.md) |
 | **Stratégie de tests** | Tests frontend/backend, profils Quarkus, règles de migration REST | [docs/testing-strategy.md](docs/testing-strategy.md) |
 | **Préparation v0.4.0** | Checklist documentaire, tests, tag, Swagger et APK | [docs/release-v0.4.0.md](docs/release-v0.4.0.md) |
+| **Dette technique** | Limites assumées v0.4.0 et évolutions futures | [docs/technical-debt.md](docs/technical-debt.md) |
 | **Changelog** | Historique des versions | [CHANGELOG.md](CHANGELOG.md) |
 
 ### Intégration continue et déploiement

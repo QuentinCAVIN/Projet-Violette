@@ -1,5 +1,6 @@
 package io.violette.showdate.dto;
 
+import io.violette.showdate.model.ShowDateStatus;
 import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
@@ -25,7 +26,9 @@ public record UpdateShowDateRequestDto(
         @Size(max = 50)
         String clientContactPhone,
 
-        String showDetails
+        String showDetails,
+
+        ShowDateStatus status
 ) {
 }
 

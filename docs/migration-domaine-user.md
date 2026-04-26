@@ -30,6 +30,16 @@ Crée le profil backend à partir du JWT (firebaseUid, email) + corps de requêt
 Le client Dart est généré dans `violette_api_client/` via OpenAPI Generator (`dart-dio`).
 La configuration est dans `openapitools.json` à la racine du monorepo.
 
+En `v0.4.0`, ce client généré est utilisé principalement pour le domaine `user` :
+
+- `UserRemoteDataSource` encapsule `UtilisateursApi` pour `GET /api/users/me/profile` et `POST /api/users` ;
+- `UserMapper` convertit les DTOs générés vers les modèles métier Flutter ;
+- les ViewModels ne manipulent jamais directement les types générés.
+
+Les domaines `availability`, `showDate` et `booking` sont également migrés vers le backend REST, mais ils passent encore par Dio manuel, des maps JSON et des mappers dédiés. Cette décision limite le risque juste avant `v0.4.0` et évite de lier les flux critiques à un client généré encore partiellement adopté.
+
+La régénération complète de `violette_api_client/` est reportée après `v0.4.0`. Lors de l'audit release, une incohérence potentielle a été identifiée : `apiArtistBookingsMeGet` peut être généré comme une réponse `ArtistBookingDto` unique alors que le backend renvoie une liste. Cette dette n'est pas bloquante pour `v0.4.0`, car le code runtime appelle `GET /api/artist-bookings/me` via `BookingRemoteDataSource` et Dio manuel, pas via cette méthode générée.
+
 ### Couches Flutter créées
 
 | Classe | Fichier | Rôle |
@@ -219,4 +229,5 @@ flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8080
 | `Future.delayed(2s)` dans `StartupViewModel` | La vérification du profil backend est retardée de 2s à chaque démarrage | Cosmétique ; le délai est intentionnel pour le splash |
 | `RegisterViewModel` n'appelle pas `setBusy` pendant l'async | Le bouton de soumission reste cliquable pendant `createAccountWithEmail` + `addUser` | UX ; à corriger lors d'une passe UI |
 | Tester et documenter tous les domaines REST de façon homogène | `user` utilise le client généré OpenAPI, tandis que `showDate`, `availability` et `booking` utilisent Dio + Maps + mappers manuels | À consolider dans la documentation d'architecture frontend |
+| Signature générée de `apiArtistBookingsMeGet` à vérifier | Le client généré peut typer un endpoint liste comme DTO unique ; non bloquant car non utilisé au runtime v0.4.0 | Après tag v0.4.0 |
 | Tests du client REST non écrits côté Flutter | `UserRemoteDataSource` et `RestUserRepository` ne sont pas couverts par des tests | À ajouter lors de la stabilisation des domaines suivants |

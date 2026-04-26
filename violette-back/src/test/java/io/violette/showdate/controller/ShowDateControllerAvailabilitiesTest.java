@@ -4,10 +4,14 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
 import io.violette.cabaretcompany.model.CabaretCompanyEntity;
+import io.violette.cabaretcompany.model.CompanyMemberEntity;
+import io.violette.cabaretcompany.model.CompanyMemberId;
 import io.violette.cabaretcompany.repository.CabaretCompanyRepository;
+import io.violette.cabaretcompany.repository.CompanyMemberRepository;
 import io.violette.security.CurrentUserContextProvider;
 import io.violette.security.JwtPrincipalInfo;
 import io.violette.showdate.model.ShowDateEntity;
+import io.violette.showdate.model.ShowDateStatus;
 import io.violette.showdate.repository.ArtistAvailabilityRepository;
 import io.violette.showdate.repository.ShowDateRepository;
 import io.violette.violetteuser.model.UserRole;
@@ -49,6 +53,9 @@ class ShowDateControllerAvailabilitiesTest {
     ArtistAvailabilityRepository artistAvailabilityRepository;
 
     @Inject
+    CompanyMemberRepository companyMemberRepository;
+
+    @Inject
     VioletteUserRepository violetteUserRepository;
 
     @Inject
@@ -88,6 +95,28 @@ class ShowDateControllerAvailabilitiesTest {
     }
 
     @Test
+    @TestSecurity(user = "ctrl-dates-art-ok", roles = {"ARTIST"})
+    @DisplayName("GET /show-dates/me/available en ARTIST retourne uniquement OPTION/CONFIRMED/STAFFED")
+    void getMyAvailableShowDates_whenRoleIsArtist_returnsFilteredStatuses() throws Exception {
+        ShowDateFixture fx = persistShowDateFixture("ctrl-dates-visible");
+        when(currentUserContextProvider.getCurrentPrincipal())
+                .thenReturn(Optional.of(new JwtPrincipalInfo(fx.artistFirebaseUid, fx.artistEmail, "Artiste")));
+
+        try {
+            given()
+                    .when().get("/api/show-dates/me/available")
+                    .then()
+                    .statusCode(200)
+                    .body("$", hasSize(3))
+                    .body("[0].status", equalTo("OPTION"))
+                    .body("[1].status", equalTo("CONFIRMED"))
+                    .body("[2].status", equalTo("STAFFED"));
+        } finally {
+            deleteFixture(fx);
+        }
+    }
+
+    @Test
     @TestSecurity(user = "ctrl-avail-art-ok", roles = {"ARTIST"})
     @DisplayName("PUT /show-dates/{id}/availabilities/me en ARTIST avec principal JWT retourne 200")
     void upsertMyAvailability_whenRoleIsArtist_returns200() throws Exception {
@@ -107,6 +136,27 @@ class ShowDateControllerAvailabilitiesTest {
                     .body("artistId", equalTo(fx.artistId.intValue()))
                     .body("artistFirebaseUid", equalTo(artist.getFirebaseUid()))
                     .body("status", equalTo("AVAILABLE"));
+        } finally {
+            deleteFixture(fx);
+        }
+    }
+
+    @Test
+    @TestSecurity(user = "ctrl-avail-art-me", roles = {"ARTIST"})
+    @DisplayName("GET /show-dates/{id}/availabilities/me en ARTIST retourne PENDING si aucune ligne n'existe")
+    void getMyAvailability_whenNoRow_returnsPending() throws Exception {
+        ShowDateFixture fx = persistShowDateFixture("ctrl-avail-get-me");
+        when(currentUserContextProvider.getCurrentPrincipal())
+                .thenReturn(Optional.of(new JwtPrincipalInfo(fx.artistFirebaseUid, fx.artistEmail, "Artiste")));
+
+        try {
+            given()
+                    .when().get("/api/show-dates/" + fx.optionShowDateId + "/availabilities/me")
+                    .then()
+                    .statusCode(200)
+                    .body("showDateId", equalTo(fx.optionShowDateId.intValue()))
+                    .body("artistId", equalTo(fx.artistId.intValue()))
+                    .body("status", equalTo("PENDING"));
         } finally {
             deleteFixture(fx);
         }
@@ -151,7 +201,15 @@ class ShowDateControllerAvailabilitiesTest {
         }
     }
 
-    private record ShowDateFixture(Long showDateId, Long artistId, Long managerId, Long companyId) {
+    private record ShowDateFixture(
+            Long showDateId,
+            Long optionShowDateId,
+            Long artistId,
+            String artistFirebaseUid,
+            String artistEmail,
+            Long managerId,
+            Long companyId
+    ) {
     }
 
     private ShowDateFixture persistShowDateFixture(String seed) throws Exception {
@@ -175,34 +233,55 @@ class ShowDateControllerAvailabilitiesTest {
         company.setName("Compagnie " + seed);
         company.setManager(manager);
 
-        ShowDateEntity showDate = new ShowDateEntity();
-        showDate.setCompany(company);
-        showDate.setEventDate(LocalDate.of(2025, 9, 1));
-        showDate.setMeetingTime(LocalTime.of(20, 0));
-        showDate.setLocation("Lieu test " + seed);
-        showDate.setClientContactName("Contact");
-        showDate.setClientContactPhone("0600000000");
+        ShowDateEntity inquiryDate = buildShowDate(company, LocalDate.of(2025, 9, 1), ShowDateStatus.INQUIRY, "Lieu inquiry " + seed);
+        ShowDateEntity optionDate = buildShowDate(company, LocalDate.of(2025, 9, 2), ShowDateStatus.OPTION, "Lieu option " + seed);
+        ShowDateEntity confirmedDate = buildShowDate(company, LocalDate.of(2025, 9, 3), ShowDateStatus.CONFIRMED, "Lieu confirmed " + seed);
+        ShowDateEntity staffedDate = buildShowDate(company, LocalDate.of(2025, 9, 4), ShowDateStatus.STAFFED, "Lieu staffed " + seed);
+        ShowDateEntity cancelledDate = buildShowDate(company, LocalDate.of(2025, 9, 5), ShowDateStatus.CANCELLED, "Lieu cancelled " + seed);
+        ShowDateEntity archivedDate = buildShowDate(company, LocalDate.of(2025, 9, 6), ShowDateStatus.ARCHIVED, "Lieu archived " + seed);
+
+        CompanyMemberEntity membership = new CompanyMemberEntity();
+        membership.setId(new CompanyMemberId(company.getId(), artist.getId()));
+        membership.setCompany(company);
+        membership.setArtist(artist);
 
         userTransaction.begin();
         try {
             violetteUserRepository.persist(manager);
             violetteUserRepository.persist(artist);
             cabaretCompanyRepository.persist(company);
-            showDateRepository.persist(showDate);
+            showDateRepository.persist(inquiryDate);
+            showDateRepository.persist(optionDate);
+            showDateRepository.persist(confirmedDate);
+            showDateRepository.persist(staffedDate);
+            showDateRepository.persist(cancelledDate);
+            showDateRepository.persist(archivedDate);
+            companyMemberRepository.persist(membership);
             userTransaction.commit();
         } catch (Exception e) {
             userTransaction.rollback();
             throw e;
         }
 
-        return new ShowDateFixture(showDate.getId(), artist.getId(), manager.getId(), company.getId());
+        return new ShowDateFixture(
+                inquiryDate.getId(),
+                optionDate.getId(),
+                artist.getId(),
+                artist.getFirebaseUid(),
+                artist.getEmail(),
+                manager.getId(),
+                company.getId()
+        );
     }
 
     private void deleteFixture(ShowDateFixture fx) throws Exception {
         userTransaction.begin();
         try {
-            artistAvailabilityRepository.findByShowDateId(fx.showDateId).forEach(artistAvailabilityRepository::delete);
-            showDateRepository.findByIdOptional(fx.showDateId).ifPresent(showDateRepository::delete);
+            showDateRepository.findByCompanyId(fx.companyId).forEach(showDate ->
+                    artistAvailabilityRepository.findByShowDateId(showDate.getId()).forEach(artistAvailabilityRepository::delete)
+            );
+            showDateRepository.findByCompanyId(fx.companyId).forEach(showDateRepository::delete);
+            companyMemberRepository.findByArtistId(fx.artistId).forEach(companyMemberRepository::delete);
             cabaretCompanyRepository.findByIdOptional(fx.companyId).ifPresent(cabaretCompanyRepository::delete);
             violetteUserRepository.findByIdOptional(fx.managerId).ifPresent(violetteUserRepository::delete);
             violetteUserRepository.findByIdOptional(fx.artistId).ifPresent(violetteUserRepository::delete);
@@ -211,5 +290,17 @@ class ShowDateControllerAvailabilitiesTest {
             userTransaction.rollback();
             throw e;
         }
+    }
+
+    private ShowDateEntity buildShowDate(CabaretCompanyEntity company, LocalDate eventDate, ShowDateStatus status, String location) {
+        ShowDateEntity showDate = new ShowDateEntity();
+        showDate.setCompany(company);
+        showDate.setEventDate(eventDate);
+        showDate.setMeetingTime(LocalTime.of(20, 0));
+        showDate.setLocation(location);
+        showDate.setClientContactName("Contact");
+        showDate.setClientContactPhone("0600000000");
+        showDate.setStatus(status);
+        return showDate;
     }
 }

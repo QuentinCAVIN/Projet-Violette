@@ -94,7 +94,7 @@ L'authentification reste assurée par **Firebase Auth** côté frontend : le fro
 
 | Environnement                   | Base de données                       | Profil Quarkus |
 | ------------------------------- | ------------------------------------- | -------------- |
-| Dev local (défaut)              | MySQL 8+                              | `dev`          |
+| Dev local (défaut)              | H2 in-memory (MySQL **non** requis)   | `dev`          |
 | Dev local avec Firebase JWT     | H2 in-memory (MySQL **non** requis)   | `firebase`     |
 | Production                      | MySQL 8+ (Aiven via Fly.io)           | `prod`         |
 | Tests JUnit                     | H2 in-memory                          | `test`         |

@@ -9,12 +9,6 @@ import 'user_repository.dart';
 ///
 /// Remplace [FirestoreUserRepository] sans modifier les ViewModels ni l'interface.
 /// La bascule se fait dans app.dart en changeant une seule ligne de DI.
-///
-/// Limitation actuelle (POC) :
-/// [getUser] ignore le paramètre [uid] et retourne toujours le profil de
-/// l'utilisateur authentifié courant via GET /api/users/me/profile.
-/// Pour les cas MANAGER (consulter un autre utilisateur), un endpoint dédié
-/// sera nécessaire dans une prochaine itération.
 class RestUserRepository implements UserRepository {
   final UserRemoteDataSource _remoteDataSource;
 
@@ -25,8 +19,14 @@ class RestUserRepository implements UserRepository {
 
   @override
   Future<VioletteUser?> getUser(String uid) async {
+    final normalizedUid = uid.trim();
+    if (normalizedUid.isEmpty) return null;
+
     try {
-      final dto = await _remoteDataSource.getMyProfile();
+      final isBackendId = RegExp(r'^\d+$').hasMatch(normalizedUid);
+      final dto = isBackendId
+          ? await _remoteDataSource.getUserById(normalizedUid)
+          : await _remoteDataSource.getMyProfile();
       if (dto == null) return null;
       return UserMapper.fromDto(dto);
     } on DioException catch (e) {

@@ -176,6 +176,23 @@ class ArtistAvailabilityServiceTest {
                 artistAvailabilityRepository.findById(new ArtistAvailabilityId(fx.showDate.getId(), artist.getId())).getStatus());
     }
 
+    @Test
+    @Transactional
+    @DisplayName("getMyAvailability retourne PENDING si aucune disponibilité n'existe encore")
+    void getMyAvailability_whenNoRow_thenReturnsPending() {
+        ShowDateFixture fx = buildShowDateFixture("avail-svc-get-me-pending");
+        VioletteUserEntity artist = buildAndPersistUser("avail-svc-get-me-artist", "avail-svc-get-me@test.com", Set.of(UserRole.ARTIST));
+        JwtPrincipalInfo principal = new JwtPrincipalInfo(artist.getFirebaseUid(), artist.getEmail(), "Artiste");
+
+        ArtistAvailabilityDto dto = artistAvailabilityService.getMyAvailability(fx.showDate.getId(), principal);
+
+        assertAll(
+                () -> assertEquals(fx.showDate.getId(), dto.showDateId()),
+                () -> assertEquals(artist.getId(), dto.artistId()),
+                () -> assertEquals(AvailabilityStatus.PENDING, dto.status())
+        );
+    }
+
     private record ShowDateFixture(ShowDateEntity showDate) {
     }
 

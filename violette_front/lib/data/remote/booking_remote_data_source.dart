@@ -34,6 +34,19 @@ class BookingRemoteDataSource {
     }
   }
 
+  /// Toutes les réservations de l’artiste authentifié.
+  ///
+  /// `GET /api/artist-bookings/me`
+  Future<List<ArtistBooking>> getMyBookings() async {
+    try {
+      final response = await _dio.get('/api/artist-bookings/me');
+      final items = ArtistBookingMapper.parseBookingList(response.data);
+      return ArtistBookingMapper.toArtistBookingList(items);
+    } on DioException catch (e) {
+      throw Exception(_messageFromDio(e));
+    }
+  }
+
   /// Répond à une demande de confirmation pour la date [showDateId].
   ///
   /// Résout d'abord l'identifiant backend du booking via

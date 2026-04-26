@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 
 /// Client HTTP Dio configuré pour le backend Violette.
 ///
@@ -9,7 +10,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 class DioClient {
   /// URL de base du backend Violette (port Quarkus par défaut : 8080).
   ///
-  /// **Téléphone physique branché en USB (ton cas)** : `127.0.0.1` fonctionne
+  /// **Téléphone physique branché en USB ** : `127.0.0.1` fonctionne
   /// si tu rediriges le port depuis le PC vers l’appareil :
   /// `adb reverse tcp:8080 tcp:8080`
   /// (à refaire après reconnexion USB si besoin).
@@ -53,9 +54,22 @@ class _FirebaseJwtInterceptor extends Interceptor {
   ) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      // forceRefresh: false → utilise le token en cache si encore valide
-      final token = await user.getIdToken();
-      options.headers['Authorization'] = 'Bearer $token';
+      try {
+        // forceRefresh: false → utilise le token en cache si encore valide
+        final token = await user.getIdToken();
+        options.headers['Authorization'] = 'Bearer $token';
+      } on FirebaseAuthException catch (e) {
+        // Cas observé en dev: session Firebase locale conservée alors que
+        // l'utilisateur a été supprimé côté Firebase.
+        // On purge la session locale pour éviter de bloquer le startup.
+        if (e.code == 'user-not-found' || e.code == 'user-disabled') {
+          await FirebaseAuth.instance.signOut();
+        }
+      } catch (e) {
+        // Ne bloque pas la requête : l'absence de token sera traitée par le backend.
+        // Utile aussi si Firebase Auth est temporairement indisponible ou mal synchronisé.
+        debugPrint('Impossible de récupérer le token Firebase : $e');
+      }
     }
     handler.next(options);
   }

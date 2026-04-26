@@ -23,8 +23,12 @@ class ManagerDateDetailViewModel extends BaseViewModel {
   final _snackbarService = locator<SnackbarService>();
 
   final ShowDate showDate;
+  final Future<void> Function(ShowDate updatedShowDate)? onShowDateUpdated;
 
-  ManagerDateDetailViewModel({required this.showDate});
+  ManagerDateDetailViewModel({
+    required this.showDate,
+    this.onShowDateUpdated,
+  });
 
   /// Lignes affichées : profil + identifiant artiste backend (aligné API booking).
   List<ManagerArtistLine> artistLines = [];
@@ -41,6 +45,7 @@ class ManagerDateDetailViewModel extends BaseViewModel {
       currentShowDate?.selectedCount ?? showDate.selectedCount;
 
   bool get canSendConfirmation =>
+      displayedShowDate.status == ShowDateStatus.confirmed &&
       bookings.any((b) => b.status == BookingStatus.preselected);
 
   /// Méthode d'initialisation appelée à l'ouverture de la vue.
@@ -210,7 +215,8 @@ class ManagerDateDetailViewModel extends BaseViewModel {
   /// 2. Si aucun booking n'existe :
   ///    - la date doit être en [ShowDateStatus.option] ou [ShowDateStatus.confirmed]
   ///      (pas inquiry / staffed / cancelled / archived)
-  ///    - l'artiste doit être "available"
+  ///    - l'artiste doit être "available" ou "ifNeeded"
+  ///      (pending et unavailable restent non sélectionnables en V1)
   ///    - le plafond `totalRequiredArtists` ne doit pas être atteint
   bool isSelectionEnabled(ShowDate currentShowDate, String artistId) {
     final booking = getBookingForArtist(artistId);
@@ -225,16 +231,26 @@ class ManagerDateDetailViewModel extends BaseViewModel {
 
     final availability = getAvailabilityForArtist(artistId);
 
-    if (availability != AvailabilityStatus.available) {
+    if (!_isSelectableAvailability(availability)) {
       return false;
     }
 
-    if (currentShowDate.selectedCount >=
-        currentShowDate.totalRequiredArtists) {
+    // Quand aucun besoin n'est encore configuré (0), on n'applique pas
+    // de plafond bloquant côté UI pour ne pas bloquer le gérant dans sa réservation
+    //TODO : Que se passe t il si le plafond est congiguré avec un montant inférieur
+    // au nombre d'artistes sélectionnés ? 
+    if (currentShowDate.totalRequiredArtists > 0 &&
+        currentShowDate.selectedCount >= currentShowDate.totalRequiredArtists) {
       return false;
     }
 
     return true;
+  }
+
+  static bool _isSelectableAvailability(AvailabilityStatus? availability) {
+    // IF_NEEDED = disponible si besoin : sélection autorisée mais moins prioritaire.
+    return availability == AvailabilityStatus.available ||
+        availability == AvailabilityStatus.ifNeeded;
   }
 
   static bool _allowsNewArtistSelectionForShowDateStatus(ShowDateStatus status) {
@@ -294,6 +310,15 @@ class ManagerDateDetailViewModel extends BaseViewModel {
       return;
     }
 
+    if (displayedShowDate.status != ShowDateStatus.confirmed) {
+      _dialogService.showDialog(
+        title: 'Envoi impossible',
+        description:
+            "Passe d'abord la date au statut Confirmé avant d'envoyer les demandes.",
+      );
+      return;
+    }
+
     try {
       await _bookingRepository.sendConfirmationRequests(dateId);
       await _refreshAfterAction();
@@ -306,6 +331,53 @@ class ManagerDateDetailViewModel extends BaseViewModel {
       _dialogService.showDialog(
         title: 'Erreur',
         description: "Échec de l'envoi : $e",
+      );
+    }
+  }
+
+  List<ShowDateStatus> getAvailableNextStatuses() {
+    switch (displayedShowDate.status) {
+      case ShowDateStatus.inquiry:
+        return const [ShowDateStatus.option];
+      case ShowDateStatus.option:
+        return const [ShowDateStatus.confirmed];
+      case ShowDateStatus.confirmed:
+        return const [ShowDateStatus.staffed];
+      case ShowDateStatus.staffed:
+      case ShowDateStatus.cancelled:
+      case ShowDateStatus.archived:
+        return const [];
+    }
+  }
+
+  Future<void> changeShowDateStatus(ShowDateStatus targetStatus) async {
+    final dateId =
+        displayedShowDate.id.isNotEmpty ? displayedShowDate.id : showDate.id;
+    if (dateId.isEmpty) {
+      _snackbarService.showSnackbar(
+        message: "Identifiant de date manquant.",
+        duration: const Duration(seconds: 2),
+      );
+      return;
+    }
+
+    try {
+      await _showDateRepository.updateShowDateStatus(dateId, targetStatus);
+      await _refreshAfterAction();
+      await _loadAvailabilities();
+      await _loadAllArtists();
+      if (onShowDateUpdated != null) {
+        await onShowDateUpdated!(displayedShowDate);
+      }
+      rebuildUi();
+      _snackbarService.showSnackbar(
+        message: "Statut mis à jour : ${targetStatus.label}.",
+        duration: const Duration(seconds: 2),
+      );
+    } catch (e) {
+      await _dialogService.showDialog(
+        title: 'Changement de statut impossible',
+        description: e.toString(),
       );
     }
   }

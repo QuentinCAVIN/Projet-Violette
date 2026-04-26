@@ -14,48 +14,92 @@ class AvailabilityChoiceView extends StackedView<AvailabilityChoiceViewModel> {
     AvailabilityChoiceViewModel viewModel,
     Widget? child,
   ) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Sélection des dates'),
-      ),
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 20.0),
-          child: Column(
-            children: [
-              VioletteCalendar(
-                focusedDay: viewModel.focusedDay,
-                selectedDayPredicate: viewModel.isSelectedDay,
-                onDaySelected: viewModel.onDaySelected,
-                onPageChanged: viewModel.onPageChange,
-                dayColorBuilder: (day) => viewModel.getStatusForDay(day)?.color,
-              ),
-              if (viewModel.showDatePicked != null)
-                ShowDateDetail(
-                    showDate: viewModel.showDatePicked!,
-                    status: viewModel.getStatusForDay(viewModel.selectedDay!) ??
-                        AvailabilityStatus.pending),
-              const SizedBox(height: 30),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    await viewModel.onValidatePressed();
-                  },
-                  child: viewModel.isBusy
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Text("Valider"),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        await viewModel.onBackPressed();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () async => viewModel.onBackPressed(),
+          ),
+          title: const Text('Sélection des dates'),
+        ),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        body: SingleChildScrollView(
+          child: Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 25.0, vertical: 20.0),
+            child: Column(
+              children: [
+                VioletteCalendar(
+                  focusedDay: viewModel.focusedDay,
+                  selectedDayPredicate: viewModel.isSelectedDay,
+                  onDaySelected: viewModel.onDaySelected,
+                  onPageChanged: viewModel.onPageChange,
+                  dayColorBuilder: viewModel.getColorForDay,
                 ),
-              ),
-            ],
+                if (viewModel.selectedShowDates.isNotEmpty) ...[
+                  for (final sd in viewModel.selectedShowDates) ...[
+                    ShowDateDetail(
+                      showDate: sd,
+                      status: viewModel.getStatusForShowDateId(sd.id) ??
+                          AvailabilityStatus.pending,
+                    ),
+                    if (viewModel.isShowDateConfirmedByBooking(sd.id))
+                      Card(
+                        child: ListTile(
+                          leading: Icon(
+                            Icons.lock,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          title: Text(viewModel.confirmedBookingLockMessage),
+                        ),
+                      ),
+                    if (viewModel.selectedShowDates.length > 1)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton(
+                            onPressed: viewModel.isBusy ||
+                                    viewModel.isShowDateConfirmedByBooking(sd.id)
+                                ? null
+                                : () => viewModel.cycleAvailabilityForShowDate(sd),
+                            child: Text(
+                              viewModel.isShowDateConfirmedByBooking(sd.id)
+                                  ? 'Disponibilité verrouillée'
+                                  : 'Mettre à jour ma disponibilité',
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ],
+                const SizedBox(height: 30),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      await viewModel.onValidatePressed();
+                    },
+                    child: viewModel.isBusy
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text("Valider"),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

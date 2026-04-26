@@ -28,4 +28,11 @@ public class CompanyMemberRepository implements PanacheRepositoryBase<CompanyMem
     public List<CompanyMemberEntity> findByArtistId(Long artistId) {
         return find("id.artistId", artistId).list();
     }
+
+    /**
+     * Indique si l'appartenance (compagnie, artiste) existe déjà.
+     */
+    public boolean existsByCompanyIdAndArtistId(Long companyId, Long artistId) {
+        return count("id.companyId = ?1 and id.artistId = ?2", companyId, artistId) > 0;
+    }
 }

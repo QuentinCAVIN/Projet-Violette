@@ -77,6 +77,23 @@ public class ShowDateController {
     }
 
     @GET
+    @Path("/me/available")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed("ARTIST")
+    @Operation(
+            summary = "Lister mes dates visibles (artiste)",
+            description = "Retourne les dates visibles pour l'artiste authentifié, filtrées par statuts métier (OPTION, CONFIRMED, STAFFED)."
+    )
+    @APIResponse(responseCode = "200", description = "Liste des dates visibles", content = @Content(schema = @Schema(implementation = ShowDateDto.class)))
+    @APIResponse(responseCode = "401", description = "Principal JWT introuvable")
+    @APIResponse(responseCode = "403", description = "Accès refusé (rôle insuffisant)")
+    public Response getMyAvailableForArtist() {
+        return currentUserContextProvider.getCurrentPrincipal()
+                .map(principal -> Response.ok(showDateService.getVisibleForArtist(principal)).build())
+                .orElse(Response.status(Response.Status.UNAUTHORIZED).build());
+    }
+
+    @GET
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @RolesAllowed("MANAGER")
@@ -174,6 +191,24 @@ public class ShowDateController {
     public Response getAvailabilitiesForShowDate(@PathParam("id") Long id) {
         List<ArtistAvailabilityDto> dtos = artistAvailabilityService.getAvailabilitiesForShowDate(id);
         return Response.ok(dtos).build();
+    }
+
+    @GET
+    @Path("/{id}/availabilities/me")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed("ARTIST")
+    @Operation(
+            summary = "Lire ma disponibilité pour une date",
+            description = "Retourne uniquement la disponibilité de l'artiste authentifié pour cette date. Si aucune disponibilité n'existe, le statut PENDING est renvoyé."
+    )
+    @APIResponse(responseCode = "200", description = "Disponibilité courante", content = @Content(schema = @Schema(implementation = ArtistAvailabilityDto.class)))
+    @APIResponse(responseCode = "401", description = "Principal JWT introuvable")
+    @APIResponse(responseCode = "403", description = "Accès refusé (rôle insuffisant)")
+    @APIResponse(responseCode = "404", description = "Date ou utilisateur introuvable")
+    public Response getMyAvailability(@PathParam("id") Long id) {
+        return currentUserContextProvider.getCurrentPrincipal()
+                .map(principal -> Response.ok(artistAvailabilityService.getMyAvailability(id, principal)).build())
+                .orElse(Response.status(Response.Status.UNAUTHORIZED).build());
     }
 
     @PUT

@@ -10,7 +10,7 @@ Toutes les versions suivent la convention Semantic Versioning (MAJOR.MINOR.PATCH
 ---
 
 ## v0.4.0 – Migration REST frontend, consolidation métier et documentation release
-Date : À venir
+Date : 25-04-2026
 
 ### Added
 - Mise en place du client HTTP `DioClient` avec injection automatique du JWT Firebase dans les
@@ -29,6 +29,8 @@ Date : À venir
   de la création REST des dates.
 - Ajout des DTOs backend `UpdateShowDateRequestDto` et `UpsertAvailabilityRequestDto` pour les flux
   REST de mise à jour partielle et de disponibilité.
+- Ajout de l'endpoint artiste `GET /api/artist-bookings/me` pour exposer les bookings de l'artiste
+  authentifié et distinguer disponibilité déclarée et engagement confirmé.
 
 ### Changed
 - Migration REST côté frontend des domaines `user`, `availability`, `showDate` et `booking`.
@@ -55,6 +57,10 @@ Date : À venir
   sur le tag de release pendant le workflow de déploiement.
 - Ajustement de la configuration datasource Quarkus pour isoler les profils `dev`, `test`,
   `integration` et `prod`.
+- Affichage de plusieurs `ShowDate` le même jour dans les calendriers gérant et artiste, avec une
+  priorité simple de couleur quand plusieurs statuts coexistent.
+- Verrouillage côté frontend de la modification de disponibilité lorsqu'un booking artiste est
+  `CONFIRMED` sur la date concernée.
 
 ### Removed
 - Suppression des dépendances Flutter `cloud_firestore` et `fake_cloud_firestore`, ainsi que de leurs
@@ -71,6 +77,13 @@ Date : À venir
   renvoyées par le backend REST.
 - Correction des cases de sélection et de la sémantique de sélection / présélection dans le détail
   manager.
+- Correction de la visibilité artiste quand plusieurs `ShowDate` existent le même jour.
+- Correction de l'affichage des demandes de confirmation artiste : les actions `Confirmer` et
+  `Refuser` sont visibles pour les bookings `PENDING_CONFIRMATION`.
+- Correction du fallback d'affichage des demandes sans détail de date : plus aucune date factice
+  n'est affichée.
+- Correction de navigation artiste par retour explicite vers `HomeView` afin d'éviter une pile
+  héritée incohérente.
 - Correction d'un import `firebase_auth` redondant dans les tests Flutter.
 - Correction d'avertissements d'analyse statique sur le domaine disponibilité.
 
@@ -83,6 +96,8 @@ Date : À venir
 - Ajout de tests Flutter pour les mappers `user`, `availability`, `showDate` et `artistBooking`.
 - Ajout et mise à jour de tests ViewModel (`startup`, `home`, `availability_choice`,
   `manager_planning`, `manager_date_detail`) pour les flux REST et les cas d'erreur.
+- Ajout de tests widget pour `BookingRequestCard` (boutons de réponse, statut déjà traité,
+  demande sans détail de date).
 - Activation des tests d'intégration backend dans la CI avec `-DskipITs=false`.
 
 ### Documentation
@@ -92,6 +107,8 @@ Date : À venir
   le booking ferme.
 - Ajout d'une documentation d'architecture globale Flutter / Quarkus / Firebase Auth / REST.
 - Ajout d'une checklist de préparation `v0.4.0` couvrant tests, Swagger, Fly.io et APK.
+- Ajout d'une documentation de dette technique `docs/technical-debt.md` couvrant backend, frontend,
+  métier, UX, tests et évolutions futures.
 - Mise à jour du README racine avec une section d'installation Android destinée aux artistes et
   gérants non techniques.
 - Mise à jour des README frontend, backend, déploiement, tests et documentation utilisateur pour
@@ -104,6 +121,8 @@ Date : À venir
 - Alignement de la version Maven sur le tag `vX.Y.Z` dans `deploy.yml` afin que Quarkus et Swagger
   exposent la version de release.
 - Build APK de release avec `--dart-define=API_BASE_URL=https://violette-back.fly.dev`.
+- Vérification documentée que le tag `vX.Y.Z` aligne Maven, `/api/ping`, Swagger et les logs
+  backend sur la version de release.
 
 ### Known limitations
 - Firebase Auth reste nécessaire : la release supprime Firestore du code métier frontend migré, mais
@@ -114,6 +133,12 @@ Date : À venir
   données historiques pendant la transition vers les identifiants backend.
 - Les tests générés dans `violette_api_client/test` restent des squelettes OpenAPI et ne constituent
   pas une barrière fonctionnelle complète.
+- Le verrou `booking CONFIRMED -> disponibilité non modifiable` est garanti côté application
+  Flutter ; le garde-fou backend équivalent reste une évolution à traiter.
+- La compagnie unique `Dream's Production`, le rattachement automatique des utilisateurs et l'absence
+  de compagnie active restent des limitations temporaires de `v0.4.0`.
+- Le client OpenAPI généré doit être régénéré avant de servir de référence pour les enums `showDate`,
+  car certains modèles historiques peuvent encore contenir d'anciennes valeurs.
 
 ---
 

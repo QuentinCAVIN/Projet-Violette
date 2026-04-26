@@ -204,4 +204,28 @@ public class ArtistBookingController {
                 })
                 .orElse(Response.status(Response.Status.UNAUTHORIZED).build());
     }
+
+    /**
+     * Retourne tous les bookings de l'artiste authentifié (ARTIST).
+     * Permet au frontend de connaître les engagements confirmés sans exposer les bookings d'autres artistes.
+     */
+    @GET
+    @Path("/me")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed("ARTIST")
+    @Operation(
+            summary = "Mes réservations",
+            description = "Retourne toutes les réservations de l'artiste authentifié. Requiert le rôle ARTIST."
+    )
+    @APIResponse(responseCode = "200", description = "Liste des réservations de l'artiste", content = @Content(schema = @Schema(implementation = ArtistBookingDto.class)))
+    @APIResponse(responseCode = "401", description = "Non authentifié")
+    @APIResponse(responseCode = "403", description = "Accès refusé (rôle insuffisant)")
+    public Response getMyBookings() {
+        return currentUserContextProvider.getCurrentPrincipal()
+                .map(principal -> {
+                    List<ArtistBookingDto> dtos = artistBookingService.getBookingsForCurrentArtist(principal);
+                    return Response.ok(dtos).build();
+                })
+                .orElse(Response.status(Response.Status.UNAUTHORIZED).build());
+    }
 }

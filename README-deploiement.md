@@ -72,6 +72,27 @@ Cette séparation entre `push main` et `tag v*.*.*` permet de sécuriser les dé
 
 ---
 
+## Vérification de version release
+
+Le backend garde `0.3.0-SNAPSHOT` dans `violette-back/pom.xml` pendant le développement. Lorsqu'un tag `vX.Y.Z` est poussé, `deploy.yml` exécute `mvn versions:set -DnewVersion=X.Y.Z` avant `mvn clean verify`.
+
+Cette étape aligne la version Maven utilisée par :
+
+- les logs de démarrage Quarkus (`violette-back X.Y.Z`) ;
+- `GET /api/ping`, via `quarkus.application.version=@project.version@` ;
+- Swagger / OpenAPI, via `quarkus.smallrye-openapi.info-version=@project.version@`.
+
+Après le tag `v0.4.0`, vérifier :
+
+```bash
+curl https://violette-back.fly.dev/api/ping
+# Attendu : {"status":"pong","version":"0.4.0"}
+```
+
+Puis ouvrir Swagger UI et contrôler que la version affichée est `0.4.0` : [https://violette-back.fly.dev/swagger-ui](https://violette-back.fly.dev/swagger-ui).
+
+---
+
 ## Structure du dépôt
 
 ```

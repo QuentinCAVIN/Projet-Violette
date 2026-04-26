@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:violette_front/core/network/dio_client.dart';
+import 'package:violette_front/models/enums/show_date_status.dart';
 import 'package:violette_front/models/mappers/show_date_mapper.dart';
 import 'package:violette_front/models/show_date.dart';
 
@@ -34,6 +35,33 @@ class ShowDateRemoteDataSource {
     }
 
     // Gestion défensive si le backend renvoie du JSON encodé en chaîne.
+    if (data is String) {
+      final decoded = jsonDecode(data);
+      if (decoded is List) {
+        return decoded
+            .whereType<Map<String, dynamic>>()
+            .map(ShowDateMapper.fromJson)
+            .toList();
+      }
+    }
+
+    return [];
+  }
+
+  /// Récupère les dates visibles pour l'artiste courant.
+  ///
+  /// GET `/api/show-dates/me/available`
+  Future<List<ShowDate>> getMyAvailableShowDates() async {
+    final response = await _dio.get('/api/show-dates/me/available');
+    final data = response.data;
+
+    if (data is List) {
+      return data
+          .whereType<Map<String, dynamic>>()
+          .map(ShowDateMapper.fromJson)
+          .toList();
+    }
+
     if (data is String) {
       final decoded = jsonDecode(data);
       if (decoded is List) {
@@ -195,6 +223,7 @@ class ShowDateRemoteDataSource {
     String? clientContactName,
     String? clientContactPhone,
     String? showDetails,
+    ShowDateStatus? status,
   }) async {
     final normalizedId = showDateId.trim();
     if (normalizedId.isEmpty) {
@@ -232,6 +261,9 @@ class ShowDateRemoteDataSource {
     if (showDetails != null) {
       payload['showDetails'] = showDetails.trim();
     }
+    if (status != null) {
+      payload['status'] = _toApiShowDateStatus(status);
+    }
 
     if (payload.isEmpty) {
       return;
@@ -241,5 +273,22 @@ class ShowDateRemoteDataSource {
       '/api/show-dates/$idNum',
       data: payload,
     );
+  }
+
+  static String _toApiShowDateStatus(ShowDateStatus status) {
+    switch (status) {
+      case ShowDateStatus.inquiry:
+        return 'INQUIRY';
+      case ShowDateStatus.option:
+        return 'OPTION';
+      case ShowDateStatus.confirmed:
+        return 'CONFIRMED';
+      case ShowDateStatus.staffed:
+        return 'STAFFED';
+      case ShowDateStatus.cancelled:
+        return 'CANCELLED';
+      case ShowDateStatus.archived:
+        return 'ARCHIVED';
+    }
   }
 }
