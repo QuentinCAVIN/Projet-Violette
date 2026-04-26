@@ -14,7 +14,8 @@ class ShowDate {
   /// `eventDate` (jour local).
   final DateTime date;
 
-  /// `meetingTime` converti en minutes depuis minuit.
+  /// Représentation interne de `meetingTime` en minutes depuis minuit.
+  /// Exemple : `08:30:00` côté API devient `510`.
   final int meetingTimeMinutes;
 
   /// `location`.
@@ -58,7 +59,7 @@ extension ShowDateX on ShowDate {
 
   String get formattedMeetingTime => _minutesToHHmm(meetingTimeMinutes);
 
-  /// Affichage convocation : une seule heure côté API (`meetingTime`).
+  /// Affichage de l'heure de convocation (champ unique `meetingTime` côté API).
   String get formattedMeetingTimeForDisplay => formattedMeetingTime;
 }
 

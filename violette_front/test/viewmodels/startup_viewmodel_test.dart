@@ -159,7 +159,7 @@ void main() {
         expect(
           viewModel.startupError,
           stringContainsInOrder([
-            'Impossible de joindre le serveur au démarrage.',
+            'Erreur inattendue au démarrage.',
             'erreur réseau simulée',
           ]),
         );
