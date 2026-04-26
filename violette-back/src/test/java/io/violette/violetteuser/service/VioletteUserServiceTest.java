@@ -116,6 +116,7 @@ class VioletteUserServiceTest {
         showDateSkillRequirementRepository.deleteAll();
         showDateRepository.deleteAll();
         companyMemberRepository.deleteAll();
+        cabaretShowRepository.deleteAll();
         cabaretCompanyRepository.deleteAll();
         violetteUserRepository.deleteAll();
         violetteUserRepository.flush();
@@ -145,6 +146,7 @@ class VioletteUserServiceTest {
         showDateSkillRequirementRepository.deleteAll();
         showDateRepository.deleteAll();
         companyMemberRepository.deleteAll();
+        cabaretShowRepository.deleteAll();
         cabaretCompanyRepository.deleteAll();
         violetteUserRepository.deleteAll();
         violetteUserRepository.flush();
@@ -192,6 +194,7 @@ class VioletteUserServiceTest {
         showDateSkillRequirementRepository.deleteAll();
         showDateRepository.deleteAll();
         companyMemberRepository.deleteAll();
+        cabaretShowRepository.deleteAll();
         cabaretCompanyRepository.deleteAll();
         violetteUserRepository.deleteAll();
         violetteUserRepository.flush();

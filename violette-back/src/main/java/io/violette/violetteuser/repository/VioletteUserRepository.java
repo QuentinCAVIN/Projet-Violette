@@ -32,9 +32,11 @@ public class VioletteUserRepository implements PanacheRepository<VioletteUserEnt
 
     /**
      * Liste paginée des utilisateurs, triée par date de création décroissante.
+     * L'id sert de second critère pour stabiliser la pagination quand plusieurs lignes
+     * partagent le même timestamp.
      */
     public List<VioletteUserEntity> findAllOrderByCreatedAtDesc(Page page) {
-        return find("order by createdAt desc").page(page).list();
+        return find("order by createdAt desc, id desc").page(page).list();
     }
 
     /**

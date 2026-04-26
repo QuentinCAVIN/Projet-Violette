@@ -106,12 +106,16 @@ Deux stratégies coexistent aujourd'hui :
 
 | Domaine frontend | Accès API actuel |
 |---|---|
-| `user` | `violette_api_client` généré OpenAPI + `UserRemoteDataSource` + `UserMapper` |
+| `user` | `violette_api_client` généré OpenAPI + `UserRemoteDataSource` + `UserMapper` (usage principal du client généré) |
 | `showDate` | Dio manuel + `ShowDateRemoteDataSource` + `ShowDateMapper` |
 | `availability` | Dio manuel + remote data source + mapper |
 | `booking` | Dio manuel + `BookingRemoteDataSource` + `ArtistBookingMapper` |
 
 Cette coexistence est volontaire à court terme. La règle d'architecture reste la même : les types générés ou JSON bruts ne doivent pas remonter dans les ViewModels.
+
+En `v0.4.0`, les flux critiques `availability`, `showDate` et `booking` n'utilisent pas le client généré au runtime : ils passent par `DioClient`, des endpoints explicites et des mappers manuels. Les endpoints récents du domaine booking, dont `GET /api/artist-bookings/me`, sont donc appelés par Dio manuel.
+
+La régénération complète de `violette_api_client/` est reportée après `v0.4.0` pour éviter un diff généré large juste avant tag. Une incohérence potentielle a été observée lors de l'audit : la méthode générée `apiArtistBookingsMeGet` peut être typée comme un DTO unique alors que le backend renvoie une liste. Cette dette n'est pas bloquante pour `v0.4.0`, car ce endpoint généré n'est pas utilisé par le code frontend exécuté.
 
 À terme, chaque domaine peut soit adopter le client généré, soit conserver une couche Dio manuelle si elle reste mieux maîtrisée. Dans les deux cas, le repository et les mappers doivent rester la frontière métier.
 
@@ -167,3 +171,4 @@ Le déploiement de production doit passer par un tag versionné.
 | Règles métier | [regles-metier.md](regles-metier.md) |
 | Tests | [testing-strategy.md](testing-strategy.md) |
 | Déploiement | [../README-deploiement.md](../README-deploiement.md) |
+| Dette technique | [technical-debt.md](technical-debt.md) |

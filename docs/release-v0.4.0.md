@@ -83,6 +83,7 @@ Après déploiement :
 - Vérifier que `violette_api_client` ne contredit pas les enums métier actuelles avant de s'en servir comme référence.
 - Ne pas réintroduire Firestore comme source métier frontend pour les domaines migrés.
 - Vérifier que `API_BASE_URL` est bien fourni au build APK de production.
+- Vérifier après tag que `/api/ping`, Swagger UI et les logs Quarkus affichent la version `0.4.0` (sans suffixe `-SNAPSHOT`).
 
 ---
 
@@ -111,5 +112,31 @@ Hors périmètre v0.4.0 :
 - le choix explicite de la compagnie active.
 - le raccord du champ **Artistes nécessaires** à la création REST (modèle orienté `ShowDateSkillRequirement`).
 - la gestion autonome du désistement artiste après confirmation.
+- la validation complète des parcours web et iOS, la release visant prioritairement Android.
 
 Ces fonctionnalités sont prévues pour `v0.5.0`.
+
+---
+
+## Risques production à surveiller
+
+- Les tests unitaires backend utilisent H2 avec génération Hibernate (`drop-and-create`) et Flyway désactivé ; ils ne suffisent pas à valider seuls les migrations MySQL.
+- Les migrations Flyway utilisent des `ENUM` MySQL et des colonnes `TEXT`. Les anciennes valeurs (`PENDING`, `OPTIONAL`, `LOCKED`, `CONDITIONAL`) sont présentes dans les migrations historiques, puis migrées vers les valeurs actuelles par V6/V7.
+- Le client `violette_api_client` généré peut contenir des modèles historiques tant qu'il n'est pas régénéré ; en `v0.4.0`, il ne doit pas servir de source de vérité pour les enums `showDate` tant que l'adoption OpenAPI par domaine n'est pas finalisée.
+- La régénération complète de `violette_api_client/` est reportée après `v0.4.0`. Le client généré est utilisé principalement pour `user`; `availability`, `showDate` et `booking` restent sur Dio manuel. L'incohérence potentielle `apiArtistBookingsMeGet` (DTO unique vs liste backend) n'est pas bloquante car cette méthode générée n'est pas utilisée au runtime.
+- Le verrou empêchant l'artiste confirmé de modifier sa disponibilité est appliqué côté frontend. Un verrou backend équivalent reste à ajouter pour couvrir les appels directs hors application.
+- Aiven peut mettre la base MySQL en pause selon le plan utilisé ; vérifier l'état du service avant une démonstration.
+
+## Évolutions futures
+
+- Ajouter un verrou backend sur la modification de disponibilité si booking `CONFIRMED`.
+- Finaliser la gestion multi-compagnies.
+- Ajouter la création et l'édition de compagnie.
+- Gérer les rôles par compagnie.
+- Reprendre la création de `ShowDate` autour de `ShowDateSkillRequirement` (compétences, effectifs, cachets).
+- Exposer le workflow complet booking : présélection → demande de confirmation → confirmation/refus → `STAFFED`.
+- Améliorer l'UX calendrier pour les jours multi-dates et les actions groupées.
+- Ajouter les notifications artistes.
+- Ajouter la suppression encadrée des `ShowDate` et utilisateurs.
+- Automatiser le passage à `STAFFED`.
+- Centraliser les règles métier frontend pour limiter la duplication entre ViewModels.

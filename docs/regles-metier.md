@@ -89,6 +89,8 @@ SELECTED | PENDING_CONFIRMATION | CONFIRMED -> CANCELLED
 - `SELECTED` peut exister en `OPTION` pour préparer une équipe sans engagement.
 - `PENDING_CONFIRMATION` ne doit exister que pour une date `CONFIRMED`.
 - `CONFIRMED` signifie que l'artiste a accepté la demande.
+- Si un artiste possède un booking `CONFIRMED` sur une date, il ne peut plus modifier sa disponibilité sur cette date dans l'application `v0.4.0`.
+- Pour modifier un engagement confirmé ou se désister, l'artiste doit contacter le gérant ; le désistement autonome est hors périmètre `v0.4.0`.
 - `REFUSED` libère la place dans la capacité métier.
 - `CANCELLED` sert à neutraliser un booking devenu inactif.
 

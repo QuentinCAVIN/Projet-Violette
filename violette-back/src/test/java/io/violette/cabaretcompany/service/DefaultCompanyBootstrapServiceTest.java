@@ -1,10 +1,15 @@
 package io.violette.cabaretcompany.service;
 
 import io.quarkus.test.junit.QuarkusTest;
+import io.violette.artistbooking.repository.ArtistBookingRepository;
 import io.violette.cabaretcompany.model.CabaretCompanyEntity;
 import io.violette.cabaretcompany.model.CompanyMemberEntity;
 import io.violette.cabaretcompany.repository.CabaretCompanyRepository;
+import io.violette.cabaretcompany.repository.CabaretShowRepository;
 import io.violette.cabaretcompany.repository.CompanyMemberRepository;
+import io.violette.showdate.repository.ArtistAvailabilityRepository;
+import io.violette.showdate.repository.ShowDateRepository;
+import io.violette.showdate.repository.ShowDateSkillRequirementRepository;
 import io.violette.violetteuser.model.UserRole;
 import io.violette.violetteuser.model.VioletteUserEntity;
 import io.violette.violetteuser.repository.VioletteUserRepository;
@@ -34,14 +39,26 @@ class DefaultCompanyBootstrapServiceTest {
     @Inject
     CompanyMemberRepository companyMemberRepository;
 
+    @Inject
+    CabaretShowRepository cabaretShowRepository;
+
+    @Inject
+    ShowDateRepository showDateRepository;
+
+    @Inject
+    ShowDateSkillRequirementRepository showDateSkillRequirementRepository;
+
+    @Inject
+    ArtistAvailabilityRepository artistAvailabilityRepository;
+
+    @Inject
+    ArtistBookingRepository artistBookingRepository;
+
     @Test
     @Transactional
     @DisplayName("Bootstrap compagnie unique : créer Dream's Production si absente")
     void ensureDefaultCompanyExists_whenMissing_createsDefaultCompany() {
-        companyMemberRepository.deleteAll();
-        cabaretCompanyRepository.deleteAll();
-        violetteUserRepository.deleteAll();
-        violetteUserRepository.flush();
+        cleanDatabase();
 
         VioletteUserEntity manager = persistUser(
                 "uid-default-manager-1",
@@ -61,10 +78,7 @@ class DefaultCompanyBootstrapServiceTest {
     @Transactional
     @DisplayName("Bootstrap compagnie unique : ne pas dupliquer Dream's Production si déjà présente")
     void ensureDefaultCompanyExists_whenAlreadyPresent_doesNotDuplicate() {
-        companyMemberRepository.deleteAll();
-        cabaretCompanyRepository.deleteAll();
-        violetteUserRepository.deleteAll();
-        violetteUserRepository.flush();
+        cleanDatabase();
 
         VioletteUserEntity manager = persistUser(
                 "uid-default-manager-2",
@@ -88,10 +102,7 @@ class DefaultCompanyBootstrapServiceTest {
     @Transactional
     @DisplayName("Rattachement bootstrap : MANAGER+ARTIST ne crée pas de doublon d'appartenance")
     void ensureUserAttachedToDefaultCompany_whenCalledTwice_createsSingleMembership() {
-        cabaretCompanyRepository.deleteAll();
-        companyMemberRepository.deleteAll();
-        violetteUserRepository.deleteAll();
-        violetteUserRepository.flush();
+        cleanDatabase();
 
         VioletteUserEntity user = persistUser(
                 "uid-dual-role-bootstrap",
@@ -122,5 +133,18 @@ class DefaultCompanyBootstrapServiceTest {
         user.setRoles(roles);
         violetteUserRepository.persistAndFlush(user);
         return user;
+    }
+
+    private void cleanDatabase() {
+        // Nettoyage explicite dans l'ordre des dépendances FK H2/MySQL.
+        artistBookingRepository.deleteAll();
+        artistAvailabilityRepository.deleteAll();
+        showDateSkillRequirementRepository.deleteAll();
+        showDateRepository.deleteAll();
+        companyMemberRepository.deleteAll();
+        cabaretShowRepository.deleteAll();
+        cabaretCompanyRepository.deleteAll();
+        violetteUserRepository.deleteAll();
+        violetteUserRepository.flush();
     }
 }
