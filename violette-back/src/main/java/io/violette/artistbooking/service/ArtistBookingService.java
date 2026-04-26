@@ -60,7 +60,7 @@ import java.util.List;
  *   <li>Présélection/sélection ({@code createBooking}) : la date doit être {@code OPTION} ou {@code CONFIRMED}</li>
  *   <li>Envoi des demandes fermes ({@code sendConfirmationRequests}) : la date doit être {@code CONFIRMED}</li>
  *   <li>Toute mutation : interdite si la date est {@code STAFFED}, {@code CANCELLED} ou {@code ARCHIVED}</li>
- *   <li>L'artiste doit avoir la disponibilité {@code AVAILABLE} pour être sélectionné</li>
+ *   <li>L'artiste doit avoir la disponibilité {@code AVAILABLE} ou {@code IF_NEEDED} pour être sélectionné</li>
  *   <li>La capacité par compétence ne doit pas être dépassée</li>
  *   <li>Un artiste ne peut être réservé qu'une seule fois par date</li>
  *   <li>Réponse artiste : date non STAFFED/CANCELLED/ARCHIVED, booking en PENDING_CONFIRMATION, ownership vérifié</li>
@@ -115,7 +115,7 @@ public class ArtistBookingService {
      *       ARCHIVED bloquent)</li>
      *   <li>L'artiste existe</li>
      *   <li>L'artiste n'a pas déjà un booking sur cette date (quel que soit le statut)</li>
-     *   <li>L'artiste a déclaré sa disponibilité {@code AVAILABLE} pour cette date</li>
+     *   <li>L'artiste a déclaré sa disponibilité {@code AVAILABLE} ou {@code IF_NEEDED} pour cette date</li>
      *   <li>Si un besoin artistique est spécifié : la capacité n'est pas atteinte
      *       et le cachet est capturé à titre d'estimation (estimation de planification en {@code OPTION},
      *       montant de référence contractuel en {@code CONFIRMED})</li>
@@ -125,7 +125,7 @@ public class ArtistBookingService {
      * @throws ShowDateNotModifiableException    si la date n'est ni {@code OPTION}, ni {@code CONFIRMED}
      * @throws UserNotFoundException             si l'artiste est introuvable
      * @throws BookingAlreadyExistsException     si un booking existe déjà pour cet artiste sur cette date
-     * @throws ArtistNotAvailableException       si l'artiste n'est pas AVAILABLE
+     * @throws ArtistNotAvailableException       si l'artiste n'est ni AVAILABLE ni IF_NEEDED
      * @throws BookingCapacityExceededException  si la capacité pour la compétence est atteinte
      */
     @Transactional
@@ -443,14 +443,17 @@ public class ArtistBookingService {
     }
 
     /**
-     * Vérifie que l'artiste a déclaré sa disponibilité {@code AVAILABLE} pour cette date.
-     * Un artiste sans entrée de disponibilité, ou avec un statut autre que {@code AVAILABLE},
-     * ne peut pas être sélectionné.
+     * Vérifie que l'artiste a déclaré une disponibilité sélectionnable pour cette date.
+     *
+     * <p>Règle métier V1 :
+     * {@code IF_NEEDED} = disponible si besoin, sélection autorisée mais non prioritaire.
+     * Les statuts {@code PENDING} et {@code UNAVAILABLE} restent bloquants.
      */
     private void validerDisponibiliteArtiste(Long showDateId, Long artistId) {
         boolean available = artistAvailabilityRepository
                 .findByIdOptional(new ArtistAvailabilityId(showDateId, artistId))
-                .map(a -> a.getStatus() == AvailabilityStatus.AVAILABLE)
+                .map(a -> a.getStatus() == AvailabilityStatus.AVAILABLE
+                        || a.getStatus() == AvailabilityStatus.IF_NEEDED)
                 .orElse(false);
 
         if (!available) {

@@ -153,6 +153,11 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
     );
   }
 
+  Future<void> onBackPressed() async {
+    // On force un retour vers Home pour éviter de revenir sur une pile manager legacy.
+    await _navigationService.clearStackAndShow(Routes.homeView);
+  }
+
 //****************************************************************************//
 //HELPERS                                                                     //
 //****************************************************************************//

@@ -135,10 +135,40 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("createBooking — échoue si la disponibilité de l'artiste n'est pas AVAILABLE")
-    void createBooking_whenArtistNotAvailable_throwsArtistNotAvailableException() {
+    @DisplayName("createBooking — autorisé si la disponibilité de l'artiste est IF_NEEDED")
+    void createBooking_whenArtistAvailabilityIsIfNeeded_returnsSelectedBooking() {
         Context ctx = buildContext("svc-unavail-1");
         ctx.availability.setStatus(AvailabilityStatus.IF_NEEDED);
+        availabilityRepository.flush();
+
+        ArtistBookingDto dto = artistBookingService.createBooking(
+                new CreateBookingRequestDto(ctx.showDate.getId(), ctx.artist.getId(), ctx.skillReq.getId())
+        );
+
+        assertEquals(BookingStatus.SELECTED, dto.status());
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("createBooking — échoue si la disponibilité de l'artiste est PENDING")
+    void createBooking_whenArtistAvailabilityIsPending_throwsArtistNotAvailableException() {
+        Context ctx = buildContext("svc-pending-unavail-1");
+        ctx.availability.setStatus(AvailabilityStatus.PENDING);
+        availabilityRepository.flush();
+
+        assertThrows(ArtistNotAvailableException.class, () ->
+                artistBookingService.createBooking(
+                        new CreateBookingRequestDto(ctx.showDate.getId(), ctx.artist.getId(), ctx.skillReq.getId())
+                )
+        );
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("createBooking — échoue si la disponibilité de l'artiste est UNAVAILABLE")
+    void createBooking_whenArtistAvailabilityIsUnavailable_throwsArtistNotAvailableException() {
+        Context ctx = buildContext("svc-unavailable-1");
+        ctx.availability.setStatus(AvailabilityStatus.UNAVAILABLE);
         availabilityRepository.flush();
 
         assertThrows(ArtistNotAvailableException.class, () ->

@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dio/dio.dart';
 import 'package:violette_front/app/app.locator.dart';
+import 'package:violette_front/app/app.router.dart';
 import 'package:violette_front/models/availability.dart';
 import 'package:violette_front/ui/views/availability_choice/availability_choice_viewmodel.dart';
 import 'package:violette_front/models/show_date.dart';
@@ -247,6 +248,28 @@ void main() {
               )).called(1);
         },
       );
+    });
+
+    group('navigation -', () {
+      test('onBackPressed_clearStackAndShowHome', () async {
+        final navigationService = getAndRegisterNavigationService();
+        when(() => navigationService.clearStackAndShow(
+              any(),
+              arguments: any(named: 'arguments'),
+              id: any(named: 'id'),
+              parameters: any(named: 'parameters'),
+            )).thenAnswer((_) async => true);
+
+        final viewModel = AvailabilityChoiceViewModel();
+        await viewModel.onBackPressed();
+
+        verify(() => navigationService.clearStackAndShow(
+              Routes.homeView,
+              arguments: any(named: 'arguments'),
+              id: any(named: 'id'),
+              parameters: any(named: 'parameters'),
+            )).called(1);
+      });
     });
   });
 }

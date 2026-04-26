@@ -215,7 +215,8 @@ class ManagerDateDetailViewModel extends BaseViewModel {
   /// 2. Si aucun booking n'existe :
   ///    - la date doit être en [ShowDateStatus.option] ou [ShowDateStatus.confirmed]
   ///      (pas inquiry / staffed / cancelled / archived)
-  ///    - l'artiste doit être "available"
+  ///    - l'artiste doit être "available" ou "ifNeeded"
+  ///      (pending et unavailable restent non sélectionnables en V1)
   ///    - le plafond `totalRequiredArtists` ne doit pas être atteint
   bool isSelectionEnabled(ShowDate currentShowDate, String artistId) {
     final booking = getBookingForArtist(artistId);
@@ -230,7 +231,7 @@ class ManagerDateDetailViewModel extends BaseViewModel {
 
     final availability = getAvailabilityForArtist(artistId);
 
-    if (availability != AvailabilityStatus.available) {
+    if (!_isSelectableAvailability(availability)) {
       return false;
     }
 
@@ -244,6 +245,12 @@ class ManagerDateDetailViewModel extends BaseViewModel {
     }
 
     return true;
+  }
+
+  static bool _isSelectableAvailability(AvailabilityStatus? availability) {
+    // IF_NEEDED = disponible si besoin : sélection autorisée mais moins prioritaire.
+    return availability == AvailabilityStatus.available ||
+        availability == AvailabilityStatus.ifNeeded;
   }
 
   static bool _allowsNewArtistSelectionForShowDateStatus(ShowDateStatus status) {

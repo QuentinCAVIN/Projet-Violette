@@ -60,6 +60,8 @@ CANCELLED CANCELLED  CANCELLED
 - Après une réponse, le retour à `PENDING` n'est pas une transition normale.
 - `IF_NEEDED` remplace l'ancien vocabulaire `CONDITIONAL`.
 - Une disponibilité ne réserve pas l'artiste et ne bloque pas d'autre engagement.
+- Pour la sélection manager (`SELECTED`) : `AVAILABLE` et `IF_NEEDED` sont sélectionnables ; `UNAVAILABLE` et `PENDING` ne le sont pas en v0.4.0.
+- `IF_NEEDED` signifie "disponible si besoin" : sélection autorisée, mais priorité métier inférieure à `AVAILABLE`.
 
 ---
 

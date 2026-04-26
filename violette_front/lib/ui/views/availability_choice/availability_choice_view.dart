@@ -14,48 +14,60 @@ class AvailabilityChoiceView extends StackedView<AvailabilityChoiceViewModel> {
     AvailabilityChoiceViewModel viewModel,
     Widget? child,
   ) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Sélection des dates'),
-      ),
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 20.0),
-          child: Column(
-            children: [
-              VioletteCalendar(
-                focusedDay: viewModel.focusedDay,
-                selectedDayPredicate: viewModel.isSelectedDay,
-                onDaySelected: viewModel.onDaySelected,
-                onPageChanged: viewModel.onPageChange,
-                dayColorBuilder: (day) => viewModel.getStatusForDay(day)?.color,
-              ),
-              if (viewModel.showDatePicked != null)
-                ShowDateDetail(
-                    showDate: viewModel.showDatePicked!,
-                    status: viewModel.getStatusForDay(viewModel.selectedDay!) ??
-                        AvailabilityStatus.pending),
-              const SizedBox(height: 30),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    await viewModel.onValidatePressed();
-                  },
-                  child: viewModel.isBusy
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Text("Valider"),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        await viewModel.onBackPressed();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () async => viewModel.onBackPressed(),
+          ),
+          title: const Text('Sélection des dates'),
+        ),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        body: SingleChildScrollView(
+          child: Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 25.0, vertical: 20.0),
+            child: Column(
+              children: [
+                VioletteCalendar(
+                  focusedDay: viewModel.focusedDay,
+                  selectedDayPredicate: viewModel.isSelectedDay,
+                  onDaySelected: viewModel.onDaySelected,
+                  onPageChanged: viewModel.onPageChange,
+                  dayColorBuilder: (day) => viewModel.getStatusForDay(day)?.color,
                 ),
-              ),
-            ],
+                if (viewModel.showDatePicked != null)
+                  ShowDateDetail(
+                      showDate: viewModel.showDatePicked!,
+                      status: viewModel.getStatusForDay(viewModel.selectedDay!) ??
+                          AvailabilityStatus.pending),
+                const SizedBox(height: 30),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      await viewModel.onValidatePressed();
+                    },
+                    child: viewModel.isBusy
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text("Valider"),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

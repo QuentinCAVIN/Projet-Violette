@@ -38,7 +38,9 @@ class ManagerDateDetailBody extends ViewModelWidget<ManagerDateDetailViewModel> 
 
         final availability = viewModel.getAvailabilityForArtist(apiArtistId);
 
-        return Card(
+        return Opacity(
+          opacity: isEnabled ? 1 : 0.72,
+          child: Card(
           margin: const EdgeInsets.symmetric(
             horizontal: 16,
             vertical: 8,
@@ -64,9 +66,23 @@ class ManagerDateDetailBody extends ViewModelWidget<ManagerDateDetailViewModel> 
               "${artist.firstName} ${artist.lastName}",
               style: theme.textTheme.bodyLarge,
             ),
-            subtitle: Text(
-              artist.email,
-              style: theme.textTheme.bodyMedium,
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  artist.email,
+                  style: theme.textTheme.bodyMedium,
+                ),
+                if (!isEnabled)
+                  Text(
+                    "Sélection indisponible",
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+              ],
             ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
@@ -84,7 +100,7 @@ class ManagerDateDetailBody extends ViewModelWidget<ManagerDateDetailViewModel> 
               ],
             ),
           ),
-        );
+        ));
       },
     );
 

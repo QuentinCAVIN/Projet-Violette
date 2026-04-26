@@ -605,7 +605,7 @@ void main() {
       });
 
       test(
-        'isSelectionEnabled_whenAvailabilityIsIfNeeded_returnsFalse',
+        'isSelectionEnabled_whenAvailabilityIsIfNeeded_returnsTrue',
         () {
           // IF_NEEDED : disponibilité possible mais non prioritaire pour la présélection.
           final currentShowDate = ShowDate(
@@ -623,6 +623,60 @@ void main() {
             Availability(
               artistId: 'artist1',
               status: AvailabilityStatus.ifNeeded,
+            ),
+          ];
+          viewModel.bookings = [];
+
+          final canSelect = viewModel.isSelectionEnabled(currentShowDate, 'artist1');
+          expect(canSelect, isTrue);
+        },
+      );
+
+      test(
+        'isSelectionEnabled_whenAvailabilityIsUnavailable_returnsFalse',
+        () {
+          final currentShowDate = ShowDate(
+            id: 'date-1',
+            title: 'Test',
+            date: DateTime(2026, 1, 1),
+            meetingTimeMinutes: 540,
+            address: 'Adresse test',
+            totalRequiredArtists: 2,
+            status: ShowDateStatus.option,
+          );
+
+          final viewModel = ManagerDateDetailViewModel(showDate: currentShowDate);
+          viewModel.availabilities = [
+            Availability(
+              artistId: 'artist1',
+              status: AvailabilityStatus.unavailable,
+            ),
+          ];
+          viewModel.bookings = [];
+
+          final canSelect = viewModel.isSelectionEnabled(currentShowDate, 'artist1');
+          expect(canSelect, isFalse);
+        },
+      );
+
+      test(
+        'isSelectionEnabled_whenAvailabilityIsPending_returnsFalse',
+        () {
+          final currentShowDate = ShowDate(
+            id: 'date-1',
+            title: 'Test',
+            date: DateTime(2026, 1, 1),
+            meetingTimeMinutes: 540,
+            address: 'Adresse test',
+            totalRequiredArtists: 2,
+            status: ShowDateStatus.option,
+          );
+
+          final viewModel = ManagerDateDetailViewModel(showDate: currentShowDate);
+          viewModel.availabilities = [
+            Availability(
+              artistId: 'artist1',
+              status: AvailabilityStatus.pending,
             ),
           ];
           viewModel.bookings = [];
