@@ -20,11 +20,13 @@ void main() {
     late MockNavigationService navigationService;
     late MockDialogService dialogService;
     late MockShowDateRepository showDateRepository;
+    late MockSnackbarService snackbarService;
 
     setUp(() {
       navigationService = getAndRegisterNavigationService();
       dialogService = getAndRegisterDialogService();
       showDateRepository = getAndRegisterShowDateRepository();
+      snackbarService = getAndRegisterSnackbarService();
 
       when(
         () => navigationService.replaceWith<dynamic>(
@@ -47,6 +49,13 @@ void main() {
           barrierDismissible: any(named: 'barrierDismissible'),
         ),
       ).thenAnswer((_) async => DialogResponse());
+
+      when(
+        () => snackbarService.showSnackbar(
+          message: any(named: 'message'),
+          duration: any(named: 'duration'),
+        ),
+      ).thenReturn(null);
     });
 
     tearDown(() => locator.reset());
@@ -93,6 +102,41 @@ void main() {
             cancelTitle: any(named: 'cancelTitle'),
             dialogPlatform: any(named: 'dialogPlatform'),
             barrierDismissible: any(named: 'barrierDismissible'),
+          ),
+        ).called(1);
+      },
+    );
+
+    test(
+      'si addShowDate réussit, afficher une snackbar puis naviguer vers Home',
+      () async {
+        final viewModel = CreateShowDateViewModel();
+        viewModel.titleValue = 'Date test';
+        viewModel.dateValue = '2026-04-25';
+        viewModel.startTimeValue = '21:00';
+        viewModel.addressValue = 'Paris';
+        viewModel.artistsCountValue = '3';
+        viewModel.clientContactNameController.text = 'Contact';
+        viewModel.clientContactPhoneController.text = '0102030405';
+        viewModel.onDateChanged(DateTime(2026, 4, 25));
+        viewModel.onStartTimeChanged(const TimeOfDay(hour: 21, minute: 0));
+
+        when(() => showDateRepository.addShowDate(any())).thenAnswer((_) async {});
+
+        await viewModel.submitShowDateForm();
+
+        verify(() => snackbarService.showSnackbar(
+              message: 'Date de spectacle créée avec succès.',
+              duration: const Duration(seconds: 2),
+            )).called(1);
+        verify(
+          () => navigationService.replaceWith<dynamic>(
+            Routes.homeView,
+            arguments: any(named: 'arguments'),
+            id: any(named: 'id'),
+            preventDuplicates: any(named: 'preventDuplicates'),
+            parameters: any(named: 'parameters'),
+            transition: any(named: 'transition'),
           ),
         ).called(1);
       },

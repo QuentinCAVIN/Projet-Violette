@@ -428,7 +428,13 @@ void main() {
         when(() => availabilityRepository.getAvailabilitiesForDate('date-99'))
             .thenAnswer((_) async => []);
 
-        final viewModel = ManagerDateDetailViewModel(showDate: initialShowDate);
+        ShowDate? callbackShowDate;
+        final viewModel = ManagerDateDetailViewModel(
+          showDate: initialShowDate,
+          onShowDateUpdated: (updated) async {
+            callbackShowDate = updated;
+          },
+        );
         await viewModel.initialize();
 
         when(() => showDateRepository.updateShowDateStatus(
@@ -445,6 +451,7 @@ void main() {
               ShowDateStatus.option,
             )).called(1);
         expect(viewModel.displayedShowDate.status, ShowDateStatus.option);
+        expect(callbackShowDate?.status, ShowDateStatus.option);
       });
 
       test("en cas d'erreur, n'applique pas de faux succès", () async {

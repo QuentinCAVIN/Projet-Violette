@@ -12,6 +12,7 @@ class CreateShowDateViewModel extends FormViewModel {
   final _navigationService = locator<NavigationService>();
   final _dialogService = locator<DialogService>();
   final _showDateRepository = locator<ShowDateRepository>();
+  final _snackbarService = locator<SnackbarService>();
 
   bool formAlreadyValidatedOnce = false;
 
@@ -69,16 +70,9 @@ class CreateShowDateViewModel extends FormViewModel {
       setAddressValidationMessage('Adresse obligatoire');
     }
 
-    if (artistsCountValue != null && artistsCountValue!.isNotEmpty) {
-      final parsed = int.tryParse(artistsCountValue!);
-      if (parsed == null || parsed <= 0) {
-        setArtistsCountValidationMessage('Nombre d’artistes invalide');
-      }
-    }
-
-    if (artistsCountValue == null || artistsCountValue!.trim().isEmpty) {
-      setArtistsCountValidationMessage('Nombre d’artistes obligatoire');
-    }
+    // v0.4.0 : le champ "Artistes nécessaires" est conservé visuellement,
+    // mais non utilisé par l'API de création (les besoins viennent des
+    // ShowDateSkillRequirement). Aucune validation bloquante ici.
 
     if (clientContactNameController.text.trim().isEmpty) {
       clientContactNameError = 'Nom du contact client obligatoire';
@@ -124,10 +118,8 @@ class CreateShowDateViewModel extends FormViewModel {
       ),
       meetingTimeMinutes: _timeOfDayToMinutes(selectedStartTime!),
       address: addressValue!,
-      // TODO(v0.5.0): raccorder totalRequiredArtists a l'API de creation.
-      // Le formulaire capture deja artistsCount, mais POST /api/show-dates
-      // (CreateShowDateRequestDto) n'expose pas encore ce champ.
-      totalRequiredArtists: int.parse(artistsCountValue!),
+      // v0.4.0 : valeur neutralisée car non persistée à la création via REST.
+      totalRequiredArtists: 0,
       description: descriptionValue,
       clientContactName: clientContactNameController.text.trim(),
       clientContactPhone: clientContactPhoneController.text.trim(),
@@ -135,6 +127,10 @@ class CreateShowDateViewModel extends FormViewModel {
 
     try {
       await runBusyFuture(_showDateRepository.addShowDate(showDate));
+      _snackbarService.showSnackbar(
+        message: 'Date de spectacle créée avec succès.',
+        duration: const Duration(seconds: 2),
+      );
       _navigationService.replaceWithHomeView();
     } catch (e) {
       final message = e.toString();

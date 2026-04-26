@@ -95,6 +95,7 @@ Pour éviter de bloquer la démo et les tests de création de date (`POST /api/s
 - la logique est volontairement temporaire et documentée dans le code backend (bootstrap v0.4.0).
 - l'exposition des dates côté artiste passe par des endpoints dédiés (`/api/show-dates/me/available` et `/api/show-dates/{id}/availabilities/me`) pour ne pas exposer les disponibilités des autres artistes.
 - une action manager minimale permet de changer manuellement le statut d'une date pour tester le flux `INQUIRY -> OPTION -> CONFIRMED` (et `CONFIRMED -> STAFFED`) en v0.4.0.
+- le champ frontend **Artistes nécessaires** du formulaire de création est temporairement informatif : la valeur n'est pas persistée par `POST /api/show-dates` en v0.4.0.
 
 Conséquence :
 
@@ -106,5 +107,6 @@ Hors périmètre v0.4.0 :
 - la création autonome de compagnie ;
 - la gestion multi-compagnies ;
 - le choix explicite de la compagnie active.
+- le raccord du champ **Artistes nécessaires** à la création REST (modèle orienté `ShowDateSkillRequirement`).
 
 Ces fonctionnalités sont prévues pour `v0.5.0`.

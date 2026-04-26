@@ -33,6 +33,27 @@ class ManagerPlanningViewModel extends BaseViewModel {
     rebuildUi();
   }
 
+  Future<void> refreshShowDateAfterStatusChange(ShowDate updatedShowDate) async {
+    if (updatedShowDate.id.isEmpty) {
+      await loadShowDates();
+      return;
+    }
+
+    final index = showDates.indexWhere((date) => date.id == updatedShowDate.id);
+    if (index >= 0) {
+      showDates[index] = updatedShowDate;
+    } else {
+      await loadShowDates();
+      return;
+    }
+
+    if (showDatePicked?.id == updatedShowDate.id) {
+      showDatePicked = updatedShowDate;
+    }
+
+    rebuildUi();
+  }
+
   final _navigationService = locator<NavigationService>();
 
   void navigateToDetail(ShowDate showDate) {

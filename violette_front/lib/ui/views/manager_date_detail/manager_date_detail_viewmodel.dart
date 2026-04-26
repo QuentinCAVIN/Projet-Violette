@@ -23,8 +23,12 @@ class ManagerDateDetailViewModel extends BaseViewModel {
   final _snackbarService = locator<SnackbarService>();
 
   final ShowDate showDate;
+  final Future<void> Function(ShowDate updatedShowDate)? onShowDateUpdated;
 
-  ManagerDateDetailViewModel({required this.showDate});
+  ManagerDateDetailViewModel({
+    required this.showDate,
+    this.onShowDateUpdated,
+  });
 
   /// Lignes affichées : profil + identifiant artiste backend (aligné API booking).
   List<ManagerArtistLine> artistLines = [];
@@ -355,6 +359,9 @@ class ManagerDateDetailViewModel extends BaseViewModel {
       await _refreshAfterAction();
       await _loadAvailabilities();
       await _loadAllArtists();
+      if (onShowDateUpdated != null) {
+        await onShowDateUpdated!(displayedShowDate);
+      }
       rebuildUi();
       _snackbarService.showSnackbar(
         message: "Statut mis à jour : ${targetStatus.label}.",

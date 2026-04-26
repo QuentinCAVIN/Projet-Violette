@@ -109,9 +109,13 @@ class ShowDateForm extends ViewModelWidget<CreateShowDateViewModel> {
 
         TextFormField(
           controller: artistsCountController,
+          enabled: false,
+          readOnly: true,
           decoration: InputDecoration(
             labelText: 'Artistes nécessaires',
-            hintText: '5',
+            hintText: 'Géré via les besoins artistiques (v0.5.0)',
+            helperText:
+                'Non utilisé à la création en v0.4.0. La gestion détaillée arrive en v0.5.0.',
             errorText: viewModel.artistsCountValidationMessage,
           ),
           keyboardType: TextInputType.number,

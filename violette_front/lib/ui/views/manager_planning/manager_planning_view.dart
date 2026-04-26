@@ -52,6 +52,8 @@ class ManagerPlanningView extends StackedView<ManagerPlanningViewModel> {
                       child: viewModel.isExpanded(viewModel.showDatePicked!)
                           ? ManagerShowDateInlineDetail(
                               showDate: viewModel.showDatePicked!,
+                              onShowDateUpdated:
+                                  viewModel.refreshShowDateAfterStatusChange,
                             )
                           : const SizedBox.shrink(),
                     ),

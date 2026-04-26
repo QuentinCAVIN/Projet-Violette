@@ -6,16 +6,21 @@ import 'package:violette_front/ui/views/manager_date_detail/manager_date_detail_
 
 class ManagerShowDateInlineDetail extends StatelessWidget {
   final ShowDate showDate;
+  final Future<void> Function(ShowDate updatedShowDate)? onShowDateUpdated;
 
   const ManagerShowDateInlineDetail({
     super.key,
     required this.showDate,
+    this.onShowDateUpdated,
   });
 
   @override
   Widget build(BuildContext context) {
     return ViewModelBuilder<ManagerDateDetailViewModel>.reactive(
-      viewModelBuilder: () => ManagerDateDetailViewModel(showDate: showDate),
+      viewModelBuilder: () => ManagerDateDetailViewModel(
+        showDate: showDate,
+        onShowDateUpdated: onShowDateUpdated,
+      ),
       onViewModelReady: (viewModel) => viewModel.initialize(),
       builder: (context, viewModel, child) {
         return const Card(
