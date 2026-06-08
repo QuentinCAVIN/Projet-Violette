@@ -1,11 +1,13 @@
 package io.violette.showdate.service;
 
+import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.violette.artistbooking.model.ArtistBookingEntity;
 import io.violette.artistbooking.model.BookingStatus;
 import io.violette.artistbooking.repository.ArtistBookingRepository;
 import io.violette.cabaretcompany.model.CabaretCompanyEntity;
 import io.violette.cabaretcompany.model.CabaretShowEntity;
+import io.violette.security.ManagerCompanyResolver;
 import io.violette.cabaretcompany.repository.CabaretCompanyRepository;
 import io.violette.cabaretcompany.repository.CabaretShowRepository;
 import io.violette.showdate.dto.CreateShowDateRequestDto;
@@ -35,6 +37,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
 
 @QuarkusTest
 class ShowDateServiceTest {
@@ -44,6 +47,10 @@ class ShowDateServiceTest {
 
     @Inject
     ShowDateService showDateService;
+
+    /** Mocké pour neutraliser la garde d'ownership dans les tests qui ne testent pas l'autorisation. */
+    @InjectMock
+    ManagerCompanyResolver managerCompanyResolver;
 
     @Inject
     ShowDateRepository showDateRepository;
@@ -79,6 +86,7 @@ class ShowDateServiceTest {
                 null
         ));
 
+        when(managerCompanyResolver.resolveCurrentManagerCompany()).thenReturn(seed.company());
         ShowDateDto dto = showDateService.getById(created.id());
 
         String expected = "Les Étoiles d'hiver — Paris 11e — " + DISPLAY_TITLE_DATE_FORMAT.format(eventDate);
@@ -103,6 +111,7 @@ class ShowDateServiceTest {
                 null
         ));
 
+        when(managerCompanyResolver.resolveCurrentManagerCompany()).thenReturn(seed.company());
         ShowDateDto dto = showDateService.getById(created.id());
 
         String expected = "Lille — salle municipale — " + DISPLAY_TITLE_DATE_FORMAT.format(eventDate);
@@ -126,6 +135,7 @@ class ShowDateServiceTest {
                 null
         ));
 
+        when(managerCompanyResolver.resolveCurrentManagerCompany()).thenReturn(seed.company());
         showDateService.addSkillRequirement(created.id(), new CreateSkillRequirementRequestDto(
                 ArtistSkill.DANCE, 2, new BigDecimal("100.00")));
         showDateService.addSkillRequirement(created.id(), new CreateSkillRequirementRequestDto(
@@ -181,6 +191,7 @@ class ShowDateServiceTest {
         persistBooking(showDate, persistArtist("svc-sc-a5"), BookingStatus.CANCELLED);
         artistBookingRepository.flush();
 
+        when(managerCompanyResolver.resolveCurrentManagerCompany()).thenReturn(seed.company());
         ShowDateDto dto = showDateService.getById(created.id());
         assertEquals(3, dto.selectedCount());
     }
@@ -201,6 +212,7 @@ class ShowDateServiceTest {
                 null
         ));
 
+        when(managerCompanyResolver.resolveCurrentManagerCompany()).thenReturn(seed.company());
         showDateService.deleteShowDate(created.id());
 
         assertEquals(0, showDateRepository.count("id", created.id()));
@@ -229,6 +241,7 @@ class ShowDateServiceTest {
                 "Détails initiaux"
         ));
 
+        when(managerCompanyResolver.resolveCurrentManagerCompany()).thenReturn(seed.company());
         ShowDateDto updated = showDateService.updateShowDate(created.id(), new UpdateShowDateRequestDto(
                 LocalDate.of(2026, 4, 11),
                 null,
@@ -273,6 +286,7 @@ class ShowDateServiceTest {
                 "Détails initiaux"
         ));
 
+        when(managerCompanyResolver.resolveCurrentManagerCompany()).thenReturn(seed.company());
         ShowDateDto updated = showDateService.updateShowDate(created.id(), new UpdateShowDateRequestDto(
                 null,
                 null,
@@ -302,6 +316,7 @@ class ShowDateServiceTest {
                 "Détails initiaux"
         ));
 
+        when(managerCompanyResolver.resolveCurrentManagerCompany()).thenReturn(seed.company());
         assertThrows(BadRequestException.class, () -> showDateService.updateShowDate(created.id(), new UpdateShowDateRequestDto(
                 null,
                 null,

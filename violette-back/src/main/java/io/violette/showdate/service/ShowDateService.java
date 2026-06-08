@@ -22,6 +22,8 @@ import io.violette.showdate.model.ShowDateStatus;
 import io.violette.showdate.repository.ShowDateRepository;
 import io.violette.showdate.repository.ShowDateSkillRequirementRepository;
 import io.violette.security.JwtPrincipalInfo;
+import io.violette.security.ManagerCompanyResolver;
+import io.violette.security.exception.ForbiddenCompanyAccessException;
 import io.violette.violetteuser.exception.UserNotFoundException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -84,6 +86,9 @@ public class ShowDateService {
     @Inject
     io.violette.violetteuser.repository.VioletteUserRepository violetteUserRepository;
 
+    @Inject
+    ManagerCompanyResolver managerCompanyResolver;
+
     /**
      * Crée une nouvelle date de spectacle.
      *
@@ -124,14 +129,15 @@ public class ShowDateService {
 
     /**
      * Récupère une date de spectacle par son id.
+     * Vérifie que la date appartient à la compagnie du manager authentifié (OWASP A01).
+     * Ordre : 404 si date absente, puis 403 si la compagnie ne correspond pas.
      *
-     * @throws ShowDateNotFoundException si la date n'existe pas
+     * @throws ShowDateNotFoundException        si la date n'existe pas
+     * @throws ForbiddenCompanyAccessException  si la date n'appartient pas à la compagnie du manager courant
      */
     public ShowDateDto getById(Long id) {
         LOG.debug("Récupération de la date de spectacle id={}", id);
-        return showDateRepository.findByIdOptional(id)
-                .map(this::mapToDto)
-                .orElseThrow(ShowDateNotFoundException::new);
+        return mapToDto(loadOwnedShowDate(id));
     }
 
     /**
@@ -168,11 +174,19 @@ public class ShowDateService {
 
     /**
      * Retourne toutes les dates de spectacle d'une compagnie.
+     * Vérifie que le companyId correspond à la compagnie du manager authentifié (OWASP A01).
      *
-     * @throws CabaretCompanyNotFoundException si la compagnie n'existe pas
+     * @throws ForbiddenCompanyAccessException  si le companyId ne correspond pas à la compagnie du manager courant
+     * @throws CabaretCompanyNotFoundException  si la compagnie n'existe pas (garde de sécurité secondaire)
      */
     public List<ShowDateDto> getByCompanyId(Long companyId) {
         LOG.debug("Récupération des dates de spectacle pour companyId={}", companyId);
+        Long managerCompanyId = managerCompanyResolver.resolveCurrentManagerCompanyId();
+        if (!companyId.equals(managerCompanyId)) {
+            LOG.debug("Accès refusé à getByCompanyId : companyId={} ne correspond pas à la compagnie du manager ({})",
+                    companyId, managerCompanyId);
+            throw new ForbiddenCompanyAccessException();
+        }
         cabaretCompanyRepository.findByIdOptional(companyId)
                 .orElseThrow(CabaretCompanyNotFoundException::new);
         return showDateRepository.findByCompanyId(companyId).stream()
@@ -187,27 +201,26 @@ public class ShowDateService {
      * {@code show_date_skill_requirement}) sont supprimées automatiquement
      * par les contraintes SQL ON DELETE CASCADE.
      *
-     * @throws ShowDateNotFoundException si la date n'existe pas
+     * @throws ShowDateNotFoundException        si la date n'existe pas
+     * @throws ForbiddenCompanyAccessException  si la date n'appartient pas à la compagnie du manager courant
      */
     @Transactional
     public void deleteShowDate(Long id) {
         LOG.info("Suppression de la date de spectacle id={}", id);
-        ShowDateEntity entity = showDateRepository.findByIdOptional(id)
-                .orElseThrow(ShowDateNotFoundException::new);
-        showDateRepository.delete(entity);
+        showDateRepository.delete(loadOwnedShowDate(id));
     }
 
     /**
      * Met à jour partiellement une date de spectacle.
      * Les champs {@code null} dans le DTO sont ignorés (pas de modification).
      *
-     * @throws ShowDateNotFoundException si la date n'existe pas
+     * @throws ShowDateNotFoundException        si la date n'existe pas
+     * @throws ForbiddenCompanyAccessException  si la date n'appartient pas à la compagnie du manager courant
      */
     @Transactional
     public ShowDateDto updateShowDate(Long id, UpdateShowDateRequestDto request) {
         LOG.info("Mise à jour partielle de la date de spectacle id={}", id);
-        ShowDateEntity entity = showDateRepository.findByIdOptional(id)
-                .orElseThrow(ShowDateNotFoundException::new);
+        ShowDateEntity entity = loadOwnedShowDate(id);
 
         if (request.eventDate() != null) {
             entity.setEventDate(request.eventDate());
@@ -255,6 +268,25 @@ public class ShowDateService {
     }
 
     /**
+     * Charge une date de spectacle par id et vérifie qu'elle appartient à la compagnie du manager courant.
+     * Ordre impératif : existence (404) avant ownership (403).
+     *
+     * @throws ShowDateNotFoundException        si la date n'existe pas
+     * @throws ForbiddenCompanyAccessException  si la compagnie de la date ne correspond pas au manager courant
+     */
+    private ShowDateEntity loadOwnedShowDate(Long id) {
+        ShowDateEntity entity = showDateRepository.findByIdOptional(id)
+                .orElseThrow(ShowDateNotFoundException::new);
+        Long managerCompanyId = managerCompanyResolver.resolveCurrentManagerCompany().getId();
+        if (!entity.getCompany().getId().equals(managerCompanyId)) {
+            LOG.debug("Accès refusé à la date id={} : compagnie attendue={}, trouvée={}",
+                    id, managerCompanyId, entity.getCompany().getId());
+            throw new ForbiddenCompanyAccessException();
+        }
+        return entity;
+    }
+
+    /**
      * Construit le DTO avec titre affiché et agrégats calculés (non persistés).
      */
     private ShowDateDto mapToDto(ShowDateEntity entity) {
@@ -284,14 +316,14 @@ public class ShowDateService {
     /**
      * Ajoute un besoin artistique par compétence à une date de spectacle.
      *
-     * @throws ShowDateNotFoundException si la date n'existe pas
+     * @throws ShowDateNotFoundException        si la date n'existe pas
+     * @throws ForbiddenCompanyAccessException  si la date n'appartient pas à la compagnie du manager courant
      */
     @Transactional
     public ShowDateSkillRequirementDto addSkillRequirement(Long showDateId, CreateSkillRequirementRequestDto request) {
         LOG.info("Ajout d'un besoin {} pour showDateId={}", request.skill(), showDateId);
 
-        ShowDateEntity showDate = showDateRepository.findByIdOptional(showDateId)
-                .orElseThrow(ShowDateNotFoundException::new);
+        ShowDateEntity showDate = loadOwnedShowDate(showDateId);
 
         ShowDateSkillRequirementEntity entity = new ShowDateSkillRequirementEntity();
         entity.setShowDate(showDate);
@@ -308,12 +340,12 @@ public class ShowDateService {
     /**
      * Retourne tous les besoins artistiques d'une date de spectacle.
      *
-     * @throws ShowDateNotFoundException si la date n'existe pas
+     * @throws ShowDateNotFoundException        si la date n'existe pas
+     * @throws ForbiddenCompanyAccessException  si la date n'appartient pas à la compagnie du manager courant
      */
     public List<ShowDateSkillRequirementDto> getSkillRequirements(Long showDateId) {
         LOG.debug("Récupération des besoins artistiques pour showDateId={}", showDateId);
-        showDateRepository.findByIdOptional(showDateId)
-                .orElseThrow(ShowDateNotFoundException::new);
+        loadOwnedShowDate(showDateId);
         return skillRequirementRepository.findByShowDateId(showDateId).stream()
                 .map(skillRequirementMapper::toDto)
                 .toList();

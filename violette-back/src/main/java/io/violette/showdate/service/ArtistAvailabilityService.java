@@ -1,5 +1,7 @@
 package io.violette.showdate.service;
 
+import io.violette.security.ManagerCompanyResolver;
+import io.violette.security.exception.ForbiddenCompanyAccessException;
 import io.violette.security.JwtPrincipalInfo;
 import io.violette.showdate.dto.ArtistAvailabilityDto;
 import io.violette.showdate.exception.InvalidAvailabilityStatusException;
@@ -42,17 +44,21 @@ public class ArtistAvailabilityService {
     @Inject
     ArtistAvailabilityMapper artistAvailabilityMapper;
 
+    @Inject
+    ManagerCompanyResolver managerCompanyResolver;
+
     /**
      * Liste les disponibilités déclarées pour une date de spectacle (usage manager).
+     * Vérifie que la date appartient à la compagnie du manager authentifié (OWASP A01).
      *
      * @return liste vide si aucune disponibilité n'a encore été enregistrée
-     * @throws ShowDateNotFoundException si la date n'existe pas
+     * @throws ShowDateNotFoundException        si la date n'existe pas
+     * @throws ForbiddenCompanyAccessException  si la date n'appartient pas à la compagnie du manager courant
      */
     @Transactional
     public List<ArtistAvailabilityDto> getAvailabilitiesForShowDate(Long showDateId) {
         LOG.debug("Liste des disponibilités pour showDateId={}", showDateId);
-        showDateRepository.findByIdOptional(showDateId)
-                .orElseThrow(ShowDateNotFoundException::new);
+        assertManagerOwnsShowDate(showDateId);
         return artistAvailabilityRepository.findByShowDateId(showDateId).stream()
                 .map(artistAvailabilityMapper::toDto)
                 .toList();
@@ -124,5 +130,21 @@ public class ArtistAvailabilityService {
                         AvailabilityStatus.PENDING,
                         null
                 ));
+    }
+
+    /**
+     * Vérifie qu'une date existe et appartient à la compagnie du manager courant.
+     * Ordre impératif : existence (404) avant ownership (403).
+     * Méthode locale à ce service (logique équivalente à {@link ShowDateService#loadOwnedShowDate(Long)}).
+     */
+    private void assertManagerOwnsShowDate(Long showDateId) {
+        ShowDateEntity entity = showDateRepository.findByIdOptional(showDateId)
+                .orElseThrow(ShowDateNotFoundException::new);
+        Long managerCompanyId = managerCompanyResolver.resolveCurrentManagerCompany().getId();
+        if (!entity.getCompany().getId().equals(managerCompanyId)) {
+            LOG.debug("Accès refusé aux disponibilités de la date id={} : compagnie attendue={}, trouvée={}",
+                    showDateId, managerCompanyId, entity.getCompany().getId());
+            throw new ForbiddenCompanyAccessException();
+        }
     }
 }

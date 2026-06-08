@@ -1,9 +1,12 @@
 package io.violette.showdate.controller;
 
+import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
 import io.violette.cabaretcompany.model.CabaretCompanyEntity;
 import io.violette.cabaretcompany.repository.CabaretCompanyRepository;
+import io.violette.security.CurrentUserContextProvider;
+import io.violette.security.JwtPrincipalInfo;
 import io.violette.showdate.model.ShowDateEntity;
 import io.violette.showdate.model.ShowDateStatus;
 import io.violette.showdate.repository.ShowDateRepository;
@@ -17,14 +20,19 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Optional;
 import java.util.Set;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.when;
 
 @QuarkusTest
 class ShowDateControllerUpdateTest {
+
+    @InjectMock
+    CurrentUserContextProvider currentUserContextProvider;
 
     @Inject
     ShowDateRepository showDateRepository;
@@ -43,6 +51,7 @@ class ShowDateControllerUpdateTest {
     @DisplayName("PATCH /show-dates/{id} en MANAGER met à jour les champs fournis et retourne 200")
     void patchById_whenRoleIsManagerAndShowDateExists_returns200AndUpdatesFields() throws Exception {
         ShowDateFixture fx = persistShowDateFixture("ctrl-upd-ok");
+        mockManagerPrincipal(fx);
 
         given()
                 .contentType("application/json")
@@ -53,10 +62,10 @@ class ShowDateControllerUpdateTest {
                           "showDetails": "Mise à jour test"
                         }
                         """)
-                .when().patch("/api/show-dates/" + fx.showDateId)
+                .when().patch("/api/show-dates/" + fx.showDateId())
                 .then()
                 .statusCode(200)
-                .body("id", equalTo(fx.showDateId.intValue()))
+                .body("id", equalTo(fx.showDateId().intValue()))
                 .body("eventDate", equalTo("2026-06-02"))
                 .body("location", equalTo("Paris 10e"))
                 .body("showDetails", equalTo("Mise à jour test"))
@@ -64,7 +73,7 @@ class ShowDateControllerUpdateTest {
 
         userTransaction.begin();
         try {
-            ShowDateEntity entity = showDateRepository.findByIdOptional(fx.showDateId).orElseThrow();
+            ShowDateEntity entity = showDateRepository.findByIdOptional(fx.showDateId()).orElseThrow();
             assertEquals(LocalDate.of(2026, 6, 2), entity.getEventDate());
             assertEquals(LocalTime.of(19, 0), entity.getMeetingTime());
             assertEquals("Paris 10e", entity.getLocation());
@@ -96,6 +105,7 @@ class ShowDateControllerUpdateTest {
     @DisplayName("PATCH /show-dates/{id} en MANAGER peut passer INQUIRY -> OPTION")
     void patchById_whenManagerUpdatesStatusToOption_returns200AndPersistsStatus() throws Exception {
         ShowDateFixture fx = persistShowDateFixture("ctrl-upd-status");
+        mockManagerPrincipal(fx);
 
         given()
                 .contentType("application/json")
@@ -104,14 +114,14 @@ class ShowDateControllerUpdateTest {
                           "status": "OPTION"
                         }
                         """)
-                .when().patch("/api/show-dates/" + fx.showDateId)
+                .when().patch("/api/show-dates/" + fx.showDateId())
                 .then()
                 .statusCode(200)
                 .body("status", equalTo("OPTION"));
 
         userTransaction.begin();
         try {
-            ShowDateEntity entity = showDateRepository.findByIdOptional(fx.showDateId).orElseThrow();
+            ShowDateEntity entity = showDateRepository.findByIdOptional(fx.showDateId()).orElseThrow();
             assertEquals(ShowDateStatus.OPTION, entity.getStatus());
             userTransaction.commit();
         } catch (Exception e) {
@@ -125,6 +135,7 @@ class ShowDateControllerUpdateTest {
     @DisplayName("PATCH /show-dates/{id} en MANAGER refuse INQUIRY -> CONFIRMED en v0.4.0 (400)")
     void patchById_whenManagerUsesInvalidStatusTransition_returns400() throws Exception {
         ShowDateFixture fx = persistShowDateFixture("ctrl-upd-status-bad");
+        mockManagerPrincipal(fx);
 
         given()
                 .contentType("application/json")
@@ -133,7 +144,7 @@ class ShowDateControllerUpdateTest {
                           "status": "CONFIRMED"
                         }
                         """)
-                .when().patch("/api/show-dates/" + fx.showDateId)
+                .when().patch("/api/show-dates/" + fx.showDateId())
                 .then()
                 .statusCode(400);
     }
@@ -147,13 +158,13 @@ class ShowDateControllerUpdateTest {
         given()
                 .contentType("application/json")
                 .body("{\"location\":\"Interdit\"}")
-                .when().patch("/api/show-dates/" + fx.showDateId)
+                .when().patch("/api/show-dates/" + fx.showDateId())
                 .then()
                 .statusCode(403);
 
         userTransaction.begin();
         try {
-            ShowDateEntity entity = showDateRepository.findByIdOptional(fx.showDateId).orElseThrow();
+            ShowDateEntity entity = showDateRepository.findByIdOptional(fx.showDateId()).orElseThrow();
             assertEquals("Paris", entity.getLocation());
             assertEquals(ShowDateStatus.INQUIRY, entity.getStatus());
             userTransaction.commit();
@@ -192,14 +203,23 @@ class ShowDateControllerUpdateTest {
             showDateRepository.flush();
 
             userTransaction.commit();
-            return new ShowDateFixture(showDate.getId());
+            return new ShowDateFixture(showDate.getId(), manager.getFirebaseUid());
         } catch (Exception e) {
             userTransaction.rollback();
             throw e;
         }
     }
 
-    private record ShowDateFixture(Long showDateId) {
+    private void mockManagerPrincipal(ShowDateFixture fx) {
+        when(currentUserContextProvider.getCurrentPrincipal())
+                .thenReturn(Optional.of(new JwtPrincipalInfo(
+                        fx.managerFirebaseUid(),
+                        fx.managerFirebaseUid() + "@test.com",
+                        "Manager"
+                )));
+    }
+
+    private record ShowDateFixture(Long showDateId, String managerFirebaseUid) {
     }
 }
 

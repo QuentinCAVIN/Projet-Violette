@@ -66,6 +66,8 @@ class ShowDateControllerAvailabilitiesTest {
     @DisplayName("GET /show-dates/{id}/availabilities en MANAGER retourne 200 et une liste (vide si aucune dispo)")
     void getAvailabilities_whenRoleIsManager_returns200AndList() throws Exception {
         ShowDateFixture fx = persistShowDateFixture("ctrl-avail-get-mgr");
+        when(currentUserContextProvider.getCurrentPrincipal())
+                .thenReturn(Optional.of(new JwtPrincipalInfo(fx.managerFirebaseUid(), fx.managerFirebaseUid() + "@test.com", "Manager")));
 
         try {
             given()
@@ -208,6 +210,7 @@ class ShowDateControllerAvailabilitiesTest {
             String artistFirebaseUid,
             String artistEmail,
             Long managerId,
+            String managerFirebaseUid,
             Long companyId
     ) {
     }
@@ -270,6 +273,7 @@ class ShowDateControllerAvailabilitiesTest {
                 artist.getFirebaseUid(),
                 artist.getEmail(),
                 manager.getId(),
+                manager.getFirebaseUid(),
                 company.getId()
         );
     }
