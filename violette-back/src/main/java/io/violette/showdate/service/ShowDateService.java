@@ -22,6 +22,8 @@ import io.violette.showdate.model.ShowDateStatus;
 import io.violette.showdate.repository.ShowDateRepository;
 import io.violette.showdate.repository.ShowDateSkillRequirementRepository;
 import io.violette.security.JwtPrincipalInfo;
+import io.violette.security.ManagerCompanyResolver;
+import io.violette.security.exception.ForbiddenCompanyAccessException;
 import io.violette.violetteuser.exception.UserNotFoundException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -84,6 +86,9 @@ public class ShowDateService {
     @Inject
     io.violette.violetteuser.repository.VioletteUserRepository violetteUserRepository;
 
+    @Inject
+    ManagerCompanyResolver managerCompanyResolver;
+
     /**
      * Crée une nouvelle date de spectacle.
      *
@@ -124,14 +129,23 @@ public class ShowDateService {
 
     /**
      * Récupère une date de spectacle par son id.
+     * Vérifie que la date appartient à la compagnie du manager authentifié (OWASP A01).
+     * Ordre : 404 si date absente, puis 403 si la compagnie ne correspond pas.
      *
-     * @throws ShowDateNotFoundException si la date n'existe pas
+     * @throws ShowDateNotFoundException        si la date n'existe pas
+     * @throws ForbiddenCompanyAccessException  si la date n'appartient pas à la compagnie du manager courant
      */
     public ShowDateDto getById(Long id) {
         LOG.debug("Récupération de la date de spectacle id={}", id);
-        return showDateRepository.findByIdOptional(id)
-                .map(this::mapToDto)
+        ShowDateEntity entity = showDateRepository.findByIdOptional(id)
                 .orElseThrow(ShowDateNotFoundException::new);
+        Long managerCompanyId = managerCompanyResolver.resolveCurrentManagerCompany().getId();
+        if (!entity.getCompany().getId().equals(managerCompanyId)) {
+            LOG.debug("Accès refusé à la date id={} : compagnie attendue={}, trouvée={}",
+                    id, managerCompanyId, entity.getCompany().getId());
+            throw new ForbiddenCompanyAccessException();
+        }
+        return mapToDto(entity);
     }
 
     /**
@@ -168,11 +182,19 @@ public class ShowDateService {
 
     /**
      * Retourne toutes les dates de spectacle d'une compagnie.
+     * Vérifie que le companyId correspond à la compagnie du manager authentifié (OWASP A01).
      *
-     * @throws CabaretCompanyNotFoundException si la compagnie n'existe pas
+     * @throws ForbiddenCompanyAccessException  si le companyId ne correspond pas à la compagnie du manager courant
+     * @throws CabaretCompanyNotFoundException  si la compagnie n'existe pas (garde de sécurité secondaire)
      */
     public List<ShowDateDto> getByCompanyId(Long companyId) {
         LOG.debug("Récupération des dates de spectacle pour companyId={}", companyId);
+        Long managerCompanyId = managerCompanyResolver.resolveCurrentManagerCompanyId();
+        if (!companyId.equals(managerCompanyId)) {
+            LOG.debug("Accès refusé à getByCompanyId : companyId={} ne correspond pas à la compagnie du manager ({})",
+                    companyId, managerCompanyId);
+            throw new ForbiddenCompanyAccessException();
+        }
         cabaretCompanyRepository.findByIdOptional(companyId)
                 .orElseThrow(CabaretCompanyNotFoundException::new);
         return showDateRepository.findByCompanyId(companyId).stream()
