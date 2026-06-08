@@ -1,8 +1,10 @@
 package io.violette.showdate.service;
 
+import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.violette.cabaretcompany.model.CabaretCompanyEntity;
 import io.violette.cabaretcompany.repository.CabaretCompanyRepository;
+import io.violette.security.ManagerCompanyResolver;
 import io.violette.security.JwtPrincipalInfo;
 import io.violette.showdate.dto.ArtistAvailabilityDto;
 import io.violette.showdate.exception.InvalidAvailabilityStatusException;
@@ -31,12 +33,17 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
 
 @QuarkusTest
 class ArtistAvailabilityServiceTest {
 
     @Inject
     ArtistAvailabilityService artistAvailabilityService;
+
+    /** Mocké pour neutraliser la garde d'ownership dans les tests qui ne testent pas l'autorisation manager. */
+    @InjectMock
+    ManagerCompanyResolver managerCompanyResolver;
 
     @Inject
     ArtistAvailabilityRepository artistAvailabilityRepository;
@@ -63,6 +70,7 @@ class ArtistAvailabilityServiceTest {
     @DisplayName("getAvailabilitiesForShowDate retourne une liste vide si aucune disponibilité n'existe")
     void getAvailabilitiesForShowDate_whenNoAvailability_thenReturnsEmptyList() {
         ShowDateFixture fx = buildShowDateFixture("avail-svc-empty");
+        when(managerCompanyResolver.resolveCurrentManagerCompany()).thenReturn(fx.company());
 
         List<ArtistAvailabilityDto> list = artistAvailabilityService.getAvailabilitiesForShowDate(fx.showDate.getId());
 
@@ -74,6 +82,7 @@ class ArtistAvailabilityServiceTest {
     @DisplayName("getAvailabilitiesForShowDate retourne toutes les disponibilités de la date")
     void getAvailabilitiesForShowDate_whenSeveralExist_thenReturnsAllDtos() {
         ShowDateFixture fx = buildShowDateFixture("avail-svc-list");
+        when(managerCompanyResolver.resolveCurrentManagerCompany()).thenReturn(fx.company());
         VioletteUserEntity a1 = buildAndPersistUser("avail-svc-a1", "avail-svc-a1@test.com", Set.of(UserRole.ARTIST));
         VioletteUserEntity a2 = buildAndPersistUser("avail-svc-a2", "avail-svc-a2@test.com", Set.of(UserRole.ARTIST));
         persistAvailability(fx.showDate, a1, AvailabilityStatus.AVAILABLE);
@@ -193,14 +202,14 @@ class ArtistAvailabilityServiceTest {
         );
     }
 
-    private record ShowDateFixture(ShowDateEntity showDate) {
+    private record ShowDateFixture(ShowDateEntity showDate, CabaretCompanyEntity company) {
     }
 
     private ShowDateFixture buildShowDateFixture(String seed) {
         VioletteUserEntity manager = buildAndPersistUser(seed + "-mgr", seed + "-mgr@test.com", Set.of(UserRole.MANAGER));
         CabaretCompanyEntity company = buildAndPersistCompany("Compagnie " + seed, manager);
         ShowDateEntity showDate = buildAndPersistShowDate(company, LocalDate.of(2025, 8, 20));
-        return new ShowDateFixture(showDate);
+        return new ShowDateFixture(showDate, company);
     }
 
     private VioletteUserEntity buildAndPersistUser(String firebaseUid, String email, Set<UserRole> roles) {

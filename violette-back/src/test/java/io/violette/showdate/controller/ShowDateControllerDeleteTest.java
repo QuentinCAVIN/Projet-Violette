@@ -1,9 +1,12 @@
 package io.violette.showdate.controller;
 
+import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
 import io.violette.cabaretcompany.model.CabaretCompanyEntity;
 import io.violette.cabaretcompany.repository.CabaretCompanyRepository;
+import io.violette.security.CurrentUserContextProvider;
+import io.violette.security.JwtPrincipalInfo;
 import io.violette.showdate.model.ShowDateEntity;
 import io.violette.showdate.repository.ShowDateRepository;
 import io.violette.violetteuser.model.UserRole;
@@ -17,13 +20,15 @@ import org.junit.jupiter.api.Test;
 import java.util.Set;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Optional;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.when;
 
 /**
- * Tests pragmatiques de l'endpoint DELETE sur {@link ShowDateController}.
+ * Tests de l'endpoint DELETE sur {@link ShowDateController}.
  *
  * <p>Limite assumée : on ne valide pas ici les cascades SQL profondes
  * ({@code artist_availability}, {@code artist_booking}, {@code show_date_skill_requirement}),
@@ -33,6 +38,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @QuarkusTest
 class ShowDateControllerDeleteTest {
+
+    @InjectMock
+    CurrentUserContextProvider currentUserContextProvider;
 
     @Inject
     ShowDateRepository showDateRepository;
@@ -51,14 +59,16 @@ class ShowDateControllerDeleteTest {
     @DisplayName("DELETE /show-dates/{id} en MANAGER retourne 204 et supprime la date")
     void deleteById_whenRoleIsManagerAndShowDateExists_returns204() throws Exception {
         ShowDateFixture fx = persistShowDateFixture("ctrl-del-ok");
-        assertEquals(1, countShowDateById(fx.showDateId));
+        when(currentUserContextProvider.getCurrentPrincipal())
+                .thenReturn(Optional.of(new JwtPrincipalInfo(fx.managerFirebaseUid(), fx.managerFirebaseUid() + "@test.com", "Manager")));
+        assertEquals(1, countShowDateById(fx.showDateId()));
 
         given()
-                .when().delete("/api/show-dates/" + fx.showDateId)
-                .then()
-                .statusCode(204);
+                    .when().delete("/api/show-dates/" + fx.showDateId())
+                    .then()
+                    .statusCode(204);
 
-        assertEquals(0, countShowDateById(fx.showDateId));
+        assertEquals(0, countShowDateById(fx.showDateId()));
     }
 
     @Test
@@ -77,14 +87,14 @@ class ShowDateControllerDeleteTest {
     @DisplayName("DELETE /show-dates/{id} en ARTIST retourne 403 et ne supprime pas la date")
     void deleteById_whenRoleIsArtist_returns403() throws Exception {
         ShowDateFixture fx = persistShowDateFixture("ctrl-del-forbidden");
-        assertEquals(1, countShowDateById(fx.showDateId));
+        assertEquals(1, countShowDateById(fx.showDateId()));
 
         given()
-                .when().delete("/api/show-dates/" + fx.showDateId)
+                .when().delete("/api/show-dates/" + fx.showDateId())
                 .then()
                 .statusCode(403);
 
-        assertEquals(1, countShowDateById(fx.showDateId));
+        assertEquals(1, countShowDateById(fx.showDateId()));
     }
 
     private ShowDateFixture persistShowDateFixture(String uidPrefix) throws Exception {
@@ -115,7 +125,7 @@ class ShowDateControllerDeleteTest {
             showDateRepository.flush();
 
             userTransaction.commit();
-            return new ShowDateFixture(showDate.getId());
+            return new ShowDateFixture(showDate.getId(), manager.getFirebaseUid());
         } catch (Exception e) {
             userTransaction.rollback();
             throw e;
@@ -134,6 +144,6 @@ class ShowDateControllerDeleteTest {
         }
     }
 
-    private record ShowDateFixture(Long showDateId) {
+    private record ShowDateFixture(Long showDateId, String managerFirebaseUid) {
     }
 }

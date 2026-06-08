@@ -135,12 +135,12 @@ class ShowDateServiceTest {
                 null
         ));
 
+        when(managerCompanyResolver.resolveCurrentManagerCompany()).thenReturn(seed.company());
         showDateService.addSkillRequirement(created.id(), new CreateSkillRequirementRequestDto(
                 ArtistSkill.DANCE, 2, new BigDecimal("100.00")));
         showDateService.addSkillRequirement(created.id(), new CreateSkillRequirementRequestDto(
                 ArtistSkill.SINGING, 3, new BigDecimal("120.00")));
 
-        when(managerCompanyResolver.resolveCurrentManagerCompany()).thenReturn(seed.company());
         ShowDateDto dto = showDateService.getById(created.id());
         assertEquals(5, dto.totalRequiredArtists());
     }
@@ -212,6 +212,7 @@ class ShowDateServiceTest {
                 null
         ));
 
+        when(managerCompanyResolver.resolveCurrentManagerCompany()).thenReturn(seed.company());
         showDateService.deleteShowDate(created.id());
 
         assertEquals(0, showDateRepository.count("id", created.id()));
@@ -240,6 +241,7 @@ class ShowDateServiceTest {
                 "Détails initiaux"
         ));
 
+        when(managerCompanyResolver.resolveCurrentManagerCompany()).thenReturn(seed.company());
         ShowDateDto updated = showDateService.updateShowDate(created.id(), new UpdateShowDateRequestDto(
                 LocalDate.of(2026, 4, 11),
                 null,
@@ -284,6 +286,7 @@ class ShowDateServiceTest {
                 "Détails initiaux"
         ));
 
+        when(managerCompanyResolver.resolveCurrentManagerCompany()).thenReturn(seed.company());
         ShowDateDto updated = showDateService.updateShowDate(created.id(), new UpdateShowDateRequestDto(
                 null,
                 null,
@@ -313,6 +316,7 @@ class ShowDateServiceTest {
                 "Détails initiaux"
         ));
 
+        when(managerCompanyResolver.resolveCurrentManagerCompany()).thenReturn(seed.company());
         assertThrows(BadRequestException.class, () -> showDateService.updateShowDate(created.id(), new UpdateShowDateRequestDto(
                 null,
                 null,
