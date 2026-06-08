@@ -3,6 +3,7 @@
 # Déclencheurs :
 #   • push sur `main` ou PR vers `main` → CI : build Maven + tests + push image Docker sur GHCR
 #   • tag v*.*.*                        → CD : idem CI + déploiement Fly.io + release APK Android
+#                                         Corps de release : extrait CHANGELOG.md (## vX.Y.Z …) sinon notes auto GitHub
 #
 # Secrets GitHub requis :
 #   FLY_API_TOKEN               → fly tokens create deploy -a violette-back  (CD uniquement)
@@ -24,6 +25,8 @@ on:
 permissions:
   contents: write
   packages: write
+  # Requis uniquement pour le fallback « generate-notes » (PR / commits entre tags).
+  pull-requests: read
 
 env:
   REGISTRY:   ghcr.io
@@ -114,7 +117,8 @@ jobs:
             --image "${{ steps.coords.outputs.image }}:${{ steps.coords.outputs.tag }}" \
             --wait-timeout 180
 
-      # Créer la GitHub Release uniquement sur les tags — le job APK s'y accroche ensuite.
+      # Créer la GitHub Release uniquement sur les tags — le job APK s'y accroche ensuite (needs: deploy-backend).
+      # Corps : section CHANGELOG « ## vX.Y.Z… » jusqu’au prochain « ## » exclus ; sinon API releases/generate-notes.
       - name: Create GitHub Release (tags only)
         if: startsWith(github.ref, 'refs/tags/')
         env:
@@ -124,10 +128,46 @@ jobs:
           if gh release view "$TAG" --repo "${{ github.repository }}" >/dev/null 2>&1; then
             echo "Release $TAG existe déjà — ignoré."
           else
+            IMAGE="${{ steps.coords.outputs.image }}:$TAG"
+            CHANGELOG_FILE="${GITHUB_WORKSPACE}/CHANGELOG.md"
+            RELEASE_NOTES_FILE=$(mktemp)
+            trap 'rm -f "$RELEASE_NOTES_FILE"' EXIT
+
+            use_changelog=0
+            if [ -f "$CHANGELOG_FILE" ]; then
+              awk -v tag="$TAG" '
+                BEGIN { prefix = "## " tag }
+                index($0, prefix) == 1 {
+                  in_section = 1
+                  print
+                  next
+                }
+                in_section && /^## / { exit }
+                in_section { print }
+              ' "$CHANGELOG_FILE" > "$RELEASE_NOTES_FILE"
+              if [ -s "$RELEASE_NOTES_FILE" ]; then
+                use_changelog=1
+              fi
+            fi
+
+            if [ "$use_changelog" -ne 1 ]; then
+              echo "::notice::Section CHANGELOG absente pour ${TAG} — notes générées via l’API GitHub (generate-notes)."
+              gh api --method POST \
+                "repos/${{ github.repository }}/releases/generate-notes" \
+                -f tag_name="$TAG" \
+                --jq .body > "$RELEASE_NOTES_FILE"
+            fi
+
+            {
+              printf '\n\n---\n\n## Déploiement\n\n'
+              printf -- '- Image Docker : `%s` déployée sur Fly.io.\n' "$IMAGE"
+              printf '%s\n' '- APK Android ajouté par le job **Build & Release APK**.'
+            } >> "$RELEASE_NOTES_FILE"
+
             gh release create "$TAG" \
               --repo "${{ github.repository }}" \
               --title "Release $TAG" \
-              --notes "## Backend\nImage Docker : \`${{ steps.coords.outputs.image }}:$TAG\` déployée sur Fly.io.\n\n## Mobile\nL'APK Android est ajouté par le job **Build & Release APK** ci-dessous." \
+              --notes-file "$RELEASE_NOTES_FILE" \
               --verify-tag
           fi
 
