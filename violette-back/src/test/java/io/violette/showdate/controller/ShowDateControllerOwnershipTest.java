@@ -365,6 +365,70 @@ class ShowDateControllerOwnershipTest {
         }
     }
 
+    // --- POST /api/show-dates ---
+
+    @Test
+    @TestSecurity(user = "ownership-create-ok", roles = {"MANAGER"})
+    @DisplayName("POST /show-dates — manager A crée une date pour sa compagnie A → 201")
+    void createShowDate_whenManagerCreatesForOwnCompany_returns201() throws Exception {
+        OwnershipFixture fx = persistOwnershipFixture("own-create-ok");
+        mockManagerA(fx);
+
+        try {
+            given()
+                    .contentType("application/json")
+                    .body("""
+                            {
+                              "companyId": %d,
+                              "eventDate": "2026-11-15",
+                              "meetingTime": "19:00:00",
+                              "location": "Lieu création A",
+                              "clientContactName": "Contact A",
+                              "clientContactPhone": "0600000001"
+                            }
+                            """.formatted(fx.companyAId))
+                    .when().post("/api/show-dates")
+                    .then()
+                    .statusCode(201)
+                    .body("companyId", equalTo(fx.companyAId.intValue()))
+                    .body("location", equalTo("Lieu création A"));
+        } finally {
+            deleteOwnershipFixture(fx);
+        }
+    }
+
+    @Test
+    @TestSecurity(user = "ownership-create-403", roles = {"MANAGER"})
+    @DisplayName("POST /show-dates — manager A tente de créer une date pour la compagnie B → 403")
+    void createShowDate_whenManagerCreatesForOtherCompany_returns403AndNoRowCreated() throws Exception {
+        OwnershipFixture fx = persistOwnershipFixture("own-create-403");
+        mockManagerA(fx);
+        long showDatesForCompanyBBefore = countShowDatesByCompanyId(fx.companyBId);
+
+        try {
+            given()
+                    .contentType("application/json")
+                    .body("""
+                            {
+                              "companyId": %d,
+                              "eventDate": "2026-11-16",
+                              "meetingTime": "20:00:00",
+                              "location": "Lieu création B interdit",
+                              "clientContactName": "Contact B",
+                              "clientContactPhone": "0600000002"
+                            }
+                            """.formatted(fx.companyBId))
+                    .when().post("/api/show-dates")
+                    .then()
+                    .statusCode(403)
+                    .body(equalTo("Accès refusé."));
+
+            assertEquals(showDatesForCompanyBBefore, countShowDatesByCompanyId(fx.companyBId));
+        } finally {
+            deleteOwnershipFixture(fx);
+        }
+    }
+
     // --- Fixtures ---
 
     private void mockManagerA(OwnershipFixture fx) {
@@ -380,6 +444,18 @@ class ShowDateControllerOwnershipTest {
         userTransaction.begin();
         try {
             long count = showDateRepository.count("id", showDateId);
+            userTransaction.commit();
+            return count;
+        } catch (Exception e) {
+            userTransaction.rollback();
+            throw e;
+        }
+    }
+
+    private long countShowDatesByCompanyId(Long companyId) throws Exception {
+        userTransaction.begin();
+        try {
+            long count = showDateRepository.findByCompanyId(companyId).size();
             userTransaction.commit();
             return count;
         } catch (Exception e) {
@@ -439,8 +515,16 @@ class ShowDateControllerOwnershipTest {
         try {
             showDateSkillRequirementRepository.findByShowDateId(fx.showDateAId).forEach(showDateSkillRequirementRepository::delete);
             showDateSkillRequirementRepository.findByShowDateId(fx.showDateBId).forEach(showDateSkillRequirementRepository::delete);
-            showDateRepository.findByIdOptional(fx.showDateAId).ifPresent(showDateRepository::delete);
-            showDateRepository.findByIdOptional(fx.showDateBId).ifPresent(showDateRepository::delete);
+            showDateRepository.findByCompanyId(fx.companyAId).forEach(showDate -> {
+                showDateSkillRequirementRepository.findByShowDateId(showDate.getId())
+                        .forEach(showDateSkillRequirementRepository::delete);
+                showDateRepository.delete(showDate);
+            });
+            showDateRepository.findByCompanyId(fx.companyBId).forEach(showDate -> {
+                showDateSkillRequirementRepository.findByShowDateId(showDate.getId())
+                        .forEach(showDateSkillRequirementRepository::delete);
+                showDateRepository.delete(showDate);
+            });
             cabaretCompanyRepository.findByIdOptional(fx.companyAId).ifPresent(cabaretCompanyRepository::delete);
             cabaretCompanyRepository.findByIdOptional(fx.companyBId).ifPresent(cabaretCompanyRepository::delete);
             violetteUserRepository.findByIdOptional(fx.managerAId).ifPresent(violetteUserRepository::delete);
