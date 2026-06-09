@@ -345,6 +345,8 @@ class ShowDateServiceTest {
         company.setName("Compagnie " + uidPrefix);
         company.setManager(manager);
         cabaretCompanyRepository.persistAndFlush(company);
+        when(managerCompanyResolver.resolveCurrentManagerCompany()).thenReturn(company);
+        when(managerCompanyResolver.resolveCurrentManagerCompanyId()).thenReturn(company.getId());
         return new Seed(company, manager);
     }
 

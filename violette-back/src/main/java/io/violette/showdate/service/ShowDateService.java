@@ -91,13 +91,22 @@ public class ShowDateService {
 
     /**
      * Crée une nouvelle date de spectacle.
+     * Vérifie que le companyId demandé correspond à la compagnie du manager authentifié (OWASP A01).
      *
-     * @throws CabaretCompanyNotFoundException si la compagnie n'existe pas
-     * @throws CabaretShowNotFoundException    si la revue est fournie mais introuvable
+     * @throws ForbiddenCompanyAccessException  si le companyId ne correspond pas à la compagnie du manager courant
+     * @throws CabaretCompanyNotFoundException  si la compagnie n'existe pas
+     * @throws CabaretShowNotFoundException     si la revue est fournie mais introuvable
      */
     @Transactional
     public ShowDateDto createShowDate(CreateShowDateRequestDto request) {
         LOG.info("Création d'une date de spectacle pour companyId={}", request.companyId());
+
+        Long managerCompanyId = managerCompanyResolver.resolveCurrentManagerCompanyId();
+        if (!request.companyId().equals(managerCompanyId)) {
+            LOG.debug("Accès refusé à createShowDate : companyId={} ne correspond pas à la compagnie du manager ({})",
+                    request.companyId(), managerCompanyId);
+            throw new ForbiddenCompanyAccessException();
+        }
 
         CabaretCompanyEntity company = cabaretCompanyRepository
                 .findByIdOptional(request.companyId())
