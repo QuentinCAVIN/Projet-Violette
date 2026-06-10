@@ -11,6 +11,8 @@ import io.violette.cabaretcompany.model.CompanyMemberId;
 import io.violette.cabaretcompany.repository.CabaretCompanyRepository;
 import io.violette.cabaretcompany.repository.CompanyMemberRepository;
 import io.violette.security.JwtPrincipalInfo;
+import io.violette.security.ManagerCompanyResolver;
+import io.violette.security.exception.ForbiddenCompanyAccessException;
 import io.violette.violetteuser.exception.UserNotFoundException;
 import io.violette.violetteuser.model.UserRole;
 import io.violette.violetteuser.model.VioletteUserEntity;
@@ -55,6 +57,9 @@ public class CabaretCompanyService {
 
     @Inject
     VioletteUserRepository violetteUserRepository;
+
+    @Inject
+    ManagerCompanyResolver managerCompanyResolver;
 
     @Transactional
     public CabaretCompanyEntity ensureDefaultCompanyExists() {
@@ -140,6 +145,21 @@ public class CabaretCompanyService {
     }
 
     /**
+     * Récupère une compagnie par son id en vérifiant l'appartenance au manager authentifié (OWASP A01).
+     * Ordre : 404 si la compagnie n'existe pas, puis 403 si elle n'appartient pas au manager courant.
+     *
+     * @throws CabaretCompanyNotFoundException   si la compagnie n'existe pas
+     * @throws ForbiddenCompanyAccessException   si la compagnie n'appartient pas au manager courant
+     */
+    public CabaretCompanyDto getOwnedById(Long id) {
+        LOG.debug("Récupération sécurisée de la compagnie id={}", id);
+        CabaretCompanyEntity company = cabaretCompanyRepository.findByIdOptional(id)
+                .orElseThrow(CabaretCompanyNotFoundException::new);
+        managerCompanyResolver.assertCurrentManagerOwnsCompany(id);
+        return cabaretCompanyMapper.toDto(company);
+    }
+
+    /**
      * Retourne toutes les compagnies gérées par un manager.
      */
     public List<CabaretCompanyDto> getByManagerId(Long managerId) {
@@ -169,12 +189,14 @@ public class CabaretCompanyService {
     /**
      * Retourne tous les membres d'une compagnie.
      *
-     * @throws CabaretCompanyNotFoundException si la compagnie n'existe pas
+     * @throws CabaretCompanyNotFoundException   si la compagnie n'existe pas
+     * @throws ForbiddenCompanyAccessException si la compagnie n'appartient pas au manager courant
      */
     public List<CompanyMemberDto> getMembersByCompanyId(Long companyId) {
         LOG.debug("Récupération des membres pour companyId={}", companyId);
         cabaretCompanyRepository.findByIdOptional(companyId)
                 .orElseThrow(CabaretCompanyNotFoundException::new);
+        managerCompanyResolver.assertCurrentManagerOwnsCompany(companyId);
         return companyMemberRepository.findByCompanyId(companyId).stream()
                 .map(companyMemberMapper::toDto)
                 .toList();
