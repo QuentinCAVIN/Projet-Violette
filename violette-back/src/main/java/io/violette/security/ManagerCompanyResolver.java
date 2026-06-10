@@ -85,4 +85,22 @@ public class ManagerCompanyResolver {
     public Long resolveCurrentManagerCompanyId() {
         return resolveCurrentManagerCompany().getId();
     }
+
+    /**
+     * Vérifie que l'identifiant de compagnie fourni correspond à celle du manager authentifié.
+     * Centralise la garde d'ownership compagnie (OWASP A01) pour éviter la duplication
+     * dans les services métier.
+     *
+     * @param companyId identifiant de la compagnie à contrôler
+     * @throws ForbiddenCompanyAccessException si {@code companyId} est absent ou ne correspond pas
+     *                                         à la compagnie du manager courant
+     */
+    public void assertCurrentManagerOwnsCompany(Long companyId) {
+        Long managerCompanyId = resolveCurrentManagerCompanyId();
+        if (companyId == null || !companyId.equals(managerCompanyId)) {
+            LOG.debug("Accès refusé : companyId demandé={} ne correspond pas à la compagnie du manager ({})",
+                    companyId, managerCompanyId);
+            throw new ForbiddenCompanyAccessException();
+        }
+    }
 }
