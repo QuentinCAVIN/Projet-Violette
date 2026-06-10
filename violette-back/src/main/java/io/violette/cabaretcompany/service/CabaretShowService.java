@@ -6,6 +6,8 @@ import io.violette.cabaretcompany.exception.CabaretShowNotFoundException;
 import io.violette.cabaretcompany.mapper.CabaretShowMapper;
 import io.violette.cabaretcompany.repository.CabaretCompanyRepository;
 import io.violette.cabaretcompany.repository.CabaretShowRepository;
+import io.violette.security.ManagerCompanyResolver;
+import io.violette.security.exception.ForbiddenCompanyAccessException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.slf4j.Logger;
@@ -31,6 +33,9 @@ public class CabaretShowService {
     @Inject
     CabaretShowMapper cabaretShowMapper;
 
+    @Inject
+    ManagerCompanyResolver managerCompanyResolver;
+
     /**
      * Récupère une revue par son id.
      *
@@ -46,12 +51,14 @@ public class CabaretShowService {
     /**
      * Retourne toutes les revues d'une compagnie.
      *
-     * @throws CabaretCompanyNotFoundException si la compagnie n'existe pas
+     * @throws CabaretCompanyNotFoundException   si la compagnie n'existe pas
+     * @throws ForbiddenCompanyAccessException si la compagnie n'appartient pas au manager courant
      */
     public List<CabaretShowDto> getByCompanyId(Long companyId) {
         LOG.debug("Récupération des revues pour companyId={}", companyId);
         cabaretCompanyRepository.findByIdOptional(companyId)
                 .orElseThrow(CabaretCompanyNotFoundException::new);
+        managerCompanyResolver.assertCurrentManagerOwnsCompany(companyId);
         return cabaretShowRepository.findByCompanyId(companyId).stream()
                 .map(cabaretShowMapper::toDto)
                 .toList();

@@ -68,7 +68,7 @@ public class CabaretCompanyController {
     @APIResponse(responseCode = "403", description = "Accès refusé (rôle insuffisant)")
     @APIResponse(responseCode = "404", description = "Compagnie introuvable")
     public Response getById(@PathParam("id") Long id) {
-        CabaretCompanyDto dto = cabaretCompanyService.getById(id);
+        CabaretCompanyDto dto = cabaretCompanyService.getOwnedById(id);
         return Response.ok(dto).build();
     }
 
