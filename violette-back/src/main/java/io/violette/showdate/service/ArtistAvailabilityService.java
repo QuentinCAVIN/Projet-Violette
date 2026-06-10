@@ -140,11 +140,6 @@ public class ArtistAvailabilityService {
     private void assertManagerOwnsShowDate(Long showDateId) {
         ShowDateEntity entity = showDateRepository.findByIdOptional(showDateId)
                 .orElseThrow(ShowDateNotFoundException::new);
-        Long managerCompanyId = managerCompanyResolver.resolveCurrentManagerCompany().getId();
-        if (!entity.getCompany().getId().equals(managerCompanyId)) {
-            LOG.debug("Accès refusé aux disponibilités de la date id={} : compagnie attendue={}, trouvée={}",
-                    showDateId, managerCompanyId, entity.getCompany().getId());
-            throw new ForbiddenCompanyAccessException();
-        }
+        managerCompanyResolver.assertCurrentManagerOwnsCompany(entity.getCompany().getId());
     }
 }

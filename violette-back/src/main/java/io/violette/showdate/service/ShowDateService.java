@@ -286,12 +286,7 @@ public class ShowDateService {
     private ShowDateEntity loadOwnedShowDate(Long id) {
         ShowDateEntity entity = showDateRepository.findByIdOptional(id)
                 .orElseThrow(ShowDateNotFoundException::new);
-        Long managerCompanyId = managerCompanyResolver.resolveCurrentManagerCompany().getId();
-        if (!entity.getCompany().getId().equals(managerCompanyId)) {
-            LOG.debug("Accès refusé à la date id={} : compagnie attendue={}, trouvée={}",
-                    id, managerCompanyId, entity.getCompany().getId());
-            throw new ForbiddenCompanyAccessException();
-        }
+        managerCompanyResolver.assertCurrentManagerOwnsCompany(entity.getCompany().getId());
         return entity;
     }
 

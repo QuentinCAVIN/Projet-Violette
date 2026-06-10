@@ -1,5 +1,6 @@
 package io.violette.artistbooking.service;
 
+import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.violette.artistbooking.dto.ArtistBookingDto;
 import io.violette.artistbooking.dto.CreateBookingRequestDto;
@@ -7,6 +8,7 @@ import io.violette.artistbooking.exception.ArtistBookingNotFoundException;
 import io.violette.artistbooking.exception.ArtistNotAvailableException;
 import io.violette.artistbooking.exception.BookingAlreadyExistsException;
 import io.violette.artistbooking.exception.BookingCapacityExceededException;
+import io.violette.artistbooking.exception.ForbiddenBookingAccessException;
 import io.violette.artistbooking.exception.InvalidBookingTransitionException;
 import io.violette.artistbooking.exception.ShowDateNotModifiableException;
 import io.violette.artistbooking.exception.SkillRequirementNotFoundException;
@@ -16,6 +18,7 @@ import io.violette.artistbooking.repository.ArtistBookingRepository;
 import io.violette.cabaretcompany.model.CabaretCompanyEntity;
 import io.violette.cabaretcompany.repository.CabaretCompanyRepository;
 import io.violette.security.JwtPrincipalInfo;
+import io.violette.security.ManagerCompanyResolver;
 import io.violette.showdate.model.ArtistAvailabilityEntity;
 import io.violette.showdate.model.ArtistAvailabilityId;
 import io.violette.showdate.model.AvailabilityStatus;
@@ -46,9 +49,15 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doNothing;
 
 @QuarkusTest
 class ArtistBookingServiceTest {
+
+    /** Mocké pour neutraliser la garde d'ownership dans les tests qui ne testent pas l'autorisation. */
+    @InjectMock
+    ManagerCompanyResolver managerCompanyResolver;
 
     @Inject
     ArtistBookingService artistBookingService;
@@ -585,8 +594,8 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("respondToRequest — échoue si le demandeur n'est pas le propriétaire du booking")
-    void respondToRequest_whenCallerIsNotOwner_throwsInvalidBookingTransitionException() {
+    @DisplayName("respondToRequest — échoue si le demandeur n'est pas le propriétaire du booking (403, anciennement 409)")
+    void respondToRequest_whenCallerIsNotOwner_throwsForbiddenBookingAccessException() {
         Context ctx = buildContext("svc-resp-5");
         ArtistBookingEntity booking = persistBookingDirectly(ctx, BookingStatus.PENDING_CONFIRMATION);
 
@@ -594,8 +603,11 @@ class ArtistBookingServiceTest {
         VioletteUserEntity otherArtist = buildAndPersistUser("svc-resp-5-other", "svc-resp-5-other@test.com", Set.of(UserRole.ARTIST));
         JwtPrincipalInfo wrongPrincipal = new JwtPrincipalInfo(otherArtist.getFirebaseUid(), otherArtist.getEmail(), "");
 
-        assertThrows(InvalidBookingTransitionException.class,
+        assertThrows(ForbiddenBookingAccessException.class,
                 () -> artistBookingService.respondToRequest(booking.getId(), true, wrongPrincipal));
+
+        assertEquals(BookingStatus.PENDING_CONFIRMATION,
+                bookingRepository.findByIdOptional(booking.getId()).orElseThrow().getStatus());
     }
 
     // ==================================================================
@@ -699,6 +711,7 @@ class ArtistBookingServiceTest {
         showDateRepository.flush();
         ShowDateSkillRequirementEntity skillReq = buildAndPersistSkillRequirement(showDate, ArtistSkill.DANCE, 1, "120.00");
         ArtistAvailabilityEntity availability = persistAvailability(showDate, artist, AvailabilityStatus.AVAILABLE);
+        doNothing().when(managerCompanyResolver).assertCurrentManagerOwnsCompany(anyLong());
         return new Context(manager, artist, company, showDate, skillReq, availability);
     }
 

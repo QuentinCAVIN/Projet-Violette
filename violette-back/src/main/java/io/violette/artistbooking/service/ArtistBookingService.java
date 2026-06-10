@@ -7,6 +7,7 @@ import io.violette.artistbooking.exception.ArtistBookingNotFoundException;
 import io.violette.artistbooking.exception.ArtistNotAvailableException;
 import io.violette.artistbooking.exception.BookingAlreadyExistsException;
 import io.violette.artistbooking.exception.BookingCapacityExceededException;
+import io.violette.artistbooking.exception.ForbiddenBookingAccessException;
 import io.violette.artistbooking.exception.InvalidBookingTransitionException;
 import io.violette.artistbooking.exception.ShowDateNotModifiableException;
 import io.violette.artistbooking.exception.SkillRequirementNotFoundException;
@@ -15,6 +16,8 @@ import io.violette.artistbooking.model.ArtistBookingEntity;
 import io.violette.artistbooking.model.BookingStatus;
 import io.violette.artistbooking.repository.ArtistBookingRepository;
 import io.violette.security.JwtPrincipalInfo;
+import io.violette.security.ManagerCompanyResolver;
+import io.violette.security.exception.ForbiddenCompanyAccessException;
 import io.violette.showdate.model.AvailabilityStatus;
 import io.violette.showdate.model.ArtistAvailabilityId;
 import io.violette.showdate.model.ShowDateEntity;
@@ -93,6 +96,9 @@ public class ArtistBookingService {
     @Inject
     Event<BookingStatusChangedEvent> bookingStatusChangedEvent;
 
+    @Inject
+    ManagerCompanyResolver managerCompanyResolver;
+
     // ------------------------------------------------------------------
     // Sélection d'un artiste (MANAGER)
     // ------------------------------------------------------------------
@@ -122,6 +128,7 @@ public class ArtistBookingService {
      * </ol>
      *
      * @throws ShowDateNotFoundException         si la date est introuvable
+     * @throws ForbiddenCompanyAccessException   si la date n'appartient pas à la compagnie du manager courant
      * @throws ShowDateNotModifiableException    si la date n'est ni {@code OPTION}, ni {@code CONFIRMED}
      * @throws UserNotFoundException             si l'artiste est introuvable
      * @throws BookingAlreadyExistsException     si un booking existe déjà pour cet artiste sur cette date
@@ -135,6 +142,8 @@ public class ArtistBookingService {
         ShowDateEntity showDate = showDateRepository
                 .findByIdOptional(request.showDateId())
                 .orElseThrow(ShowDateNotFoundException::new);
+
+        managerCompanyResolver.assertCurrentManagerOwnsCompany(showDate.getCompany().getId());
 
         validerDateBookable(showDate);
 
@@ -189,6 +198,7 @@ public class ArtistBookingService {
      * et si la date n'est pas {@code STAFFED}, {@code CANCELLED} ou {@code ARCHIVED}.
      *
      * @throws ArtistBookingNotFoundException    si le booking est introuvable
+     * @throws ForbiddenCompanyAccessException   si la date du booking n'appartient pas à la compagnie du manager courant
      * @throws ShowDateNotModifiableException    si la date est STAFFED, CANCELLED ou ARCHIVED
      * @throws InvalidBookingTransitionException si le statut n'est pas SELECTED
      */
@@ -199,6 +209,8 @@ public class ArtistBookingService {
         ArtistBookingEntity booking = artistBookingRepository
                 .findByIdOptional(bookingId)
                 .orElseThrow(ArtistBookingNotFoundException::new);
+
+        managerCompanyResolver.assertCurrentManagerOwnsCompany(booking.getShowDate().getCompany().getId());
 
         validerDateModifiable(booking.getShowDate());
 
@@ -226,8 +238,9 @@ public class ArtistBookingService {
      * Les présélections réalisées pendant la phase {@code OPTION} ne peuvent pas encore
      * être transformées en demandes fermes : attendre la confirmation client d'abord.
      *
-     * @throws ShowDateNotFoundException      si la date est introuvable
-     * @throws ShowDateNotModifiableException si la date n'est pas {@code CONFIRMED} (workflow V1)
+     * @throws ShowDateNotFoundException       si la date est introuvable
+     * @throws ForbiddenCompanyAccessException si la date n'appartient pas à la compagnie du manager courant
+     * @throws ShowDateNotModifiableException  si la date n'est pas {@code CONFIRMED} (workflow V1)
      * @return liste des bookings mis à jour
      */
     @Transactional
@@ -237,6 +250,8 @@ public class ArtistBookingService {
         ShowDateEntity showDate = showDateRepository
                 .findByIdOptional(showDateId)
                 .orElseThrow(ShowDateNotFoundException::new);
+
+        managerCompanyResolver.assertCurrentManagerOwnsCompany(showDate.getCompany().getId());
 
         validerDateConfirmee(showDate);
 
@@ -285,11 +300,11 @@ public class ArtistBookingService {
      * @param bookingId identifiant du booking
      * @param accept    {@code true} pour accepter, {@code false} pour refuser
      * @param principal principal JWT de l'artiste qui répond
-     * @throws ArtistBookingNotFoundException    si le booking est introuvable
-     * @throws ShowDateNotModifiableException    si la date est STAFFED, CANCELLED ou ARCHIVED
-     * @throws UserNotFoundException             si le principal n'a pas de profil backend
-     * @throws InvalidBookingTransitionException si le booking n'est pas en PENDING_CONFIRMATION
-     *                                           ou si l'artiste ne correspond pas
+     * @throws ArtistBookingNotFoundException      si le booking est introuvable
+     * @throws UserNotFoundException               si le principal n'a pas de profil backend
+     * @throws ForbiddenBookingAccessException     si l'artiste authentifié n'est pas le destinataire du booking
+     * @throws ShowDateNotModifiableException      si la date est STAFFED, CANCELLED ou ARCHIVED
+     * @throws InvalidBookingTransitionException   si le booking n'est pas en PENDING_CONFIRMATION
      */
     @Transactional
     public ArtistBookingDto respondToRequest(Long bookingId, boolean accept, JwtPrincipalInfo principal) {
@@ -300,17 +315,15 @@ public class ArtistBookingService {
                 .findByIdOptional(bookingId)
                 .orElseThrow(ArtistBookingNotFoundException::new);
 
-        validerDateModifiable(booking.getShowDate());
-
         VioletteUserEntity currentArtist = violetteUserRepository
                 .findByFirebaseUid(principal.firebaseUid())
                 .orElseThrow(UserNotFoundException::new);
 
         if (!booking.getArtist().getId().equals(currentArtist.getId())) {
-            throw new InvalidBookingTransitionException(
-                    "Ce booking ne vous appartient pas."
-            );
+            throw new ForbiddenBookingAccessException();
         }
+
+        validerDateModifiable(booking.getShowDate());
 
         if (booking.getStatus() != BookingStatus.PENDING_CONFIRMATION) {
             throw new InvalidBookingTransitionException(
@@ -389,12 +402,14 @@ public class ArtistBookingService {
     /**
      * Retourne tous les bookings d'une date de spectacle.
      *
-     * @throws ShowDateNotFoundException si la date est introuvable
+     * @throws ShowDateNotFoundException       si la date est introuvable
+     * @throws ForbiddenCompanyAccessException si la date n'appartient pas à la compagnie du manager courant
      */
     public List<ArtistBookingDto> getBookingsForShowDate(Long showDateId) {
         LOG.debug("Récupération des bookings pour showDateId={}", showDateId);
-        showDateRepository.findByIdOptional(showDateId)
+        ShowDateEntity showDate = showDateRepository.findByIdOptional(showDateId)
                 .orElseThrow(ShowDateNotFoundException::new);
+        managerCompanyResolver.assertCurrentManagerOwnsCompany(showDate.getCompany().getId());
         return artistBookingRepository.findByShowDateId(showDateId).stream()
                 .map(artistBookingMapper::toDto)
                 .toList();
