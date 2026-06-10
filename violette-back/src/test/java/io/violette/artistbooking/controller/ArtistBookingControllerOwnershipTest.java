@@ -40,9 +40,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 /**
- * Tests d'autorisation OWASP A01 (Broken Access Control) sur les opérations MANAGER
- * de {@link ArtistBookingController}.
- * Vérifie qu'un manager ne peut agir que sur les bookings des dates de SA compagnie.
+ * Tests d'autorisation OWASP A01 (Broken Access Control) sur {@link ArtistBookingController}.
+ * Vérifie qu'un manager ne peut agir que sur les bookings des dates de SA compagnie,
+ * et qu'un artiste ne peut répondre qu'à SES propres bookings.
  *
  * <p>Le principal JWT est simulé via {@link InjectMock} sur {@link CurrentUserContextProvider}
  * (pas de mock du resolver — la résolution compagnie est réelle).
@@ -247,7 +247,144 @@ class ArtistBookingControllerOwnershipTest {
         }
     }
 
+    // --- PATCH /api/artist-bookings/{id}/respond (ARTIST) ---
+
+    @Test
+    @TestSecurity(user = "bk-own-resp-ok", roles = {"ARTIST"})
+    @DisplayName("PATCH /artist-bookings/{id}/respond — artiste destinataire accepte → 200 CONFIRMED")
+    void respondToRequest_whenDestinationArtistAccepts_returns200() throws Exception {
+        ArtistRespondFixture fx = persistArtistRespondFixture("bk-own-resp-ok");
+        mockArtist(fx.artistOwnerFirebaseUid);
+
+        try {
+            given()
+                    .contentType("application/json")
+                    .body("{\"accept\":true}")
+                    .when().patch("/api/artist-bookings/" + fx.bookingId + "/respond")
+                    .then()
+                    .statusCode(200)
+                    .body("status", equalTo("CONFIRMED"));
+        } finally {
+            deleteArtistRespondFixture(fx);
+        }
+    }
+
+    @Test
+    @TestSecurity(user = "bk-own-resp-403", roles = {"ARTIST"})
+    @DisplayName("PATCH /artist-bookings/{id}/respond — artiste tiers tente de répondre → 403")
+    void respondToRequest_whenOtherArtistResponds_returns403AndStatusUnchanged() throws Exception {
+        ArtistRespondFixture fx = persistArtistRespondFixture("bk-own-resp-403");
+        mockArtist(fx.artistOtherFirebaseUid);
+
+        try {
+            given()
+                    .contentType("application/json")
+                    .body("{\"accept\":true}")
+                    .when().patch("/api/artist-bookings/" + fx.bookingId + "/respond")
+                    .then()
+                    .statusCode(403)
+                    .body(equalTo("Accès refusé."));
+
+            assertEquals(BookingStatus.PENDING_CONFIRMATION, getBookingStatus(fx.bookingId));
+        } finally {
+            deleteArtistRespondFixture(fx);
+        }
+    }
+
     // --- Fixtures ---
+
+    private void mockArtist(String firebaseUid) {
+        when(currentUserContextProvider.getCurrentPrincipal())
+                .thenReturn(Optional.of(new JwtPrincipalInfo(
+                        firebaseUid,
+                        firebaseUid + "@test.com",
+                        "Artiste Test"
+                )));
+    }
+
+    private BookingStatus getBookingStatus(Long bookingId) throws Exception {
+        userTransaction.begin();
+        try {
+            BookingStatus status = artistBookingRepository.findByIdOptional(bookingId)
+                    .orElseThrow()
+                    .getStatus();
+            userTransaction.commit();
+            return status;
+        } catch (Exception e) {
+            userTransaction.rollback();
+            throw e;
+        }
+    }
+
+    /**
+     * Fixture minimale : booking PENDING_CONFIRMATION destiné à artistOwner, second artiste distinct pour le cas 403.
+     */
+    private record ArtistRespondFixture(
+            Long bookingId,
+            String artistOwnerFirebaseUid,
+            String artistOtherFirebaseUid,
+            Long managerId,
+            Long companyId,
+            Long showDateId,
+            Long artistOwnerId,
+            Long artistOtherId
+    ) {
+    }
+
+    private ArtistRespondFixture persistArtistRespondFixture(String seed) throws Exception {
+        userTransaction.begin();
+        try {
+            VioletteUserEntity manager = buildManager(seed + "-mgr");
+            VioletteUserEntity artistOwner = buildArtist(seed + "-art-owner");
+            VioletteUserEntity artistOther = buildArtist(seed + "-art-other");
+            violetteUserRepository.persist(manager);
+            violetteUserRepository.persist(artistOwner);
+            violetteUserRepository.persist(artistOther);
+
+            CabaretCompanyEntity company = buildCompany("Compagnie " + seed, manager);
+            cabaretCompanyRepository.persist(company);
+
+            ShowDateEntity showDate = buildShowDate(company, LocalDate.of(2026, 9, 1), ShowDateStatus.CONFIRMED, seed);
+            showDateRepository.persist(showDate);
+
+            ArtistBookingEntity booking = buildSelectedBooking(showDate, artistOwner);
+            booking.setStatus(BookingStatus.PENDING_CONFIRMATION);
+            artistBookingRepository.persist(booking);
+
+            showDateRepository.flush();
+
+            userTransaction.commit();
+            return new ArtistRespondFixture(
+                    booking.getId(),
+                    artistOwner.getFirebaseUid(),
+                    artistOther.getFirebaseUid(),
+                    manager.getId(),
+                    company.getId(),
+                    showDate.getId(),
+                    artistOwner.getId(),
+                    artistOther.getId()
+            );
+        } catch (Exception e) {
+            userTransaction.rollback();
+            throw e;
+        }
+    }
+
+    private void deleteArtistRespondFixture(ArtistRespondFixture fx) throws Exception {
+        userTransaction.begin();
+        try {
+            artistBookingRepository.findByIdOptional(fx.bookingId).ifPresent(artistBookingRepository::delete);
+            showDateRepository.findByIdOptional(fx.showDateId).ifPresent(showDateRepository::delete);
+            cabaretCompanyRepository.findByIdOptional(fx.companyId).ifPresent(cabaretCompanyRepository::delete);
+            violetteUserRepository.findByIdOptional(fx.managerId).ifPresent(violetteUserRepository::delete);
+            violetteUserRepository.findByIdOptional(fx.artistOwnerId).ifPresent(violetteUserRepository::delete);
+            violetteUserRepository.findByIdOptional(fx.artistOtherId).ifPresent(violetteUserRepository::delete);
+            userTransaction.commit();
+        } catch (Exception e) {
+            userTransaction.rollback();
+            throw e;
+        }
+    }
 
     private void mockManagerA(BookingOwnershipFixture fx) {
         when(currentUserContextProvider.getCurrentPrincipal())

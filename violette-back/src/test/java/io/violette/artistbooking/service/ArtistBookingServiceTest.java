@@ -8,6 +8,7 @@ import io.violette.artistbooking.exception.ArtistBookingNotFoundException;
 import io.violette.artistbooking.exception.ArtistNotAvailableException;
 import io.violette.artistbooking.exception.BookingAlreadyExistsException;
 import io.violette.artistbooking.exception.BookingCapacityExceededException;
+import io.violette.artistbooking.exception.ForbiddenBookingAccessException;
 import io.violette.artistbooking.exception.InvalidBookingTransitionException;
 import io.violette.artistbooking.exception.ShowDateNotModifiableException;
 import io.violette.artistbooking.exception.SkillRequirementNotFoundException;
@@ -593,8 +594,8 @@ class ArtistBookingServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("respondToRequest — échoue si le demandeur n'est pas le propriétaire du booking")
-    void respondToRequest_whenCallerIsNotOwner_throwsInvalidBookingTransitionException() {
+    @DisplayName("respondToRequest — échoue si le demandeur n'est pas le propriétaire du booking (403, anciennement 409)")
+    void respondToRequest_whenCallerIsNotOwner_throwsForbiddenBookingAccessException() {
         Context ctx = buildContext("svc-resp-5");
         ArtistBookingEntity booking = persistBookingDirectly(ctx, BookingStatus.PENDING_CONFIRMATION);
 
@@ -602,8 +603,11 @@ class ArtistBookingServiceTest {
         VioletteUserEntity otherArtist = buildAndPersistUser("svc-resp-5-other", "svc-resp-5-other@test.com", Set.of(UserRole.ARTIST));
         JwtPrincipalInfo wrongPrincipal = new JwtPrincipalInfo(otherArtist.getFirebaseUid(), otherArtist.getEmail(), "");
 
-        assertThrows(InvalidBookingTransitionException.class,
+        assertThrows(ForbiddenBookingAccessException.class,
                 () -> artistBookingService.respondToRequest(booking.getId(), true, wrongPrincipal));
+
+        assertEquals(BookingStatus.PENDING_CONFIRMATION,
+                bookingRepository.findByIdOptional(booking.getId()).orElseThrow().getStatus());
     }
 
     // ==================================================================

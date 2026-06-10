@@ -7,6 +7,7 @@ import io.violette.artistbooking.exception.ArtistBookingNotFoundException;
 import io.violette.artistbooking.exception.ArtistNotAvailableException;
 import io.violette.artistbooking.exception.BookingAlreadyExistsException;
 import io.violette.artistbooking.exception.BookingCapacityExceededException;
+import io.violette.artistbooking.exception.ForbiddenBookingAccessException;
 import io.violette.artistbooking.exception.InvalidBookingTransitionException;
 import io.violette.artistbooking.exception.ShowDateNotModifiableException;
 import io.violette.artistbooking.exception.SkillRequirementNotFoundException;
@@ -299,11 +300,11 @@ public class ArtistBookingService {
      * @param bookingId identifiant du booking
      * @param accept    {@code true} pour accepter, {@code false} pour refuser
      * @param principal principal JWT de l'artiste qui répond
-     * @throws ArtistBookingNotFoundException    si le booking est introuvable
-     * @throws ShowDateNotModifiableException    si la date est STAFFED, CANCELLED ou ARCHIVED
-     * @throws UserNotFoundException             si le principal n'a pas de profil backend
-     * @throws InvalidBookingTransitionException si le booking n'est pas en PENDING_CONFIRMATION
-     *                                           ou si l'artiste ne correspond pas
+     * @throws ArtistBookingNotFoundException      si le booking est introuvable
+     * @throws UserNotFoundException               si le principal n'a pas de profil backend
+     * @throws ForbiddenBookingAccessException     si l'artiste authentifié n'est pas le destinataire du booking
+     * @throws ShowDateNotModifiableException      si la date est STAFFED, CANCELLED ou ARCHIVED
+     * @throws InvalidBookingTransitionException   si le booking n'est pas en PENDING_CONFIRMATION
      */
     @Transactional
     public ArtistBookingDto respondToRequest(Long bookingId, boolean accept, JwtPrincipalInfo principal) {
@@ -314,17 +315,15 @@ public class ArtistBookingService {
                 .findByIdOptional(bookingId)
                 .orElseThrow(ArtistBookingNotFoundException::new);
 
-        validerDateModifiable(booking.getShowDate());
-
         VioletteUserEntity currentArtist = violetteUserRepository
                 .findByFirebaseUid(principal.firebaseUid())
                 .orElseThrow(UserNotFoundException::new);
 
         if (!booking.getArtist().getId().equals(currentArtist.getId())) {
-            throw new InvalidBookingTransitionException(
-                    "Ce booking ne vous appartient pas."
-            );
+            throw new ForbiddenBookingAccessException();
         }
+
+        validerDateModifiable(booking.getShowDate());
 
         if (booking.getStatus() != BookingStatus.PENDING_CONFIRMATION) {
             throw new InvalidBookingTransitionException(
