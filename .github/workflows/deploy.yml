@@ -94,7 +94,7 @@ jobs:
 
       # Fly.io utilise linux/amd64 → pas besoin de QEMU ni de multi-arch.
       - name: Build and push image (linux/amd64)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: violette-back
           file:    violette-back/src/main/docker/Dockerfile.jvm
