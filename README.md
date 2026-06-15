@@ -112,6 +112,8 @@ La documentation technique backend reste détaillée dans le README du backend :
 | **Guide de déploiement** | Fly.io, Aiven MySQL, pipeline CI/CD, secrets GitHub, checklist soutenance | [README-deploiement.md](README-deploiement.md) |
 | **Migration domaine user** | Setup OpenAPI Generator, client Dart généré, flux REST user, adb reverse, dette résiduelle | [docs/migration-domaine-user.md](docs/migration-domaine-user.md) |
 | **Stratégie de tests** | Tests frontend/backend, profils Quarkus, règles de migration REST | [docs/testing-strategy.md](docs/testing-strategy.md) |
+| **Sécurité (OWASP Top 10)** | Couverture des 10 failles OWASP : mesures, preuves, limites assumées | [docs/securite-owasp.md](docs/securite-owasp.md) |
+| **Accessibilité** | Référentiel WCAG 2.2 AA : choix, justification, périmètre et trajectoire | [docs/accessibilite.md](docs/accessibilite.md) |
 | **Préparation v0.4.0** | Checklist documentaire, tests, tag, Swagger et APK | [docs/release-v0.4.0.md](docs/release-v0.4.0.md) |
 | **Dette technique** | Limites assumées v0.4.0 et évolutions futures | [docs/technical-debt.md](docs/technical-debt.md) |
 | **Changelog** | Historique des versions | [CHANGELOG.md](CHANGELOG.md) |
