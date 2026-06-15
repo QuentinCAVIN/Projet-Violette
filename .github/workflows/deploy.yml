@@ -90,7 +90,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       # Fly.io utilise linux/amd64 → pas besoin de QEMU ni de multi-arch.
       - name: Build and push image (linux/amd64)
