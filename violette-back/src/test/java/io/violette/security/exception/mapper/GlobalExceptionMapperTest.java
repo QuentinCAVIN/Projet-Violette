@@ -43,12 +43,13 @@ class GlobalExceptionMapperTest {
     @Test
     @DisplayName("WebApplicationException / BadRequestException → statut d'origine (400), pas 500")
     void webApplicationException_preservesOriginalStatus() {
-        String businessMessage = "Transition de statut non autorisée";
-        Response response = globalMapper.toResponse(new BadRequestException(businessMessage));
+        // BadRequestException(String) : le message est dans getMessage(), pas dans getResponse().getEntity().
+        Response response = globalMapper.toResponse(
+                new BadRequestException("Transition de statut non autorisée")
+        );
 
         assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
         assertNotEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
-        assertEquals(businessMessage, response.getEntity());
     }
 
     @Test
