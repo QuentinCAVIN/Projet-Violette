@@ -1,0 +1,35 @@
+version: 2
+
+updates:
+  # Backend Java/Maven
+  - package-ecosystem: "maven"
+    directory: "/violette-back"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "security"
+    commit-message:
+      prefix: "chore(deps)"
+
+  # Frontend Flutter/Dart (pub)
+  - package-ecosystem: "pub"
+    directory: "/violette_front"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "chore(deps-front)"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "ci(deps)"
