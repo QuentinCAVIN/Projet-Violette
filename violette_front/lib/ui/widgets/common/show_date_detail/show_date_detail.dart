@@ -18,9 +18,12 @@ class ShowDateDetail extends StatelessWidget {
   ) {
     return Column(
       children: [
-        Text(
-          showDate.title,
-          style: Theme.of(context).textTheme.headlineMedium,
+        Semantics(
+          header: true,
+          child: Text(
+            showDate.title,
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
         ),
         Card(
           child: ListTile(

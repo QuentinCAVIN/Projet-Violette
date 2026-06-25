@@ -118,6 +118,9 @@ class HomeView extends StackedView<HomeViewModel> {
                     // Bouton navigation sélection des dispos visible par les artistes uniquement
                     if (currentUser.roles.contains(Role.artist))
                       ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: const Size(double.infinity, 48),
+                        ),
                         onPressed: viewModel.navigateToAvailabilityChoiceView,
                         child: const Text(
                           'Sélection des dispos',
@@ -126,6 +129,9 @@ class HomeView extends StackedView<HomeViewModel> {
                     verticalSpaceMassive,
 
                     ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 48),
+                      ),
                       onPressed: viewModel.logOut,
                       child: const Text('Déconnexion'),
                     ),

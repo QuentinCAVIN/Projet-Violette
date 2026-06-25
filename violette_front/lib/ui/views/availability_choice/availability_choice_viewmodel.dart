@@ -275,6 +275,9 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
   /// Couleur du jour dans le calendrier (null = jour sans spectacle).
   Color? getColorForDay(DateTime day) => getStatusForDay(day)?.color;
 
+  /// Libellé de statut pour l'accessibilité du calendrier (null = jour sans spectacle).
+  String? getStatusLabelForDay(DateTime day) => getStatusForDay(day)?.label;
+
   List<ShowDate> _findShowDatesForDay(DateTime day) {
     return showDates
         .where((showDate) => isSameDay(showDate.date, day))

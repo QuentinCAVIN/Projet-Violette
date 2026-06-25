@@ -24,6 +24,7 @@ class AvailabilityChoiceView extends StackedView<AvailabilityChoiceViewModel> {
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
+            tooltip: 'Retour',
             onPressed: () async => viewModel.onBackPressed(),
           ),
           title: const Text('Sélection des dates'),
@@ -41,6 +42,7 @@ class AvailabilityChoiceView extends StackedView<AvailabilityChoiceViewModel> {
                   onDaySelected: viewModel.onDaySelected,
                   onPageChanged: viewModel.onPageChange,
                   dayColorBuilder: viewModel.getColorForDay,
+                  dayStatusLabelBuilder: viewModel.getStatusLabelForDay,
                 ),
                 if (viewModel.selectedShowDates.isNotEmpty) ...[
                   for (final sd in viewModel.selectedShowDates) ...[
@@ -65,6 +67,9 @@ class AvailabilityChoiceView extends StackedView<AvailabilityChoiceViewModel> {
                         child: SizedBox(
                           width: double.infinity,
                           child: OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size(0, 48),
+                            ),
                             onPressed: viewModel.isBusy ||
                                     viewModel.isShowDateConfirmedByBooking(sd.id)
                                 ? null
@@ -83,6 +88,9 @@ class AvailabilityChoiceView extends StackedView<AvailabilityChoiceViewModel> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(0, 48),
+                    ),
                     onPressed: () async {
                       await viewModel.onValidatePressed();
                     },
