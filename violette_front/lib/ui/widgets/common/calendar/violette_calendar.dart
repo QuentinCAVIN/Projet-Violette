@@ -32,6 +32,7 @@ class VioletteCalendar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TableCalendar(
+      locale: 'fr_FR',
       firstDay: DateTime.utc(2010, 10, 16),
       lastDay: DateTime.utc(2030, 3, 14),
       focusedDay: focusedDay,
