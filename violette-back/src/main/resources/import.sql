@@ -19,15 +19,15 @@
 -- --------------------------------------------------------------
 
 INSERT INTO violette_user (id, firebase_uid, email, first_name, last_name, created_at, updated_at)
-VALUES (1, 'REMPLACER_PAR_UID_MANAGER', 'manager@violette.test', 'Marie', 'Gérant',
+VALUES (1, 'cDxLGCKnwQWU95sWoLCbiPWRE8w2', 'manager@violette.test', 'Marie', 'Gérant',
         TIMESTAMP '2026-01-15 12:00:00', TIMESTAMP '2026-01-15 12:00:00');
 
 INSERT INTO violette_user (id, firebase_uid, email, first_name, last_name, created_at, updated_at)
-VALUES (2, 'REMPLACER_PAR_UID_ARTISTE_1', 'artiste1@violette.test', 'Léa', 'Danse',
+VALUES (2, 'L68NTv5I6gSUVSZ1Qo7JF2pK9IC3', 'artiste1@violette.test', 'Léa', 'Danse',
         TIMESTAMP '2026-01-15 12:00:00', TIMESTAMP '2026-01-15 12:00:00');
 
 INSERT INTO violette_user (id, firebase_uid, email, first_name, last_name, created_at, updated_at)
-VALUES (3, 'REMPLACER_PAR_UID_ARTISTE_2', 'artiste2@violette.test', 'Hugo', 'Chant',
+VALUES (3, 'DFj8kBDMt5TUGz0HdvQqHC9zYCP2', 'artiste2@violette.test', 'Hugo', 'Chant',
         TIMESTAMP '2026-01-15 12:00:00', TIMESTAMP '2026-01-15 12:00:00');
 
 -- --------------------------------------------------------------
@@ -129,11 +129,3 @@ VALUES (1, 3, 'UNAVAILABLE', TIMESTAMP '2026-01-15 12:00:00');
 
 INSERT INTO artist_availability (show_date_id, artist_id, status, updated_at)
 VALUES (4, 3, 'AVAILABLE', TIMESTAMP '2026-01-15 12:00:00');
-
--- --------------------------------------------------------------
--- Réalignement des identifiants auto-générés (H2 IDENTITY)
--- --------------------------------------------------------------
-
-ALTER TABLE violette_user ALTER COLUMN id RESTART WITH 4;
-ALTER TABLE cabaret_company ALTER COLUMN id RESTART WITH 2;
-ALTER TABLE show_date ALTER COLUMN id RESTART WITH 5;
