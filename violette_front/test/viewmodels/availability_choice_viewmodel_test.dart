@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dio/dio.dart';
 import 'package:violette_front/app/app.locator.dart';
@@ -14,6 +16,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../helpers/test_helpers.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('AvailabilityChoiceViewModel Tests -', () {
     setUp(() => registerServices());
     tearDown(() => locator.reset());

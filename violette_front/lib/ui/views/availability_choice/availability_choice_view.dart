@@ -27,7 +27,10 @@ class AvailabilityChoiceView extends StackedView<AvailabilityChoiceViewModel> {
             tooltip: 'Retour',
             onPressed: () async => viewModel.onBackPressed(),
           ),
-          title: const Text('Sélection des dates'),
+          title: Semantics(
+            header: true,
+            child: const Text('Sélection des dates'),
+          ),
         ),
         backgroundColor: Theme.of(context).colorScheme.surface,
         body: SingleChildScrollView(
