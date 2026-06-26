@@ -6,6 +6,53 @@ La release `v0.4.0` stabilise la sortie du code métier frontend de Firestore : 
 
 ---
 
+<a id="demarrage-rapide"></a>
+## Démarrage rapide (développement local)
+
+> Environnement local : base H2 en mémoire (aucun MySQL requis), authentification Firebase,
+> jeu de données de test préchargé automatiquement au démarrage.
+
+Prérequis : Java 21, Maven, Flutter, un téléphone Android (USB avec débogage activé) ou un émulateur.
+
+### 1. Backend (Quarkus + H2 + seed)
+
+Depuis `violette-back/` :
+
+```powershell
+$env:FIREBASE_PROJECT_ID="violette-1f64e"
+mvn quarkus:dev "-Dquarkus.profile=firebase"
+```
+
+Le backend démarre sur http://localhost:8080. Au lancement, il crée le schéma H2 et charge
+automatiquement le jeu de données de test (1 gérant, 2 artistes, 4 dates de spectacle).
+
+Vérification : `curl http://localhost:8080/api/ping`.
+
+### 2. Frontend (Flutter)
+
+Depuis `violette_front/`, téléphone Android branché en USB :
+
+```powershell
+adb reverse tcp:8080 tcp:8080
+flutter run
+```
+
+<a id="comptes-de-test"></a>
+## Comptes de test (développement local uniquement)
+
+> Ces comptes existent uniquement sur l'environnement de développement local (base H2 jetable,
+> projet Firebase de test). Ils n'ont aucune validité en production. Les mots de passe simples
+> ci-dessous sont destinés au confort de test local et ne reflètent pas la politique de sécurité
+> appliquée en production.
+
+| Rôle | Email | Mot de passe | Données associées |
+|------|-------|--------------|-------------------|
+| Gérant | manager@violette.test | 123456 | Compagnie « Dream's Production », 4 dates de novembre 2026 |
+| Artiste (danse) | artiste1@violette.test | 123456 | Membre de la compagnie, disponibilités préremplies |
+| Artiste (chant) | artiste2@violette.test | 123456 | Membre de la compagnie, disponibilités préremplies |
+
+---
+
 ## Accès rapide
 
 > L’application est actuellement disponible uniquement sur Android.
@@ -13,6 +60,8 @@ La release `v0.4.0` stabilise la sortie du code métier frontend de Firestore : 
     
   - **Téléchargement le plus simple** (dernière version) : cliquez ici pour le [téléchargement direct (fichier d'installation)](#telechargement-direct-derniere-version).
   - **Guide complet pas à pas** : lisez [Installer l'application sur votre téléphone Android](#install-violette-android-telephone).
+- **Démarrer en local rapidement** : voir le [démarrage rapide (développement local)](#demarrage-rapide).
+- **Comptes de test local** : voir les [comptes de test](#comptes-de-test).
 - **Comprendre les fonctionnalités** : voir le [manuel utilisateur](docs/user-manual.md).
 - **Voir toutes les versions mises en ligne** : page des versions Violette sur le site [GitHub](https://github.com/QuentinCAVIN/Projet-Violette/releases) (le plus haut = le plus récent).
 - **Développer ou tester le projet** : voir le [lancement rapide développeur](#lancement-rapide).

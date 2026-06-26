@@ -1,7 +1,7 @@
 # Choix et justification du référentiel d'accessibilité
 
 > Projet Violette — Bloc 2 (conception et développement)
-> Statut : décision de cadrage. L'implémentation des critères est un chantier identifié (voir § Périmètre et trajectoire).
+> Statut : référentiel choisi, justifié, et appliqué/testé sur le parcours artiste (voir § 3 et § 4).
 
 ## 1. Décision
 
@@ -44,7 +44,16 @@ Référentiel : **WCAG 2.2 AA**, appliqué via les API d'accessibilité de Flutt
 - **Compréhensible** : libellés de formulaires explicites, messages d'erreur clairs (cohérent avec les retours d'erreur déjà structurés côté backend), langue de l'interface déclarée.
 - **Robuste** : exposition correcte des rôles/états des composants à la couche d'accessibilité du système.
 
-> **État d'implémentation** : à ce stade, le référentiel est choisi et justifié ; l'implémentation et l'audit des critères constituent un chantier identifié (axe d'amélioration documenté). Le présent livrable répond à l'attendu « choix et justification du référentiel ».
+> **État d'implémentation.** Le référentiel n'est pas seulement choisi : un parcours principal — la déclaration de disponibilité par l'artiste (Accueil → Sélection des dates → calendrier → détail) — a été rendu accessible et testé au lecteur d'écran (voir § 4). Les critères WCAG 2.2 AA suivants sont implémentés sur ce parcours :
+>
+> - **1.1.1 / 1.4.1 (information non portée par la seule couleur)** : le statut de disponibilité, auparavant transmis uniquement par la couleur des cellules, est désormais exposé en texte au lecteur d'écran via la carte de détail (annonce automatique du statut à la sélection d'une date).
+> - **1.4.3 (contraste)** : les couleurs de statut ont été ajustées pour atteindre le ratio AA de 4,5:1 sur texte (available #2E7D32, ifNeeded #E65100, unavailable #C62828, pending #616161).
+> - **2.5.5 (taille des cibles tactiles)** : cibles d'au moins 48 dp sur les actions du parcours.
+> - **1.3.1 (structure)** : titres d'écran exposés comme en-têtes (Semantics header).
+> - **3.1.1 (langue)** : interface déclarée en français (locale fr_FR au niveau application et du composant calendrier), pour une restitution correcte par le lecteur d'écran.
+> - **4.1.3 (messages d'état)** : les confirmations et erreurs (enregistrement de disponibilité) sont annoncées au lecteur d'écran.
+>
+> Le périmètre couvre le parcours artiste ; l'extension des mêmes pratiques aux écrans gérant est un axe d'amélioration identifié.
 
 ### Demain — front web (fin lot 1)
 
@@ -54,7 +63,33 @@ Lorsque la version web Flutter sera déployée :
 - Le **RGAA** deviendra pertinent si une obligation légale s'applique, ou comme cadre de test web structuré.
 - La **cohérence est garantie** : les trois référentiels partagent le socle WCAG, donc viser WCAG 2.2 AA aujourd'hui pose les fondations réutilisables pour Opquast et RGAA demain, sans retravail du socle.
 
-## 4. Références
+## 4. Test au lecteur d'écran (TalkBack)
+
+Le parcours artiste de déclaration de disponibilité a été testé manuellement avec **TalkBack** (lecteur d'écran Android), sur appareil physique, avec un jeu de données réel (un artiste membre d'une compagnie, dates de spectacle préremplies).
+
+### Méthode
+
+Navigation linéaire (balayage) sur l'ensemble du parcours : écran d'accueil, navigation vers la sélection des dates, calendrier, sélection d'une date, consultation du détail, enregistrement d'une disponibilité. Pour chaque élément, vérification de ce que le lecteur d'écran annonce réellement.
+
+### Écarts détectés au premier passage et corrections apportées
+
+| Élément | Écart constaté | Correction |
+|---|---|---|
+| Interface générale | Libellés français lus avec une voix anglaise (langue non déclarée) | Déclaration de la locale fr_FR (MaterialApp + flutter_localizations) |
+| Calendrier (jours, mois) | Affichage et lecture en anglais | Passage de la locale fr_FR au composant TableCalendar |
+| Cellules de calendrier | Statut de disponibilité non annoncé (date seule) | Statut exposé via la carte de détail en région active (liveRegion), annoncé automatiquement à la sélection |
+| Confirmation d'action | Messages (« Disponibilités enregistrées ») non lus | Annonce explicite au lecteur d'écran à chaque message |
+| Titres d'écran | Titre lu mais non identifié comme en-tête | Exposition en en-tête sémantique (Semantics header) |
+
+### Résultat après corrections
+
+Au second passage TalkBack, le parcours est restitué en français, le statut de chaque date est annoncé à la sélection, les messages de confirmation sont lus, et les titres sont navigables comme en-têtes. Le statut de disponibilité est perceptible sans recours à la couleur.
+
+### Limite assumée — composant calendrier tiers
+
+Le calendrier s'appuie sur le composant tiers **table_calendar**, qui impose son propre libellé d'accessibilité sur les cellules (date seule) et empêche d'y annoncer directement le statut. Le statut est donc rendu accessible via la carte de détail (région active annoncée à la sélection), ce qui satisfait l'exigence de fond (information non portée par la seule couleur). L'annonce du statut directement sur la cellule du calendrier nécessiterait un composant exposant ce point ; elle est identifiée comme axe d'amélioration.
+
+## 5. Références
 
 - W3C — Web Content Accessibility Guidelines (WCAG) 2.2 : https://www.w3.org/TR/WCAG22/
 - W3C WAI — Nouveautés de WCAG 2.2 : https://www.w3.org/WAI/standards-guidelines/wcag/new-in-22/

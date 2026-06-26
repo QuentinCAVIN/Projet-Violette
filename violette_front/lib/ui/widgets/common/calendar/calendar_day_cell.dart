@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class CalendarDayCell extends StatelessWidget {
   final DateTime day;
   final Color? color;
+  final String? statusLabel;
   final bool isSelected;
   final bool isToday;
 
@@ -10,17 +12,33 @@ class CalendarDayCell extends StatelessWidget {
     super.key,
     required this.day,
     this.color,
+    this.statusLabel,
     this.isSelected = false,
     this.isToday = false,
   });
 
+  String get _formattedDate =>
+      DateFormat('d MMMM y', 'fr_FR').format(day);
+
+  String get _semanticsLabel {
+    if (statusLabel != null && statusLabel!.isNotEmpty) {
+      return '$_formattedDate, $statusLabel';
+    }
+    return _formattedDate;
+  }
+
   @override
   Widget build(BuildContext context) {
     if (color == null && !isSelected && !isToday) {
-      return Center(
-        child: Text(
-          '${day.day}',
-          style: Theme.of(context).textTheme.bodyMedium,
+      return Semantics(
+        label: _semanticsLabel,
+        child: ExcludeSemantics(
+          child: Center(
+            child: Text(
+              '${day.day}',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
         ),
       );
     }
@@ -63,13 +81,18 @@ class CalendarDayCell extends StatelessWidget {
       );
     }
 
-    return Container(
-      margin: const EdgeInsets.all(4),
-      decoration: decoration,
-      child: Center(
-        child: Text(
-          '${day.day}',
-          style: textStyle,
+    return Semantics(
+      label: _semanticsLabel,
+      child: ExcludeSemantics(
+        child: Container(
+          margin: const EdgeInsets.all(4),
+          decoration: decoration,
+          child: Center(
+            child: Text(
+              '${day.day}',
+              style: textStyle,
+            ),
+          ),
         ),
       ),
     );

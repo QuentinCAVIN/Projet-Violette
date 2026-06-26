@@ -24,13 +24,13 @@ extension AvailabilityStatusX on AvailabilityStatus {
   Color get color {
     switch (this) {
       case AvailabilityStatus.available:
-        return Colors.green;
+        return const Color(0xFF2E7D32);
       case AvailabilityStatus.ifNeeded:
-        return Colors.orange;
+        return const Color(0xFFE65100);
       case AvailabilityStatus.unavailable:
-        return Colors.red;
+        return const Color(0xFFC62828);
       case AvailabilityStatus.pending:
-        return Colors.grey;
+        return const Color(0xFF616161);
     }
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:stacked/stacked.dart';
 import 'package:dio/dio.dart';
 import 'package:stacked_firebase_auth/stacked_firebase_auth.dart';
@@ -73,9 +74,8 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
         _myAvailabilityByShowDateId[showDateId] = availability.status;
       } on DioException catch (e) {
         if (e.response?.statusCode == 403) {
-          _snackbarService.showSnackbar(
+          _showAccessibleSnackbar(
             message: 'Accès refusé pour charger votre disponibilité.',
-            duration: const Duration(seconds: 3),
           );
         }
       } catch (_) {
@@ -132,10 +132,9 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
 
     // 2e tap sur le même jour : cycle de disponibilité (une seule date ce jour).
     if (pickedDates.length > 1) {
-      _snackbarService.showSnackbar(
+      _showAccessibleSnackbar(
         message:
             'Plusieurs spectacles ce jour : utilise le bouton sous chaque fiche.',
-        duration: const Duration(seconds: 3),
       );
       rebuildUi();
       return;
@@ -153,10 +152,7 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
     if (id.isEmpty || _authenticationService.currentUser == null) return;
 
     if (isShowDateConfirmedByBooking(id)) {
-      _snackbarService.showSnackbar(
-        message: confirmedBookingLockMessage,
-        duration: const Duration(seconds: 3),
-      );
+      _showAccessibleSnackbar(message: confirmedBookingLockMessage);
       return;
     }
 
@@ -175,9 +171,8 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
 
       _myAvailabilityByShowDateId[id] = nextStatus;
     } catch (_) {
-      _snackbarService.showSnackbar(
+      _showAccessibleSnackbar(
         message: "Impossible d'enregistrer la disponibilité.",
-        duration: const Duration(seconds: 3),
       );
     }
 
@@ -201,10 +196,7 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
 
   Future<void> onValidatePressed() async {
     _navigationService.replaceWithHomeView();
-    _snackbarService.showSnackbar(
-      message: "Disponibilités enregistrées.",
-      duration: const Duration(seconds: 3),
-    );
+    _showAccessibleSnackbar(message: 'Disponibilités enregistrées.');
   }
 
   Future<void> onBackPressed() async {
@@ -215,6 +207,24 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
 //****************************************************************************//
 //HELPERS                                                                     //
 //****************************************************************************//
+
+  void _showAccessibleSnackbar({
+    required String message,
+    Duration duration = const Duration(seconds: 3),
+  }) {
+    _snackbarService.showSnackbar(message: message, duration: duration);
+    _announceToScreenReader(message);
+  }
+
+  void _announceToScreenReader(String message) {
+    try {
+      final views = WidgetsBinding.instance.platformDispatcher.views;
+      if (views.isEmpty) return;
+      SemanticsService.sendAnnouncement(views.first, message, TextDirection.ltr);
+    } on Object {
+      // Hors contexte Flutter (ex. tests unitaires sans vue active).
+    }
+  }
 
   /// Statut de disponibilité pour une date (identifiant backend).
   AvailabilityStatus? getStatusForShowDateId(String showDateId) {
@@ -274,6 +284,9 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
 
   /// Couleur du jour dans le calendrier (null = jour sans spectacle).
   Color? getColorForDay(DateTime day) => getStatusForDay(day)?.color;
+
+  /// Libellé de statut pour l'accessibilité du calendrier (null = jour sans spectacle).
+  String? getStatusLabelForDay(DateTime day) => getStatusForDay(day)?.label;
 
   List<ShowDate> _findShowDatesForDay(DateTime day) {
     return showDates

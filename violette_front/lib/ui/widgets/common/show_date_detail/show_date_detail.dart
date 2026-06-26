@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:violette_front/models/enums/availability_status.dart';
 import '../../../../models/show_date.dart';
 
@@ -12,19 +13,34 @@ class ShowDateDetail extends StatelessWidget {
     required this.status,
   });
 
+  String get _statusAccessibilityLabel {
+    final formattedDate =
+        DateFormat('d MMMM y', 'fr_FR').format(showDate.date);
+    return '$formattedDate, ${status.label}';
+  }
+
   @override
   Widget build(
     BuildContext context,
   ) {
     return Column(
       children: [
-        Text(
-          showDate.title,
-          style: Theme.of(context).textTheme.headlineMedium,
+        Semantics(
+          header: true,
+          child: Text(
+            showDate.title,
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
         ),
-        Card(
-          child: ListTile(
-            title: Text("Disponibilité : ${status.label}"),
+        Semantics(
+          liveRegion: true,
+          label: _statusAccessibilityLabel,
+          child: ExcludeSemantics(
+            child: Card(
+              child: ListTile(
+                title: Text("Disponibilité : ${status.label}"),
+              ),
+            ),
           ),
         ),
         Card(

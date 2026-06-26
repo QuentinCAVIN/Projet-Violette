@@ -14,6 +14,9 @@ class VioletteCalendar extends StatelessWidget {
   /// Si null est retourné, le jour s'affiche normalement.
   final Color? Function(DateTime)? dayColorBuilder;
 
+  /// Libellé verbalisé du statut du jour (ex: disponibilité) pour l'accessibilité.
+  final String? Function(DateTime)? dayStatusLabelBuilder;
+
   const VioletteCalendar({
     super.key,
     required this.focusedDay,
@@ -23,11 +26,13 @@ class VioletteCalendar extends StatelessWidget {
     required this.onDaySelected,
     required this.onPageChanged,
     this.dayColorBuilder,
+    this.dayStatusLabelBuilder,
   });
 
   @override
   Widget build(BuildContext context) {
     return TableCalendar(
+      locale: 'fr_FR',
       firstDay: DateTime.utc(2010, 10, 16),
       lastDay: DateTime.utc(2030, 3, 14),
       focusedDay: focusedDay,
@@ -45,6 +50,7 @@ class VioletteCalendar extends StatelessWidget {
           return CalendarDayCell(
             day: day,
             color: dayColorBuilder?.call(day),
+            statusLabel: dayStatusLabelBuilder?.call(day),
           );
         },
         // Builder jour sélectionné
@@ -52,6 +58,7 @@ class VioletteCalendar extends StatelessWidget {
           return CalendarDayCell(
             day: day,
             color: dayColorBuilder?.call(day),
+            statusLabel: dayStatusLabelBuilder?.call(day),
             isSelected: true,
           );
         },
@@ -60,6 +67,7 @@ class VioletteCalendar extends StatelessWidget {
           return CalendarDayCell(
             day: day,
             color: dayColorBuilder?.call(day),
+            statusLabel: dayStatusLabelBuilder?.call(day),
             isToday: true,
           );
         },
@@ -70,6 +78,7 @@ class VioletteCalendar extends StatelessWidget {
             child: CalendarDayCell(
               day: day,
               color: dayColorBuilder?.call(day),
+              statusLabel: dayStatusLabelBuilder?.call(day),
             ),
           );
         },

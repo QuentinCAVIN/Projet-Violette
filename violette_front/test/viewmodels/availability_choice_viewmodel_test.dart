@@ -14,6 +14,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../helpers/test_helpers.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('AvailabilityChoiceViewModel Tests -', () {
     setUp(() => registerServices());
     tearDown(() => locator.reset());
