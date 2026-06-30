@@ -19,6 +19,7 @@ import io.violette.cabaretcompany.model.CabaretCompanyEntity;
 import io.violette.cabaretcompany.repository.CabaretCompanyRepository;
 import io.violette.security.JwtPrincipalInfo;
 import io.violette.security.ManagerCompanyResolver;
+import io.violette.security.exception.ForbiddenCompanyAccessException;
 import io.violette.showdate.model.ArtistAvailabilityEntity;
 import io.violette.showdate.model.ArtistAvailabilityId;
 import io.violette.showdate.model.AvailabilityStatus;
@@ -51,6 +52,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 
 @QuarkusTest
 class ArtistBookingServiceTest {
@@ -399,6 +401,167 @@ class ArtistBookingServiceTest {
     void deleteBooking_whenNotFound_throwsArtistBookingNotFoundException() {
         assertThrows(ArtistBookingNotFoundException.class,
                 () -> artistBookingService.deleteBooking(99999L));
+    }
+
+    // ==================================================================
+    // cancelBooking
+    // ==================================================================
+
+    @Test
+    @Transactional
+    @DisplayName("cancelBooking — annule un booking CONFIRMED (date CONFIRMED)")
+    void cancelBooking_whenConfirmed_transitionsToCancelled() {
+        Context ctx = buildContext("svc-cancel-1");
+        ArtistBookingEntity booking = persistBookingDirectly(ctx, BookingStatus.CONFIRMED);
+
+        ArtistBookingDto dto = artistBookingService.cancelBooking(booking.getId());
+
+        assertAll(
+                () -> assertEquals(BookingStatus.CANCELLED, dto.status()),
+                () -> assertEquals(BookingStatus.CANCELLED,
+                        bookingRepository.findByIdOptional(booking.getId()).orElseThrow().getStatus())
+        );
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("cancelBooking — annule un booking PENDING_CONFIRMATION")
+    void cancelBooking_whenPendingConfirmation_transitionsToCancelled() {
+        Context ctx = buildContext("svc-cancel-2");
+        ArtistBookingEntity booking = persistBookingDirectly(ctx, BookingStatus.PENDING_CONFIRMATION);
+
+        ArtistBookingDto dto = artistBookingService.cancelBooking(booking.getId());
+
+        assertAll(
+                () -> assertEquals(BookingStatus.CANCELLED, dto.status()),
+                () -> assertEquals(BookingStatus.CANCELLED,
+                        bookingRepository.findByIdOptional(booking.getId()).orElseThrow().getStatus())
+        );
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("cancelBooking — échoue si le statut est SELECTED (désélection via deleteBooking)")
+    void cancelBooking_whenSelected_throwsInvalidBookingTransitionException() {
+        Context ctx = buildContext("svc-cancel-3");
+        ArtistBookingEntity booking = persistBookingDirectly(ctx, BookingStatus.SELECTED);
+
+        assertThrows(InvalidBookingTransitionException.class,
+                () -> artistBookingService.cancelBooking(booking.getId()));
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("cancelBooking — échoue si le statut est REFUSED")
+    void cancelBooking_whenRefused_throwsInvalidBookingTransitionException() {
+        Context ctx = buildContext("svc-cancel-4");
+        ArtistBookingEntity booking = persistBookingDirectly(ctx, BookingStatus.REFUSED);
+
+        assertThrows(InvalidBookingTransitionException.class,
+                () -> artistBookingService.cancelBooking(booking.getId()));
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("cancelBooking — échoue si le booking est déjà CANCELLED")
+    void cancelBooking_whenAlreadyCancelled_throwsInvalidBookingTransitionException() {
+        Context ctx = buildContext("svc-cancel-5");
+        ArtistBookingEntity booking = persistBookingDirectly(ctx, BookingStatus.CANCELLED);
+
+        assertThrows(InvalidBookingTransitionException.class,
+                () -> artistBookingService.cancelBooking(booking.getId()));
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("cancelBooking — échoue si le booking n'existe pas")
+    void cancelBooking_whenNotFound_throwsArtistBookingNotFoundException() {
+        assertThrows(ArtistBookingNotFoundException.class,
+                () -> artistBookingService.cancelBooking(99999L));
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("cancelBooking — échoue si la date est CANCELLED")
+    void cancelBooking_whenShowDateCancelled_throwsShowDateNotModifiableException() {
+        Context ctx = buildContext("svc-cancel-6");
+        ArtistBookingEntity booking = persistBookingDirectly(ctx, BookingStatus.CONFIRMED);
+        ctx.showDate.setStatus(ShowDateStatus.CANCELLED);
+        showDateRepository.flush();
+
+        assertThrows(ShowDateNotModifiableException.class,
+                () -> artistBookingService.cancelBooking(booking.getId()));
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("cancelBooking — échoue si la date est ARCHIVED")
+    void cancelBooking_whenShowDateArchived_throwsShowDateNotModifiableException() {
+        Context ctx = buildContext("svc-cancel-7");
+        ArtistBookingEntity booking = persistBookingDirectly(ctx, BookingStatus.CONFIRMED);
+        ctx.showDate.setStatus(ShowDateStatus.ARCHIVED);
+        showDateRepository.flush();
+
+        assertThrows(ShowDateNotModifiableException.class,
+                () -> artistBookingService.cancelBooking(booking.getId()));
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("cancelBooking — échoue si le manager courant n'est pas propriétaire de la compagnie")
+    void cancelBooking_whenManagerNotOwner_throwsForbiddenCompanyAccessException() {
+        Context ctx = buildContext("svc-cancel-8");
+        ArtistBookingEntity booking = persistBookingDirectly(ctx, BookingStatus.CONFIRMED);
+        doThrow(new ForbiddenCompanyAccessException())
+                .when(managerCompanyResolver).assertCurrentManagerOwnsCompany(anyLong());
+
+        assertThrows(ForbiddenCompanyAccessException.class,
+                () -> artistBookingService.cancelBooking(booking.getId()));
+
+        assertEquals(BookingStatus.CONFIRMED,
+                bookingRepository.findByIdOptional(booking.getId()).orElseThrow().getStatus());
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("cancelBooking — annule un booking CONFIRMED et repasse la date STAFFED en CONFIRMED")
+    void cancelBooking_whenShowDateStaffedAndBookingConfirmed_cancelsBookingAndRestaffsShowDateToConfirmed() {
+        Context ctx = buildContext("svc-cancel-9");
+        ctx.showDate.setStatus(ShowDateStatus.STAFFED);
+        showDateRepository.flush();
+        ArtistBookingEntity booking = persistBookingDirectly(ctx, BookingStatus.CONFIRMED);
+        Long showDateId = ctx.showDate.getId();
+
+        ArtistBookingDto dto = artistBookingService.cancelBooking(booking.getId());
+
+        ShowDateEntity reloadedShowDate = showDateRepository.findByIdOptional(showDateId).orElseThrow();
+
+        assertAll(
+                () -> assertEquals(BookingStatus.CANCELLED, dto.status()),
+                () -> assertEquals(BookingStatus.CANCELLED,
+                        bookingRepository.findByIdOptional(booking.getId()).orElseThrow().getStatus()),
+                () -> assertEquals(ShowDateStatus.CONFIRMED, reloadedShowDate.getStatus())
+        );
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("cancelBooking — annule un booking CONFIRMED sans modifier une date déjà CONFIRMED")
+    void cancelBooking_whenShowDateConfirmedAndBookingConfirmed_cancelsBookingAndKeepsShowDateConfirmed() {
+        Context ctx = buildContext("svc-cancel-10");
+        ArtistBookingEntity booking = persistBookingDirectly(ctx, BookingStatus.CONFIRMED);
+        Long showDateId = ctx.showDate.getId();
+
+        ArtistBookingDto dto = artistBookingService.cancelBooking(booking.getId());
+
+        ShowDateEntity reloadedShowDate = showDateRepository.findByIdOptional(showDateId).orElseThrow();
+
+        assertAll(
+                () -> assertEquals(BookingStatus.CANCELLED, dto.status()),
+                () -> assertEquals(BookingStatus.CANCELLED,
+                        bookingRepository.findByIdOptional(booking.getId()).orElseThrow().getStatus()),
+                () -> assertEquals(ShowDateStatus.CONFIRMED, reloadedShowDate.getStatus())
+        );
     }
 
     // ==================================================================
