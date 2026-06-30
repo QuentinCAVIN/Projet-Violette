@@ -236,7 +236,7 @@ public class ArtistBookingService {
      *
      * @throws ArtistBookingNotFoundException    si le booking est introuvable
      * @throws ForbiddenCompanyAccessException   si la date du booking n'appartient pas à la compagnie du manager courant
-     * @throws ShowDateNotModifiableException    si la date est STAFFED, CANCELLED ou ARCHIVED
+     * @throws ShowDateNotModifiableException    si la date est CANCELLED ou ARCHIVED
      * @throws InvalidBookingTransitionException si le statut n'est ni PENDING_CONFIRMATION ni CONFIRMED
      */
     @Transactional
@@ -249,7 +249,7 @@ public class ArtistBookingService {
 
         managerCompanyResolver.assertCurrentManagerOwnsCompany(booking.getShowDate().getCompany().getId());
 
-        validerDateModifiable(booking.getShowDate());
+        assertShowDateCancellable(booking.getShowDate());
 
         BookingStatus currentStatus = booking.getStatus();
         if (currentStatus != BookingStatus.PENDING_CONFIRMATION
@@ -512,6 +512,18 @@ public class ArtistBookingService {
     private void validerDateModifiable(ShowDateEntity showDate) {
         if (showDate.getStatus() == ShowDateStatus.STAFFED
                 || showDate.getStatus() == ShowDateStatus.CANCELLED
+                || showDate.getStatus() == ShowDateStatus.ARCHIVED) {
+            throw new ShowDateNotModifiableException();
+        }
+    }
+
+    /**
+     * Vérifie que la date permet l'annulation d'un booking par le gérant.
+     * Autorise {@code OPTION}, {@code CONFIRMED} et {@code STAFFED} ;
+     * bloque uniquement {@code CANCELLED} et {@code ARCHIVED}.
+     */
+    private void assertShowDateCancellable(ShowDateEntity showDate) {
+        if (showDate.getStatus() == ShowDateStatus.CANCELLED
                 || showDate.getStatus() == ShowDateStatus.ARCHIVED) {
             throw new ShowDateNotModifiableException();
         }
