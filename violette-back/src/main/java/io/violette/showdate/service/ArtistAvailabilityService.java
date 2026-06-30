@@ -1,9 +1,12 @@
 package io.violette.showdate.service;
 
+import io.violette.artistbooking.model.BookingStatus;
+import io.violette.artistbooking.repository.ArtistBookingRepository;
 import io.violette.security.ManagerCompanyResolver;
 import io.violette.security.exception.ForbiddenCompanyAccessException;
 import io.violette.security.JwtPrincipalInfo;
 import io.violette.showdate.dto.ArtistAvailabilityDto;
+import io.violette.showdate.exception.AvailabilityLockedByConfirmedBookingException;
 import io.violette.showdate.exception.InvalidAvailabilityStatusException;
 import io.violette.showdate.exception.ShowDateNotFoundException;
 import io.violette.showdate.mapper.ArtistAvailabilityMapper;
@@ -47,6 +50,9 @@ public class ArtistAvailabilityService {
     @Inject
     ManagerCompanyResolver managerCompanyResolver;
 
+    @Inject
+    ArtistBookingRepository artistBookingRepository;
+
     /**
      * Liste les disponibilités déclarées pour une date de spectacle (usage manager).
      * Vérifie que la date appartient à la compagnie du manager authentifié (OWASP A01).
@@ -70,6 +76,7 @@ public class ArtistAvailabilityService {
      * @throws ShowDateNotFoundException si la date n'existe pas
      * @throws UserNotFoundException                 si aucun utilisateur backend ne correspond au JWT
      * @throws InvalidAvailabilityStatusException    si {@code status} est {@link AvailabilityStatus#PENDING}
+     * @throws AvailabilityLockedByConfirmedBookingException si l'artiste possède un booking CONFIRMED sur cette date
      */
     @Transactional
     public ArtistAvailabilityDto upsertMyAvailability(Long showDateId, JwtPrincipalInfo principal, AvailabilityStatus status) {
@@ -84,6 +91,16 @@ public class ArtistAvailabilityService {
 
         VioletteUserEntity artist = violetteUserRepository.findByFirebaseUid(principal.firebaseUid())
                 .orElseThrow(UserNotFoundException::new);
+
+        // Contrainte d'unicité (show_date_id, artist_id) : au plus un booking par paire.
+        // findByShowDateIdAndArtistId suffit — pas besoin d'une méthode dédiée findByShowDateIdAndArtistIdAndStatus.
+        artistBookingRepository.findByShowDateIdAndArtistId(showDateId, artist.getId())
+                .filter(booking -> booking.getStatus() == BookingStatus.CONFIRMED)
+                .ifPresent(booking -> {
+                    LOG.info("Modification de disponibilité refusée pour showDateId={} artistId={} — booking CONFIRMED id={}",
+                            showDateId, artist.getId(), booking.getId());
+                    throw new AvailabilityLockedByConfirmedBookingException();
+                });
 
         ArtistAvailabilityId key = new ArtistAvailabilityId(showDateId, artist.getId());
         var existing = artistAvailabilityRepository.findByIdOptional(key);

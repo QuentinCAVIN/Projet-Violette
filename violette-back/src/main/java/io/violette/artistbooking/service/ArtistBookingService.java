@@ -225,6 +225,57 @@ public class ArtistBookingService {
     }
 
     // ------------------------------------------------------------------
+    // Annulation par le gérant (MANAGER)
+    // ------------------------------------------------------------------
+
+    /**
+     * Annule un booking en statut {@code PENDING_CONFIRMATION} ou {@code CONFIRMED}.
+     * Seul le gérant de la compagnie peut rompre l'engagement.
+     *
+     * <p>La désélection d'un {@code SELECTED} reste gérée par {@link #deleteBooking}.
+     *
+     * @throws ArtistBookingNotFoundException    si le booking est introuvable
+     * @throws ForbiddenCompanyAccessException   si la date du booking n'appartient pas à la compagnie du manager courant
+     * @throws ShowDateNotModifiableException    si la date est STAFFED, CANCELLED ou ARCHIVED
+     * @throws InvalidBookingTransitionException si le statut n'est ni PENDING_CONFIRMATION ni CONFIRMED
+     */
+    @Transactional
+    public ArtistBookingDto cancelBooking(Long bookingId) {
+        LOG.info("Annulation du booking id={}", bookingId);
+
+        ArtistBookingEntity booking = artistBookingRepository
+                .findByIdOptional(bookingId)
+                .orElseThrow(ArtistBookingNotFoundException::new);
+
+        managerCompanyResolver.assertCurrentManagerOwnsCompany(booking.getShowDate().getCompany().getId());
+
+        validerDateModifiable(booking.getShowDate());
+
+        BookingStatus currentStatus = booking.getStatus();
+        if (currentStatus != BookingStatus.PENDING_CONFIRMATION
+                && currentStatus != BookingStatus.CONFIRMED) {
+            throw new InvalidBookingTransitionException(
+                    "Seul un booking PENDING_CONFIRMATION ou CONFIRMED peut être annulé. Statut actuel : "
+                            + currentStatus
+            );
+        }
+
+        BookingStatus oldStatus = currentStatus;
+        booking.setStatus(BookingStatus.CANCELLED);
+
+        bookingStatusChangedEvent.fire(new BookingStatusChangedEvent(
+                bookingId,
+                booking.getShowDate().getId(),
+                booking.getArtist().getId(),
+                oldStatus,
+                BookingStatus.CANCELLED
+        ));
+
+        LOG.info("Booking id={} → CANCELLED (artiste id={})", bookingId, booking.getArtist().getId());
+        return artistBookingMapper.toDto(booking);
+    }
+
+    // ------------------------------------------------------------------
     // Envoi des demandes de confirmation (MANAGER)
     // ------------------------------------------------------------------
 
