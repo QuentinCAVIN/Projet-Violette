@@ -2,17 +2,22 @@ package io.violette.showdate.service;
 
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
+import io.violette.artistbooking.model.ArtistBookingEntity;
+import io.violette.artistbooking.model.BookingStatus;
+import io.violette.artistbooking.repository.ArtistBookingRepository;
 import io.violette.cabaretcompany.model.CabaretCompanyEntity;
 import io.violette.cabaretcompany.repository.CabaretCompanyRepository;
 import io.violette.security.ManagerCompanyResolver;
 import io.violette.security.JwtPrincipalInfo;
 import io.violette.showdate.dto.ArtistAvailabilityDto;
+import io.violette.showdate.exception.AvailabilityLockedByConfirmedBookingException;
 import io.violette.showdate.exception.InvalidAvailabilityStatusException;
 import io.violette.showdate.exception.ShowDateNotFoundException;
 import io.violette.showdate.model.ArtistAvailabilityEntity;
 import io.violette.showdate.model.ArtistAvailabilityId;
 import io.violette.showdate.model.AvailabilityStatus;
 import io.violette.showdate.model.ShowDateEntity;
+import io.violette.showdate.model.ShowDateStatus;
 import io.violette.showdate.repository.ArtistAvailabilityRepository;
 import io.violette.showdate.repository.ShowDateRepository;
 import io.violette.violetteuser.exception.UserNotFoundException;
@@ -56,6 +61,9 @@ class ArtistAvailabilityServiceTest {
 
     @Inject
     VioletteUserRepository violetteUserRepository;
+
+    @Inject
+    ArtistBookingRepository artistBookingRepository;
 
     @Test
     @Transactional
@@ -187,6 +195,70 @@ class ArtistAvailabilityServiceTest {
 
     @Test
     @Transactional
+    @DisplayName("upsertMyAvailability — refuse la modification si un booking CONFIRMED existe pour l'artiste")
+    void upsertMyAvailability_whenConfirmedBookingExists_throwsAvailabilityLockedByConfirmedBookingException() {
+        ShowDateFixture fx = buildShowDateFixture("avail-lock-conf");
+        fx.showDate().setStatus(ShowDateStatus.CONFIRMED);
+        showDateRepository.flush();
+        VioletteUserEntity artist = buildAndPersistUser("avail-lock-conf-art", "avail-lock-conf-art@test.com", Set.of(UserRole.ARTIST));
+        persistAvailability(fx.showDate(), artist, AvailabilityStatus.AVAILABLE);
+        artistAvailabilityRepository.flush();
+        persistBooking(fx.showDate(), artist, BookingStatus.CONFIRMED);
+        JwtPrincipalInfo principal = new JwtPrincipalInfo(artist.getFirebaseUid(), artist.getEmail(), "Artiste Lock");
+
+        assertThrows(AvailabilityLockedByConfirmedBookingException.class,
+                () -> artistAvailabilityService.upsertMyAvailability(
+                        fx.showDate().getId(), principal, AvailabilityStatus.UNAVAILABLE));
+
+        assertEquals(AvailabilityStatus.AVAILABLE,
+                artistAvailabilityRepository.findById(new ArtistAvailabilityId(fx.showDate().getId(), artist.getId())).getStatus());
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("upsertMyAvailability — autorise la modification si le booking n'est pas CONFIRMED")
+    void upsertMyAvailability_whenPendingConfirmationBookingExists_persistsNewAvailabilityStatus() {
+        ShowDateFixture fx = buildShowDateFixture("avail-lock-pend");
+        fx.showDate().setStatus(ShowDateStatus.CONFIRMED);
+        showDateRepository.flush();
+        VioletteUserEntity artist = buildAndPersistUser("avail-lock-pend-art", "avail-lock-pend-art@test.com", Set.of(UserRole.ARTIST));
+        persistBooking(fx.showDate(), artist, BookingStatus.PENDING_CONFIRMATION);
+        JwtPrincipalInfo principal = new JwtPrincipalInfo(artist.getFirebaseUid(), artist.getEmail(), "Artiste Pend");
+
+        ArtistAvailabilityDto dto = artistAvailabilityService.upsertMyAvailability(
+                fx.showDate().getId(), principal, AvailabilityStatus.UNAVAILABLE);
+
+        assertAll(
+                () -> assertEquals(AvailabilityStatus.UNAVAILABLE, dto.status()),
+                () -> assertEquals(AvailabilityStatus.UNAVAILABLE,
+                        artistAvailabilityRepository.findById(new ArtistAvailabilityId(fx.showDate().getId(), artist.getId())).getStatus())
+        );
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("upsertMyAvailability — n'applique le verrou qu'à l'artiste concerné par le booking CONFIRMED")
+    void upsertMyAvailability_whenAnotherArtistHasConfirmedBooking_allowsCurrentArtistToUpdate() {
+        ShowDateFixture fx = buildShowDateFixture("avail-lock-iso");
+        fx.showDate().setStatus(ShowDateStatus.STAFFED);
+        showDateRepository.flush();
+        VioletteUserEntity confirmedArtist = buildAndPersistUser("avail-lock-iso-a1", "avail-lock-iso-a1@test.com", Set.of(UserRole.ARTIST));
+        VioletteUserEntity currentArtist = buildAndPersistUser("avail-lock-iso-a2", "avail-lock-iso-a2@test.com", Set.of(UserRole.ARTIST));
+        persistBooking(fx.showDate(), confirmedArtist, BookingStatus.CONFIRMED);
+        JwtPrincipalInfo principal = new JwtPrincipalInfo(currentArtist.getFirebaseUid(), currentArtist.getEmail(), "Artiste Iso");
+
+        ArtistAvailabilityDto dto = artistAvailabilityService.upsertMyAvailability(
+                fx.showDate().getId(), principal, AvailabilityStatus.UNAVAILABLE);
+
+        assertAll(
+                () -> assertEquals(AvailabilityStatus.UNAVAILABLE, dto.status()),
+                () -> assertEquals(AvailabilityStatus.UNAVAILABLE,
+                        artistAvailabilityRepository.findById(new ArtistAvailabilityId(fx.showDate().getId(), currentArtist.getId())).getStatus())
+        );
+    }
+
+    @Test
+    @Transactional
     @DisplayName("getMyAvailability retourne PENDING si aucune disponibilité n'existe encore")
     void getMyAvailability_whenNoRow_thenReturnsPending() {
         ShowDateFixture fx = buildShowDateFixture("avail-svc-get-me-pending");
@@ -252,5 +324,14 @@ class ArtistAvailabilityServiceTest {
         av.setArtist(artist);
         av.setStatus(status);
         artistAvailabilityRepository.persist(av);
+    }
+
+    /** Persiste un booking pour la paire date/artiste — contournement direct, sans passer par le service booking. */
+    private void persistBooking(ShowDateEntity showDate, VioletteUserEntity artist, BookingStatus status) {
+        ArtistBookingEntity booking = new ArtistBookingEntity();
+        booking.setShowDate(showDate);
+        booking.setArtist(artist);
+        booking.setStatus(status);
+        artistBookingRepository.persistAndFlush(booking);
     }
 }

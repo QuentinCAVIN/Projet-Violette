@@ -96,6 +96,31 @@ public class ArtistBookingController {
     }
 
     // ------------------------------------------------------------------
+    // Manager — annulation d'un booking
+    // ------------------------------------------------------------------
+
+    /**
+     * Annule une réservation en statut {@code PENDING_CONFIRMATION} ou {@code CONFIRMED} (MANAGER).
+     * Rompt l'engagement ferme ou la demande en cours — seul le gérant peut le faire.
+     */
+    @PATCH
+    @Path("/{id}/cancel")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed("MANAGER")
+    @Operation(
+            summary = "Annuler une réservation",
+            description = "Passe une réservation PENDING_CONFIRMATION ou CONFIRMED en CANCELLED. Requiert le rôle MANAGER."
+    )
+    @APIResponse(responseCode = "200", description = "Réservation annulée", content = @Content(schema = @Schema(implementation = ArtistBookingDto.class)))
+    @APIResponse(responseCode = "403", description = "Accès refusé (rôle insuffisant)")
+    @APIResponse(responseCode = "404", description = "Réservation introuvable")
+    @APIResponse(responseCode = "409", description = "La réservation n'est pas en statut PENDING_CONFIRMATION ou CONFIRMED")
+    public Response cancelBooking(@PathParam("id") Long id) {
+        ArtistBookingDto dto = artistBookingService.cancelBooking(id);
+        return Response.ok(dto).build();
+    }
+
+    // ------------------------------------------------------------------
     // Manager — envoi des demandes de confirmation
     // ------------------------------------------------------------------
 
