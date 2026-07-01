@@ -39,6 +39,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -338,6 +339,156 @@ class ArtistBookingServiceTest {
         assertThrows(SkillRequirementNotFoundException.class, () ->
                 artistBookingService.createBooking(
                         new CreateBookingRequestDto(ctx.showDate.getId(), ctx.artist.getId(), otherReq.getId())
+                )
+        );
+    }
+
+    // ==================================================================
+    // createBooking — recyclage
+    // ==================================================================
+
+    @Test
+    @Transactional
+    @DisplayName("createBooking — recyclage après REFUSED : même id, statut SELECTED, une seule ligne pour la paire")
+    void createBooking_whenTerminalRefused_recyclesExistingBookingAsSelected() {
+        Context ctx = buildContext("svc-recycle-ref-1");
+        ArtistBookingEntity terminalBooking = persistBookingDirectly(ctx, BookingStatus.REFUSED);
+        Long terminalBookingId = terminalBooking.getId();
+
+        ArtistBookingDto dto = artistBookingService.createBooking(
+                new CreateBookingRequestDto(ctx.showDate.getId(), ctx.artist.getId(), null)
+        );
+
+        assertAll(
+                () -> assertEquals(BookingStatus.SELECTED, dto.status()),
+                () -> assertEquals(terminalBookingId, dto.id()),
+                () -> assertEquals(1L, countBookingsForPair(ctx.showDate.getId(), ctx.artist.getId()))
+        );
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("createBooking — recyclage après CANCELLED : même id, statut SELECTED, une seule ligne pour la paire")
+    void createBooking_whenTerminalCancelled_recyclesExistingBookingAsSelected() {
+        Context ctx = buildContext("svc-recycle-canc-1");
+        ArtistBookingEntity terminalBooking = persistBookingDirectly(ctx, BookingStatus.CANCELLED);
+        Long terminalBookingId = terminalBooking.getId();
+
+        ArtistBookingDto dto = artistBookingService.createBooking(
+                new CreateBookingRequestDto(ctx.showDate.getId(), ctx.artist.getId(), null)
+        );
+
+        assertAll(
+                () -> assertEquals(BookingStatus.SELECTED, dto.status()),
+                () -> assertEquals(terminalBookingId, dto.id()),
+                () -> assertEquals(1L, countBookingsForPair(ctx.showDate.getId(), ctx.artist.getId()))
+        );
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("createBooking — recyclage : réinitialise requestedAt/respondedAt, conserve createdAt, rafraîchit updatedAt")
+    void createBooking_whenRecyclingTerminalBooking_resetsTimelineExceptCreatedAt() {
+        Context ctx = buildContext("svc-recycle-tl-1");
+        ArtistBookingEntity terminalBooking = persistBookingDirectly(ctx, BookingStatus.REFUSED);
+
+        Instant pastUpdatedAt = Instant.parse("2020-01-01T00:00:00Z");
+        terminalBooking.getTimeline().setRequestedAt(Instant.parse("2025-01-01T00:00:00Z"));
+        terminalBooking.getTimeline().setRespondedAt(Instant.parse("2025-06-01T00:00:00Z"));
+        terminalBooking.getTimeline().setUpdatedAt(pastUpdatedAt);
+        bookingRepository.flush();
+
+        Instant createdAtBefore = terminalBooking.getTimeline().getCreatedAt();
+
+        artistBookingService.createBooking(
+                new CreateBookingRequestDto(ctx.showDate.getId(), ctx.artist.getId(), null)
+        );
+
+        ArtistBookingEntity reloaded = bookingRepository.findByIdOptional(terminalBooking.getId()).orElseThrow();
+
+        assertAll(
+                () -> assertNull(reloaded.getTimeline().getRequestedAt()),
+                () -> assertNull(reloaded.getTimeline().getRespondedAt()),
+                () -> assertEquals(createdAtBefore, reloaded.getTimeline().getCreatedAt()),
+                () -> assertTrue(reloaded.getTimeline().getUpdatedAt().isAfter(pastUpdatedAt))
+        );
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("createBooking — recyclage avec skillRequirement : réaffecte le besoin et le snapshot agreedNetFee")
+    void createBooking_whenRecyclingWithSkillRequirement_reassignsSkillRequirementAndFee() {
+        Context ctx = buildContext("svc-recycle-sk-1");
+        persistBookingDirectly(ctx, BookingStatus.REFUSED);
+
+        ArtistBookingDto dto = artistBookingService.createBooking(
+                new CreateBookingRequestDto(ctx.showDate.getId(), ctx.artist.getId(), ctx.skillReq.getId())
+        );
+
+        assertAll(
+                () -> assertEquals(BookingStatus.SELECTED, dto.status()),
+                () -> assertEquals(ctx.skillReq.getId(), dto.skillRequirementId()),
+                () -> assertEquals(ctx.skillReq.getNetFee(), dto.agreedNetFee())
+        );
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("createBooking — recyclage sans skillRequirement : skillRequirementId et agreedNetFee à null")
+    void createBooking_whenRecyclingWithoutSkillRequirement_clearsSkillRequirementAndFee() {
+        Context ctx = buildContext("svc-recycle-nosk-1");
+        ArtistBookingEntity terminalBooking = persistBookingDirectly(ctx, BookingStatus.CANCELLED);
+        terminalBooking.setSkillRequirement(ctx.skillReq);
+        terminalBooking.setAgreedNetFee(ctx.skillReq.getNetFee());
+        bookingRepository.flush();
+
+        ArtistBookingDto dto = artistBookingService.createBooking(
+                new CreateBookingRequestDto(ctx.showDate.getId(), ctx.artist.getId(), null)
+        );
+
+        assertAll(
+                () -> assertEquals(BookingStatus.SELECTED, dto.status()),
+                () -> assertNull(dto.skillRequirementId()),
+                () -> assertNull(dto.agreedNetFee())
+        );
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("createBooking — échoue si un booking CONFIRMED actif existe déjà pour la paire")
+    void createBooking_whenActiveConfirmedBookingExists_throwsBookingAlreadyExistsException() {
+        Context ctx = buildContext("svc-recycle-dup-conf-1");
+        persistBookingDirectly(ctx, BookingStatus.CONFIRMED);
+
+        assertThrows(BookingAlreadyExistsException.class, () ->
+                artistBookingService.createBooking(
+                        new CreateBookingRequestDto(ctx.showDate.getId(), ctx.artist.getId(), null)
+                )
+        );
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("createBooking — recyclage échoue si la capacité est déjà prise par un autre booking actif")
+    void createBooking_whenRecyclingRefusedAndCapacityFull_throwsBookingCapacityExceededException() {
+        Context ctx = buildContext("svc-recycle-cap-1");
+
+        VioletteUserEntity otherArtist = buildAndPersistUser(
+                "svc-recycle-cap-1-b", "svc-recycle-cap-1-b@test.com", Set.of(UserRole.ARTIST));
+        persistAvailability(ctx.showDate, otherArtist, AvailabilityStatus.AVAILABLE);
+
+        ArtistBookingEntity activeBooking = new ArtistBookingEntity();
+        activeBooking.setShowDate(ctx.showDate);
+        activeBooking.setArtist(otherArtist);
+        activeBooking.setSkillRequirement(ctx.skillReq);
+        activeBooking.setStatus(BookingStatus.CONFIRMED);
+        bookingRepository.persistAndFlush(activeBooking);
+
+        persistBookingDirectly(ctx, BookingStatus.REFUSED);
+
+        assertThrows(BookingCapacityExceededException.class, () ->
+                artistBookingService.createBooking(
+                        new CreateBookingRequestDto(ctx.showDate.getId(), ctx.artist.getId(), ctx.skillReq.getId())
                 )
         );
     }
@@ -889,6 +1040,10 @@ class ArtistBookingServiceTest {
         booking.setStatus(status);
         bookingRepository.persistAndFlush(booking);
         return booking;
+    }
+
+    private long countBookingsForPair(Long showDateId, Long artistId) {
+        return bookingRepository.count("showDate.id = ?1 and artist.id = ?2", showDateId, artistId);
     }
 
     private VioletteUserEntity buildAndPersistUser(String firebaseUid, String email, Set<UserRole> roles) {

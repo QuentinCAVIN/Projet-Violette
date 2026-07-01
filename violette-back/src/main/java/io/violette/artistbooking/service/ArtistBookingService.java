@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Service du domaine artistbooking.
@@ -152,7 +153,10 @@ public class ArtistBookingService {
                 .findByIdOptional(request.artistId())
                 .orElseThrow(UserNotFoundException::new);
 
-        assertNoActiveBookingExists(request.showDateId(), request.artistId());
+        Optional<ArtistBookingEntity> existingBooking = artistBookingRepository
+                .findByShowDateIdAndArtistId(request.showDateId(), request.artistId());
+
+        assertNotActivelyBooked(existingBooking);
 
         validerDisponibiliteArtiste(request.showDateId(), request.artistId());
 
@@ -171,9 +175,6 @@ public class ArtistBookingService {
 
             validerCapacite(skillRequirement);
         }
-
-        var existingBooking = artistBookingRepository
-                .findByShowDateIdAndArtistId(request.showDateId(), request.artistId());
 
         ArtistBookingEntity booking;
         if (existingBooking.isPresent() && isTerminalBookingStatus(existingBooking.get().getStatus())) {
@@ -542,13 +543,12 @@ public class ArtistBookingService {
     }
 
     /**
-     * Vérifie qu'aucun booking actif n'existe pour cet artiste sur cette date.
+     * Vérifie qu'aucun booking actif n'existe pour la paire (date, artiste) déjà chargée.
      * Un booking en statut terminal ({@code REFUSED}, {@code CANCELLED}) n'est pas bloquant —
      * il sera recyclé par {@link #createBooking}.
      */
-    private void assertNoActiveBookingExists(Long showDateId, Long artistId) {
-        artistBookingRepository
-                .findByShowDateIdAndArtistId(showDateId, artistId)
+    private void assertNotActivelyBooked(Optional<ArtistBookingEntity> existingBooking) {
+        existingBooking
                 .filter(booking -> isActiveBookingStatus(booking.getStatus()))
                 .ifPresent(existing -> {
                     throw new BookingAlreadyExistsException();
