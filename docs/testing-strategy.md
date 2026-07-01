@@ -78,9 +78,42 @@ Domaines concernés pour `v0.4.0` :
 ## Couverture JaCoCo (backend)
 
 - Rapport XML généré par `quarkus-jacoco` à chaque `mvn verify`.
-- Seuil de couverture : **30 %** (branche minimale, relevé à la maturité du projet).
+- Seuil de couverture : **70 %** (lignes, voir ci-dessous).
 - `quarkus.jacoco.reuse-data-file=true` → cumul Surefire (H2) + Failsafe (ITs MySQL) dans un seul rapport.
 - ITs activés en CI avec `-DskipITs=false`.
+
+### Couverture réelle mesurée
+
+Rapport JaCoCo généré par la CI (JDK 21 Temurin, `mvn verify -DskipITs=false`) :
+
+| Métrique | Couverture |
+|----------|------------|
+| Instructions | 83,96 % |
+| Lignes | 81,55 % |
+| Branches | 60,74 % |
+| Méthodes | 81,89 % |
+| Classes | 85,85 % |
+
+### Profil de couverture assumé
+
+Le choix de couverture cible les **règles métier** plutôt qu'une couverture uniforme artificielle. Les domaines critiques sont couverts à ~95 % :
+
+| Package | Couverture lignes |
+|---------|-------------------|
+| `artistbooking.service` | 95,1 % |
+| `showdate.service` | 95,3 % |
+
+En revanche, la plomberie sans logique (records DTO, `exception.mapper`, classes d'exception à simple constructeur) est volontairement peu couverte : ces artefacts n'apportent pas de valeur métier en test unitaire.
+
+**`CabaretCompanyService`** : sa logique critique (bootstrap de la compagnie par défaut, rattachement manager/artiste) est couverte par `DefaultCompanyBootstrapServiceTest` — nommé d'après le scénario métier, non d'après la classe, d'où une couverture réelle supérieure à ce que le nommage suggère.
+
+**`CabaretShowService`** : classe de lecture avec contrôle d'ownership, désormais couverte par `CabaretShowServiceTest`.
+
+### Seuil CI
+
+Le seuil JaCoCo est passé de **30 %** (plafond hérité du module d'architecture initial, volontairement bas) à **70 %**. Ce plancher professionnel est dépassé par la couverture réelle (81,5 % lignes) avec une marge confortable : le garde-fou n'est pas bloquant et laisse de l'air pour les évolutions du code.
+
+**Note sur les branches** : le seuil porte uniquement sur les **lignes** (`LINE` / `COVEREDRATIO`). La couverture de branches (60,74 %) n'est pas soumise à seuil ; les branches non couvertes se concentrent dans les cas d'erreur rares et la plomberie.
 
 Commandes utiles :
 
