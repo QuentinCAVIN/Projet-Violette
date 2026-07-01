@@ -16,3 +16,5 @@ violette_front/android/key.properties
 
 # Firebase — google-services.json contient des clés API
 violette_front/android/app/google-services.json
+
+.vscode/
