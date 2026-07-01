@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Service du domaine artistbooking.
@@ -120,7 +121,8 @@ public class ArtistBookingService {
      *   <li>La date est {@code OPTION} ou {@code CONFIRMED} (INQUIRY bloque ; STAFFED, CANCELLED,
      *       ARCHIVED bloquent)</li>
      *   <li>L'artiste existe</li>
-     *   <li>L'artiste n'a pas déjà un booking sur cette date (quel que soit le statut)</li>
+     *   <li>L'artiste n'a pas déjà un booking actif sur cette date
+     *       (un booking terminal {@code REFUSED} ou {@code CANCELLED} est recyclé)</li>
      *   <li>L'artiste a déclaré sa disponibilité {@code AVAILABLE} ou {@code IF_NEEDED} pour cette date</li>
      *   <li>Si un besoin artistique est spécifié : la capacité n'est pas atteinte
      *       et le cachet est capturé à titre d'estimation (estimation de planification en {@code OPTION},
@@ -131,7 +133,7 @@ public class ArtistBookingService {
      * @throws ForbiddenCompanyAccessException   si la date n'appartient pas à la compagnie du manager courant
      * @throws ShowDateNotModifiableException    si la date n'est ni {@code OPTION}, ni {@code CONFIRMED}
      * @throws UserNotFoundException             si l'artiste est introuvable
-     * @throws BookingAlreadyExistsException     si un booking existe déjà pour cet artiste sur cette date
+     * @throws BookingAlreadyExistsException     si un booking actif existe déjà pour cet artiste sur cette date
      * @throws ArtistNotAvailableException       si l'artiste n'est ni AVAILABLE ni IF_NEEDED
      * @throws BookingCapacityExceededException  si la capacité pour la compétence est atteinte
      */
@@ -151,7 +153,10 @@ public class ArtistBookingService {
                 .findByIdOptional(request.artistId())
                 .orElseThrow(UserNotFoundException::new);
 
-        validerAbsenceDeBookingExistant(request.showDateId(), request.artistId());
+        Optional<ArtistBookingEntity> existingBooking = artistBookingRepository
+                .findByShowDateIdAndArtistId(request.showDateId(), request.artistId());
+
+        assertNotActivelyBooked(existingBooking);
 
         validerDisponibiliteArtiste(request.showDateId(), request.artistId());
 
@@ -171,20 +176,28 @@ public class ArtistBookingService {
             validerCapacite(skillRequirement);
         }
 
-        ArtistBookingEntity booking = new ArtistBookingEntity();
-        booking.setShowDate(showDate);
-        booking.setArtist(artist);
-        booking.setSkillRequirement(skillRequirement);
-        booking.setStatus(BookingStatus.SELECTED);
+        ArtistBookingEntity booking;
+        if (existingBooking.isPresent() && isTerminalBookingStatus(existingBooking.get().getStatus())) {
+            booking = resetBookingForReselection(existingBooking.get(), skillRequirement);
+            LOG.info("Artiste id={} re-sélectionné (recyclage bookingId={}) pour showDateId={}",
+                    artist.getId(), booking.getId(), showDate.getId());
+        } else {
+            booking = new ArtistBookingEntity();
+            booking.setShowDate(showDate);
+            booking.setArtist(artist);
+            booking.setSkillRequirement(skillRequirement);
+            booking.setStatus(BookingStatus.SELECTED);
 
-        if (skillRequirement != null) {
-            booking.setAgreedNetFee(skillRequirement.getNetFee());
+            if (skillRequirement != null) {
+                booking.setAgreedNetFee(skillRequirement.getNetFee());
+            }
+
+            artistBookingRepository.persist(booking);
+
+            LOG.info("Artiste id={} présélectionné/sélectionné (statut date={}) — bookingId={} pour showDateId={}",
+                    artist.getId(), showDate.getStatus(), booking.getId(), showDate.getId());
         }
 
-        artistBookingRepository.persist(booking);
-
-        LOG.info("Artiste id={} présélectionné/sélectionné (statut date={}) — bookingId={} pour showDateId={}",
-                artist.getId(), showDate.getStatus(), booking.getId(), showDate.getId());
         return artistBookingMapper.toDto(booking);
     }
 
@@ -530,15 +543,41 @@ public class ArtistBookingService {
     }
 
     /**
-     * Vérifie qu'aucun booking existant (quel que soit son statut) n'existe pour cet artiste sur cette date.
-     * Un booking REFUSED bloque également la re-sélection — suppression préalable requise.
+     * Vérifie qu'aucun booking actif n'existe pour la paire (date, artiste) déjà chargée.
+     * Un booking en statut terminal ({@code REFUSED}, {@code CANCELLED}) n'est pas bloquant —
+     * il sera recyclé par {@link #createBooking}.
      */
-    private void validerAbsenceDeBookingExistant(Long showDateId, Long artistId) {
-        artistBookingRepository
-                .findByShowDateIdAndArtistId(showDateId, artistId)
+    private void assertNotActivelyBooked(Optional<ArtistBookingEntity> existingBooking) {
+        existingBooking
+                .filter(booking -> isActiveBookingStatus(booking.getStatus()))
                 .ifPresent(existing -> {
                     throw new BookingAlreadyExistsException();
                 });
+    }
+
+    /**
+     * Réinitialise un booking terminal pour une nouvelle sélection sur la même paire (date, artiste).
+     * L'entité est déjà managée — aucun {@code persist} nécessaire.
+     */
+    private ArtistBookingEntity resetBookingForReselection(
+            ArtistBookingEntity booking,
+            ShowDateSkillRequirementEntity skillRequirement) {
+        booking.setSkillRequirement(skillRequirement);
+        booking.setStatus(BookingStatus.SELECTED);
+        booking.setAgreedNetFee(skillRequirement != null ? skillRequirement.getNetFee() : null);
+        booking.getTimeline().setRequestedAt(null);
+        booking.getTimeline().setRespondedAt(null);
+        return booking;
+    }
+
+    private boolean isActiveBookingStatus(BookingStatus status) {
+        return status == BookingStatus.SELECTED
+                || status == BookingStatus.PENDING_CONFIRMATION
+                || status == BookingStatus.CONFIRMED;
+    }
+
+    private boolean isTerminalBookingStatus(BookingStatus status) {
+        return status == BookingStatus.REFUSED || status == BookingStatus.CANCELLED;
     }
 
     /**
