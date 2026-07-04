@@ -12,6 +12,7 @@ import 'package:violette_front/models/artist_booking.dart';
 /// | `toggleSelection`             | REST                 | ✓ migré        |
 /// | `sendConfirmationRequests`    | REST                 | ✓ migré        |
 /// | `respondToRequest`            | REST                 | ✓ migré        |
+/// | `cancelBooking`               | REST                 | ✓ migré        |
 abstract class BookingRepository {
   /// Toutes les réservations de l'artiste connecté (one-shot REST).
   ///
@@ -40,4 +41,8 @@ abstract class BookingRepository {
   /// Réponse de l'artiste à une demande de confirmation (accepter / refuser).
   /// Implémentation : REST (`PATCH /api/artist-bookings/{id}/respond`).
   Future<void> respondToRequest(String dateId, String artistId, bool accept);
+
+  /// Annulation d'un booking PENDING_CONFIRMATION ou CONFIRMED par le gérant.
+  /// Implémentation : REST (`PATCH /api/artist-bookings/{id}/cancel`).
+  Future<void> cancelBooking(String dateId, String artistId);
 }

@@ -223,6 +223,90 @@ void main() {
     });
   });
 
+  group('BookingRemoteDataSource.cancelBooking', () {
+    test(
+      'enchaîne GET show-dates puis PATCH /{id}/cancel sans corps',
+      () async {
+        final dio = Dio(BaseOptions(baseUrl: 'http://test'));
+        String? patchedPath;
+        Object? patchedData;
+
+        dio.interceptors.add(
+          InterceptorsWrapper(
+            onRequest: (options, handler) {
+              if (options.method == 'GET' &&
+                  options.path == '/api/artist-bookings/show-dates/7') {
+                return handler.resolve(
+                  Response(
+                    requestOptions: options,
+                    statusCode: 200,
+                    data: <Map<String, dynamic>>[
+                      {
+                        'id': 42,
+                        'artistId': 5,
+                        'showDateId': 7,
+                        'status': 'CONFIRMED',
+                      },
+                    ],
+                  ),
+                );
+              }
+              if (options.method == 'PATCH' &&
+                  options.path == '/api/artist-bookings/42/cancel') {
+                patchedPath = options.path;
+                patchedData = options.data;
+                return handler.resolve(
+                  Response(
+                    requestOptions: options,
+                    statusCode: 200,
+                    data: <String, dynamic>{'id': 42},
+                  ),
+                );
+              }
+              fail('Requête inattendue : ${options.method} ${options.path}');
+            },
+          ),
+        );
+
+        final ds = BookingRemoteDataSource(dio: dio);
+        await ds.cancelBooking('7', '5');
+
+        expect(patchedPath, '/api/artist-bookings/42/cancel');
+        expect(patchedData, isNull);
+      },
+    );
+
+    test('lève une exception explicite si aucun booking ne correspond', () async {
+      final dio = Dio(BaseOptions(baseUrl: 'http://test'));
+      dio.interceptors.add(
+        InterceptorsWrapper(
+          onRequest: (options, handler) {
+            return handler.resolve(
+              Response(
+                requestOptions: options,
+                statusCode: 200,
+                data: <Map<String, dynamic>>[
+                  {
+                    'id': 1,
+                    'artistId': 99,
+                    'showDateId': 7,
+                    'status': 'CONFIRMED',
+                  },
+                ],
+              ),
+            );
+          },
+        ),
+      );
+
+      final ds = BookingRemoteDataSource(dio: dio);
+      expect(
+        () => ds.cancelBooking('7', '5'),
+        throwsA(isA<Exception>()),
+      );
+    });
+  });
+
   group('BookingRemoteDataSource.sendConfirmationRequests', () {
     test(
       'appelle POST /show-dates/{id}/send-confirmations sans corps',
