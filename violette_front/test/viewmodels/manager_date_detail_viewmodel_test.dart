@@ -508,6 +508,172 @@ void main() {
       });
     });
 
+    group('cancelShowDate -', () {
+      test('confirmation acceptée annule la date', () async {
+        final showDateRepository =
+            locator<ShowDateRepository>() as MockShowDateRepository;
+        final bookingRepository =
+            locator<BookingRepository>() as MockBookingRepository;
+        final dialogService = locator<DialogService>() as MockDialogService;
+
+        final initialShowDate = ShowDate(
+          id: 'date-1',
+          title: 'Date à annuler',
+          date: DateTime(2026, 1, 1),
+          meetingTimeMinutes: 540,
+          address: 'Adresse',
+          totalRequiredArtists: 2,
+          status: ShowDateStatus.inquiry,
+        );
+        final cancelledShowDate = ShowDate(
+          id: 'date-1',
+          title: 'Date à annuler',
+          date: DateTime(2026, 1, 1),
+          meetingTimeMinutes: 540,
+          address: 'Adresse',
+          totalRequiredArtists: 2,
+          status: ShowDateStatus.cancelled,
+        );
+
+        when(() => dialogService.showDialog(
+              title: any(named: 'title'),
+              description: any(named: 'description'),
+              buttonTitle: any(named: 'buttonTitle'),
+              cancelTitle: any(named: 'cancelTitle'),
+              dialogPlatform: any(named: 'dialogPlatform'),
+              barrierDismissible: any(named: 'barrierDismissible'),
+            )).thenAnswer((_) async => DialogResponse(confirmed: true));
+        when(() => showDateRepository.updateShowDateStatus(
+              'date-1',
+              ShowDateStatus.cancelled,
+            )).thenAnswer((_) async {});
+        when(() => showDateRepository.getShowDateById('date-1'))
+            .thenAnswer((_) async => cancelledShowDate);
+        when(() => bookingRepository.getBookingsForDate('date-1'))
+            .thenAnswer((_) async => []);
+
+        ShowDate? callbackShowDate;
+        final viewModel = ManagerDateDetailViewModel(
+          showDate: initialShowDate,
+          onShowDateUpdated: (updated) async {
+            callbackShowDate = updated;
+          },
+        );
+
+        await viewModel.cancelShowDate();
+
+        verify(() => showDateRepository.updateShowDateStatus(
+              'date-1',
+              ShowDateStatus.cancelled,
+            )).called(1);
+        expect(viewModel.displayedShowDate.status, ShowDateStatus.cancelled);
+        expect(callbackShowDate?.status, ShowDateStatus.cancelled);
+      });
+
+      test('confirmation refusée n\'annule pas la date', () async {
+        final showDateRepository =
+            locator<ShowDateRepository>() as MockShowDateRepository;
+        final dialogService = locator<DialogService>() as MockDialogService;
+
+        final showDate = ShowDate(
+          id: 'date-1',
+          title: 'Date active',
+          date: DateTime(2026, 1, 1),
+          meetingTimeMinutes: 540,
+          address: 'Adresse',
+          totalRequiredArtists: 2,
+          status: ShowDateStatus.inquiry,
+        );
+
+        when(() => dialogService.showDialog(
+              title: any(named: 'title'),
+              description: any(named: 'description'),
+              buttonTitle: any(named: 'buttonTitle'),
+              cancelTitle: any(named: 'cancelTitle'),
+              dialogPlatform: any(named: 'dialogPlatform'),
+              barrierDismissible: any(named: 'barrierDismissible'),
+            )).thenAnswer((_) async => DialogResponse(confirmed: false));
+
+        final viewModel = ManagerDateDetailViewModel(showDate: showDate);
+        await viewModel.cancelShowDate();
+
+        verifyNever(() => showDateRepository.updateShowDateStatus(
+              'date-1',
+              ShowDateStatus.cancelled,
+            ));
+      });
+
+      test('dateId vide n\'annule pas la date', () async {
+        final showDateRepository =
+            locator<ShowDateRepository>() as MockShowDateRepository;
+
+        final showDateSansId = ShowDate(
+          id: '',
+          title: 'Date sans id',
+          date: DateTime(2026, 1, 1),
+          meetingTimeMinutes: 540,
+          address: 'Adresse test',
+          totalRequiredArtists: 2,
+        );
+
+        final viewModel = ManagerDateDetailViewModel(showDate: showDateSansId);
+        await viewModel.cancelShowDate();
+
+        verifyNever(() => showDateRepository.updateShowDateStatus(
+              '',
+              ShowDateStatus.cancelled,
+            ));
+      });
+
+      test("en cas d'erreur, n'applique pas de faux succès", () async {
+        final showDateRepository =
+            locator<ShowDateRepository>() as MockShowDateRepository;
+        final dialogService = locator<DialogService>() as MockDialogService;
+
+        final initialShowDate = ShowDate(
+          id: 'date-1',
+          title: 'Date initiale',
+          date: DateTime(2026, 1, 1),
+          meetingTimeMinutes: 540,
+          address: 'Adresse',
+          totalRequiredArtists: 2,
+          status: ShowDateStatus.inquiry,
+        );
+
+        when(() => dialogService.showDialog(
+              title: any(named: 'title'),
+              description: any(named: 'description'),
+              buttonTitle: any(named: 'buttonTitle'),
+              cancelTitle: any(named: 'cancelTitle'),
+              dialogPlatform: any(named: 'dialogPlatform'),
+              barrierDismissible: any(named: 'barrierDismissible'),
+            )).thenAnswer((invocation) async {
+          final title = invocation.namedArguments[#title] as String?;
+          if (title == 'Annuler la date') {
+            return DialogResponse(confirmed: true);
+          }
+          return DialogResponse();
+        });
+        when(() => showDateRepository.updateShowDateStatus(
+              'date-1',
+              ShowDateStatus.cancelled,
+            )).thenThrow(Exception('boom'));
+
+        final viewModel = ManagerDateDetailViewModel(showDate: initialShowDate);
+        await viewModel.cancelShowDate();
+
+        expect(viewModel.displayedShowDate.status, ShowDateStatus.inquiry);
+        verify(() => dialogService.showDialog(
+              title: 'Annulation impossible',
+              description: any(named: 'description'),
+              buttonTitle: any(named: 'buttonTitle'),
+              cancelTitle: any(named: 'cancelTitle'),
+              dialogPlatform: any(named: 'dialogPlatform'),
+              barrierDismissible: any(named: 'barrierDismissible'),
+            )).called(1);
+      });
+    });
+
     group('isSelectionEnabled -', () {
       test(
           'devrait autoriser la désélection quand un booking existe avec status selected',
