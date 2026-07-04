@@ -29,15 +29,37 @@ class ManagerPlanningViewModel extends BaseViewModel {
     await runBusyFuture(
       () async {
         //TODO: Ok pour le MVP mais à optimiser plus tard avec un stream
-        showDates = await _showDateRepository.getAllShowDates();
+        final allDates = await _showDateRepository.getAllShowDates();
+        showDates = allDates
+            .where((date) => !_isHiddenFromPlanning(date.status))
+            .toList();
       }(),
     );
     rebuildUi();
   }
 
+  static bool _isHiddenFromPlanning(ShowDateStatus status) {
+    return status == ShowDateStatus.cancelled ||
+        status == ShowDateStatus.archived;
+  }
+
   Future<void> refreshShowDateAfterStatusChange(ShowDate updatedShowDate) async {
     if (updatedShowDate.id.isEmpty) {
       await loadShowDates();
+      return;
+    }
+
+    if (_isHiddenFromPlanning(updatedShowDate.status)) {
+      showDates.removeWhere((date) => date.id == updatedShowDate.id);
+      selectedShowDates.removeWhere((date) => date.id == updatedShowDate.id);
+      if (showDatePicked?.id == updatedShowDate.id) {
+        showDatePicked =
+            selectedShowDates.isNotEmpty ? selectedShowDates.first : null;
+      }
+      if (expandedShowDateId == updatedShowDate.id) {
+        expandedShowDateId = null;
+      }
+      rebuildUi();
       return;
     }
 
