@@ -129,3 +129,13 @@ VALUES (1, 3, 'UNAVAILABLE', TIMESTAMP '2026-01-15 12:00:00');
 
 INSERT INTO artist_availability (show_date_id, artist_id, status, updated_at)
 VALUES (4, 3, 'AVAILABLE', TIMESTAMP '2026-01-15 12:00:00');
+
+-- --------------------------------------------------------------
+-- Réalignement des compteurs d'auto-increment H2 (IDENTITY)
+-- Les INSERT ci-dessus utilisent des id explicites sans avancer le compteur ;
+-- sans RESTART, la prochaine insertion générée entre en collision (PK 23505).
+-- --------------------------------------------------------------
+
+ALTER TABLE violette_user ALTER COLUMN id RESTART WITH 100;
+ALTER TABLE cabaret_company ALTER COLUMN id RESTART WITH 100;
+ALTER TABLE show_date ALTER COLUMN id RESTART WITH 100;
