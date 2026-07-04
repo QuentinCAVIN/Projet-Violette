@@ -262,6 +262,76 @@ void main() {
       });
     });
 
+    group('loadShowDates -', () {
+      test('filtre les dates annulées et archivées', () async {
+        final showDateRepo = getAndRegisterShowDateRepository();
+        final testDate = DateTime(2026, 2, 15);
+
+        final inquiryDate = ShowDate(
+          id: 'date-inquiry',
+          title: 'Date inquiry',
+          date: testDate,
+          meetingTimeMinutes: 540,
+          address: 'Adresse 1',
+          totalRequiredArtists: 1,
+          status: ShowDateStatus.inquiry,
+        );
+        final cancelledDate = ShowDate(
+          id: 'date-cancelled',
+          title: 'Date cancelled',
+          date: testDate,
+          meetingTimeMinutes: 540,
+          address: 'Adresse 2',
+          totalRequiredArtists: 1,
+          status: ShowDateStatus.cancelled,
+        );
+        final archivedDate = ShowDate(
+          id: 'date-archived',
+          title: 'Date archived',
+          date: testDate,
+          meetingTimeMinutes: 540,
+          address: 'Adresse 3',
+          totalRequiredArtists: 1,
+          status: ShowDateStatus.archived,
+        );
+        final confirmedDate = ShowDate(
+          id: 'date-confirmed',
+          title: 'Date confirmed',
+          date: testDate,
+          meetingTimeMinutes: 540,
+          address: 'Adresse 4',
+          totalRequiredArtists: 1,
+          status: ShowDateStatus.confirmed,
+        );
+
+        when(() => showDateRepo.getAllShowDates()).thenAnswer(
+          (_) => Future.value([
+            inquiryDate,
+            cancelledDate,
+            archivedDate,
+            confirmedDate,
+          ]),
+        );
+
+        final viewModel = ManagerPlanningViewModel();
+        await viewModel.loadShowDates();
+
+        expect(viewModel.showDates.length, 2);
+        expect(
+          viewModel.showDates.map((date) => date.id),
+          containsAll(['date-inquiry', 'date-confirmed']),
+        );
+        expect(
+          viewModel.showDates.map((date) => date.id),
+          isNot(contains('date-cancelled')),
+        );
+        expect(
+          viewModel.showDates.map((date) => date.id),
+          isNot(contains('date-archived')),
+        );
+      });
+    });
+
     group('refreshShowDateAfterStatusChange -', () {
       test('devrait mettre à jour uniquement la date concernée', () async {
         final viewModel = ManagerPlanningViewModel();
@@ -310,6 +380,39 @@ void main() {
         expect(viewModel.selectedShowDates.last.status, ShowDateStatus.option);
         expect(viewModel.showDatePicked?.id, 'date-2');
         expect(viewModel.showDatePicked?.status, ShowDateStatus.option);
+      });
+
+      test('retire une date passée au statut cancelled', () async {
+        final viewModel = ManagerPlanningViewModel();
+        final testDate = DateTime(2026, 2, 15);
+        final activeDate = ShowDate(
+          id: 'date-1',
+          title: 'Date active',
+          date: testDate,
+          meetingTimeMinutes: 540,
+          address: 'Adresse 1',
+          totalRequiredArtists: 1,
+          status: ShowDateStatus.inquiry,
+        );
+        final cancelledDate = ShowDate(
+          id: 'date-1',
+          title: 'Date active',
+          date: testDate,
+          meetingTimeMinutes: 540,
+          address: 'Adresse 1',
+          totalRequiredArtists: 1,
+          status: ShowDateStatus.cancelled,
+        );
+
+        viewModel.showDates = [activeDate];
+        viewModel.selectedShowDates = [activeDate];
+        viewModel.showDatePicked = activeDate;
+
+        await viewModel.refreshShowDateAfterStatusChange(cancelledDate);
+
+        expect(viewModel.showDates, isEmpty);
+        expect(viewModel.selectedShowDates, isEmpty);
+        expect(viewModel.showDatePicked, isNull);
       });
     });
   });
