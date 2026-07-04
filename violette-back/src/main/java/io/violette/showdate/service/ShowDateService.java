@@ -9,6 +9,7 @@ import io.violette.cabaretcompany.model.CabaretShowEntity;
 import io.violette.cabaretcompany.repository.CabaretCompanyRepository;
 import io.violette.cabaretcompany.repository.CabaretShowRepository;
 import io.violette.showdate.dto.CreateShowDateRequestDto;
+import io.violette.showdate.event.ShowDateStatusChangedEvent;
 import io.violette.showdate.dto.CreateSkillRequirementRequestDto;
 import io.violette.showdate.dto.ShowDateDto;
 import io.violette.showdate.dto.ShowDateSkillRequirementDto;
@@ -26,6 +27,7 @@ import io.violette.security.ManagerCompanyResolver;
 import io.violette.security.exception.ForbiddenCompanyAccessException;
 import io.violette.violetteuser.exception.UserNotFoundException;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.BadRequestException;
@@ -56,7 +58,8 @@ public class ShowDateService {
     private static final List<ShowDateStatus> V040_ALLOWED_MANAGER_STATUS_TARGETS = Arrays.asList(
             ShowDateStatus.OPTION,
             ShowDateStatus.CONFIRMED,
-            ShowDateStatus.STAFFED
+            ShowDateStatus.STAFFED,
+            ShowDateStatus.CANCELLED
     );
 
     @Inject
@@ -88,6 +91,10 @@ public class ShowDateService {
 
     @Inject
     ManagerCompanyResolver managerCompanyResolver;
+
+    /** Événement CDI publié à chaque transition de statut — pattern Observer. */
+    @Inject
+    Event<ShowDateStatusChangedEvent> showDateStatusChangedEvent;
 
     /**
      * Crée une nouvelle date de spectacle.
@@ -263,17 +270,26 @@ public class ShowDateService {
      */
     private void applyV040StatusTransition(ShowDateEntity entity, ShowDateStatus targetStatus) {
         ShowDateStatus currentStatus = entity.getStatus();
-        boolean isAllowed =
+        boolean isUpwardTransition =
                 (currentStatus == ShowDateStatus.INQUIRY && targetStatus == ShowDateStatus.OPTION)
                         || (currentStatus == ShowDateStatus.OPTION && targetStatus == ShowDateStatus.CONFIRMED)
                         || (currentStatus == ShowDateStatus.CONFIRMED && targetStatus == ShowDateStatus.STAFFED);
+        boolean isCancellationTransition =
+                targetStatus == ShowDateStatus.CANCELLED
+                        && (currentStatus == ShowDateStatus.INQUIRY
+                        || currentStatus == ShowDateStatus.OPTION
+                        || currentStatus == ShowDateStatus.CONFIRMED
+                        || currentStatus == ShowDateStatus.STAFFED);
 
-        if (!isAllowed || !V040_ALLOWED_MANAGER_STATUS_TARGETS.contains(targetStatus)) {
+        if ((!isUpwardTransition && !isCancellationTransition)
+                || !V040_ALLOWED_MANAGER_STATUS_TARGETS.contains(targetStatus)) {
             throw new BadRequestException(
                     "Transition de statut non autorisée en v0.4.0 : " + currentStatus + " -> " + targetStatus
             );
         }
         entity.setStatus(targetStatus);
+        LOG.info("Date showDateId={} : statut {} → {}", entity.getId(), currentStatus, targetStatus);
+        showDateStatusChangedEvent.fire(new ShowDateStatusChangedEvent(entity.getId(), currentStatus, targetStatus));
     }
 
     /**

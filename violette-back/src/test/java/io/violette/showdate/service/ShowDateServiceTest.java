@@ -328,6 +328,90 @@ class ShowDateServiceTest {
         )));
     }
 
+    // ------------------------------------------------------------------
+    // Annulation de date — cascade
+    // ------------------------------------------------------------------
+
+    @Test
+    @Transactional
+    @DisplayName("annulation d'une date CONFIRMED — les bookings actifs passent CANCELLED")
+    void updateShowDate_whenDateCancelled_thenActiveBookingsAreCancelled() {
+        Seed seed = seedCompanyAndManager("svc-casc-base");
+        ShowDateDto created = createDefaultShowDate(seed, "casc-base");
+        advanceShowDateToConfirmed(created.id());
+
+        ShowDateEntity showDate = showDateRepository.findByIdOptional(created.id()).orElseThrow();
+        ArtistBookingEntity selected = persistBooking(showDate, persistArtist("svc-casc-sel"), BookingStatus.SELECTED);
+        ArtistBookingEntity pending = persistBooking(showDate, persistArtist("svc-casc-pnd"), BookingStatus.PENDING_CONFIRMATION);
+        ArtistBookingEntity confirmed = persistBooking(showDate, persistArtist("svc-casc-cfm"), BookingStatus.CONFIRMED);
+        artistBookingRepository.flush();
+
+        showDateService.updateShowDate(created.id(), cancelledStatusUpdate());
+
+        assertEquals(BookingStatus.CANCELLED, reloadBookingStatus(selected.getId()));
+        assertEquals(BookingStatus.CANCELLED, reloadBookingStatus(pending.getId()));
+        assertEquals(BookingStatus.CANCELLED, reloadBookingStatus(confirmed.getId()));
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("annulation d'une date CONFIRMED — les bookings terminaux préexistants ne sont pas modifiés")
+    void updateShowDate_whenDateCancelled_thenTerminalBookingsAreUntouched() {
+        Seed seed = seedCompanyAndManager("svc-casc-term");
+        ShowDateDto created = createDefaultShowDate(seed, "casc-term");
+        advanceShowDateToConfirmed(created.id());
+
+        ShowDateEntity showDate = showDateRepository.findByIdOptional(created.id()).orElseThrow();
+        ArtistBookingEntity active = persistBooking(showDate, persistArtist("svc-casc-act"), BookingStatus.CONFIRMED);
+        ArtistBookingEntity refused = persistBooking(showDate, persistArtist("svc-casc-ref"), BookingStatus.REFUSED);
+        ArtistBookingEntity alreadyCancelled = persistBooking(showDate, persistArtist("svc-casc-can"), BookingStatus.CANCELLED);
+        artistBookingRepository.flush();
+
+        showDateService.updateShowDate(created.id(), cancelledStatusUpdate());
+
+        assertEquals(BookingStatus.CANCELLED, reloadBookingStatus(active.getId()));
+        assertEquals(BookingStatus.REFUSED, reloadBookingStatus(refused.getId()));
+        assertEquals(BookingStatus.CANCELLED, reloadBookingStatus(alreadyCancelled.getId()));
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("annulation d'une date STAFFED — les bookings passent CANCELLED et la date n'est pas re-staffée")
+    void updateShowDate_whenStaffedDateCancelled_thenBookingsCancelledAndDateNotRestaffed() {
+        Seed seed = seedCompanyAndManager("svc-casc-staff");
+        ShowDateDto created = createDefaultShowDate(seed, "casc-staff");
+        advanceShowDateToStaffed(created.id());
+
+        ShowDateEntity showDate = showDateRepository.findByIdOptional(created.id()).orElseThrow();
+        ArtistBookingEntity confirmed = persistBooking(showDate, persistArtist("svc-casc-stf"), BookingStatus.CONFIRMED);
+        artistBookingRepository.flush();
+
+        showDateService.updateShowDate(created.id(), cancelledStatusUpdate());
+
+        assertEquals(BookingStatus.CANCELLED, reloadBookingStatus(confirmed.getId()));
+        assertEquals(
+                ShowDateStatus.CANCELLED,
+                showDateRepository.findByIdOptional(created.id()).orElseThrow().getStatus()
+        );
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("annulation d'une date CONFIRMED sans booking actif — succès et date CANCELLED")
+    void updateShowDate_whenDateCancelledWithNoActiveBookings_thenSucceedsAndDateIsCancelled() {
+        Seed seed = seedCompanyAndManager("svc-casc-empty");
+        ShowDateDto created = createDefaultShowDate(seed, "casc-empty");
+        advanceShowDateToConfirmed(created.id());
+
+        ShowDateDto cancelled = showDateService.updateShowDate(created.id(), cancelledStatusUpdate());
+
+        assertEquals(ShowDateStatus.CANCELLED, cancelled.status());
+        assertEquals(
+                ShowDateStatus.CANCELLED,
+                showDateRepository.findByIdOptional(created.id()).orElseThrow().getStatus()
+        );
+    }
+
     private record Seed(CabaretCompanyEntity company, VioletteUserEntity manager) {
     }
 
@@ -370,11 +454,48 @@ class ShowDateServiceTest {
         return artist;
     }
 
-    private void persistBooking(ShowDateEntity showDate, VioletteUserEntity artist, BookingStatus status) {
+    private ArtistBookingEntity persistBooking(ShowDateEntity showDate, VioletteUserEntity artist, BookingStatus status) {
         ArtistBookingEntity booking = new ArtistBookingEntity();
         booking.setShowDate(showDate);
         booking.setArtist(artist);
         booking.setStatus(status);
         artistBookingRepository.persist(booking);
+        return booking;
+    }
+
+    private ShowDateDto createDefaultShowDate(Seed seed, String uidPrefix) {
+        return showDateService.createShowDate(new CreateShowDateRequestDto(
+                seed.company.getId(),
+                null,
+                LocalDate.of(2026, 6, 15),
+                LocalTime.of(20, 0),
+                "Paris " + uidPrefix,
+                "Contact " + uidPrefix,
+                "0600000000",
+                null
+        ));
+    }
+
+    private UpdateShowDateRequestDto cancelledStatusUpdate() {
+        return new UpdateShowDateRequestDto(null, null, null, null, null, null, ShowDateStatus.CANCELLED);
+    }
+
+    private ShowDateDto transitionShowDateStatus(Long showDateId, ShowDateStatus targetStatus) {
+        return showDateService.updateShowDate(showDateId, new UpdateShowDateRequestDto(
+                null, null, null, null, null, null, targetStatus));
+    }
+
+    private void advanceShowDateToConfirmed(Long showDateId) {
+        transitionShowDateStatus(showDateId, ShowDateStatus.OPTION);
+        transitionShowDateStatus(showDateId, ShowDateStatus.CONFIRMED);
+    }
+
+    private void advanceShowDateToStaffed(Long showDateId) {
+        advanceShowDateToConfirmed(showDateId);
+        transitionShowDateStatus(showDateId, ShowDateStatus.STAFFED);
+    }
+
+    private BookingStatus reloadBookingStatus(Long bookingId) {
+        return artistBookingRepository.findByIdOptional(bookingId).orElseThrow().getStatus();
     }
 }

@@ -289,6 +289,41 @@ public class ArtistBookingService {
     }
 
     // ------------------------------------------------------------------
+    // Propagation système (annulation de date)
+    // ------------------------------------------------------------------
+
+    /**
+     * Annule en cascade tous les bookings actifs ({@code SELECTED}, {@code PENDING_CONFIRMATION},
+     * {@code CONFIRMED}) d'une date de spectacle.
+     *
+     * <p>Méthode de propagation système : l'ownership de la date est vérifié en amont
+     * par le déclencheur ({@code ShowDateService#updateShowDate} / {@code loadOwnedShowDate})
+     * avant la transition vers {@code CANCELLED}. Aucun contrôle manager ici.
+     *
+     * <p>Invoquée par {@code ShowDateCancellationObserver} suite à un
+     * {@link io.violette.showdate.event.ShowDateStatusChangedEvent}.
+     */
+    @Transactional
+    public void cancelAllActiveBookingsForShowDate(Long showDateId) {
+        List<ArtistBookingEntity> activeBookings =
+                artistBookingRepository.findActiveByShowDateId(showDateId);
+
+        for (ArtistBookingEntity booking : activeBookings) {
+            BookingStatus oldStatus = booking.getStatus();
+            booking.setStatus(BookingStatus.CANCELLED);
+            bookingStatusChangedEvent.fire(new BookingStatusChangedEvent(
+                    booking.getId(),
+                    showDateId,
+                    booking.getArtist().getId(),
+                    oldStatus,
+                    BookingStatus.CANCELLED
+            ));
+        }
+
+        LOG.info("{} booking(s) annulé(s) en cascade pour showDateId={}", activeBookings.size(), showDateId);
+    }
+
+    // ------------------------------------------------------------------
     // Envoi des demandes de confirmation (MANAGER)
     // ------------------------------------------------------------------
 
