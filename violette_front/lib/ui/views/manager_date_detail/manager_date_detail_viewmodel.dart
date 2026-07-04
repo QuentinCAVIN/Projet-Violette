@@ -48,6 +48,20 @@ class ManagerDateDetailViewModel extends BaseViewModel {
       displayedShowDate.status == ShowDateStatus.confirmed &&
       bookings.any((b) => b.status == BookingStatus.preselected);
 
+  /// Indique si la date peut être annulée (symétrique de assertShowDateCancellable côté backend).
+  bool get canCancelShowDate {
+    switch (displayedShowDate.status) {
+      case ShowDateStatus.inquiry:
+      case ShowDateStatus.option:
+      case ShowDateStatus.confirmed:
+      case ShowDateStatus.staffed:
+        return true;
+      case ShowDateStatus.cancelled:
+      case ShowDateStatus.archived:
+        return false;
+    }
+  }
+
   /// Méthode d'initialisation appelée à l'ouverture de la vue.
   Future<void> initialize() async {
     setBusy(true);
@@ -377,6 +391,52 @@ class ManagerDateDetailViewModel extends BaseViewModel {
     } catch (e) {
       await _dialogService.showDialog(
         title: 'Changement de statut impossible',
+        description: e.toString(),
+      );
+    }
+  }
+
+  /// Annule la date après confirmation explicite de l'utilisateur.
+  Future<void> cancelShowDate() async {
+    final dateId =
+        displayedShowDate.id.isNotEmpty ? displayedShowDate.id : showDate.id;
+    if (dateId.isEmpty) {
+      _snackbarService.showSnackbar(
+        message: "Identifiant de date manquant.",
+        duration: const Duration(seconds: 2),
+      );
+      return;
+    }
+
+    final response = await _dialogService.showDialog(
+      title: 'Annuler la date',
+      description:
+          'Cette date sera annulée et retirée du planning. Les artistes engagés seront également annulés. Cette action est irréversible.',
+      buttonTitle: 'Annuler la date',
+      cancelTitle: 'Retour',
+    );
+
+    if (response?.confirmed != true) {
+      return;
+    }
+
+    try {
+      await _showDateRepository.updateShowDateStatus(
+        dateId,
+        ShowDateStatus.cancelled,
+      );
+      await _refreshAfterAction();
+      if (onShowDateUpdated != null) {
+        await onShowDateUpdated!(displayedShowDate);
+      }
+      rebuildUi();
+      _snackbarService.showSnackbar(
+        message: "Date annulée.",
+        duration: const Duration(seconds: 2),
+      );
+    } catch (e) {
+      await _dialogService.showDialog(
+        title: 'Annulation impossible',
         description: e.toString(),
       );
     }

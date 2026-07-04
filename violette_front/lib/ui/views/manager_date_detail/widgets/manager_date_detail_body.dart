@@ -159,6 +159,23 @@ class ManagerDateDetailBody extends ViewModelWidget<ManagerDateDetailViewModel> 
                 ),
               ),
             ),
+            if (viewModel.canCancelShowDate) ...[
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: viewModel.cancelShowDate,
+                  icon: Icon(
+                    Icons.event_busy,
+                    color: theme.colorScheme.error,
+                  ),
+                  label: Text(
+                    'Annuler la date',
+                    style: TextStyle(color: theme.colorScheme.error),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
