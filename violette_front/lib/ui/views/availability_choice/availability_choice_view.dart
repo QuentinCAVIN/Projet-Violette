@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:violette_front/models/enums/availability_status.dart';
-import 'package:violette_front/ui/widgets/common/show_date_detail/show_date_detail.dart';
+import 'package:violette_front/ui/views/availability_choice/widgets/artist_show_date_card.dart';
 import 'package:violette_front/ui/widgets/common/calendar/violette_calendar.dart';
 import 'availability_choice_viewmodel.dart';
 
@@ -29,7 +29,7 @@ class AvailabilityChoiceView extends StackedView<AvailabilityChoiceViewModel> {
           ),
           title: Semantics(
             header: true,
-            child: const Text('Sélection des dates'),
+            child: const Text('Planning Artiste'),
           ),
         ),
         backgroundColor: Theme.of(context).colorScheme.surface,
@@ -48,44 +48,21 @@ class AvailabilityChoiceView extends StackedView<AvailabilityChoiceViewModel> {
                   dayStatusLabelBuilder: viewModel.getStatusLabelForDay,
                 ),
                 if (viewModel.selectedShowDates.isNotEmpty) ...[
-                  for (final sd in viewModel.selectedShowDates) ...[
-                    ShowDateDetail(
+                  for (final sd in viewModel.selectedShowDates)
+                    ArtistShowDateCard(
                       showDate: sd,
-                      status: viewModel.getStatusForShowDateId(sd.id) ??
-                          AvailabilityStatus.pending,
+                      availabilityStatus:
+                          viewModel.getStatusForShowDateId(sd.id) ??
+                              AvailabilityStatus.pending,
+                      bookingStatus:
+                          viewModel.getBookingStatusForShowDate(sd.id),
+                      isAvailabilityLocked:
+                          viewModel.isShowDateConfirmedByBooking(sd.id),
+                      availabilityLockMessage:
+                          viewModel.confirmedBookingLockMessage,
+                      onEditAvailability: () =>
+                          viewModel.cycleAvailabilityForShowDate(sd),
                     ),
-                    if (viewModel.isShowDateConfirmedByBooking(sd.id))
-                      Card(
-                        child: ListTile(
-                          leading: Icon(
-                            Icons.lock,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          title: Text(viewModel.confirmedBookingLockMessage),
-                        ),
-                      ),
-                    if (viewModel.selectedShowDates.length > 1)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton(
-                            style: OutlinedButton.styleFrom(
-                              minimumSize: const Size(0, 48),
-                            ),
-                            onPressed: viewModel.isBusy ||
-                                    viewModel.isShowDateConfirmedByBooking(sd.id)
-                                ? null
-                                : () => viewModel.cycleAvailabilityForShowDate(sd),
-                            child: Text(
-                              viewModel.isShowDateConfirmedByBooking(sd.id)
-                                  ? 'Disponibilité verrouillée'
-                                  : 'Mettre à jour ma disponibilité',
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
                 ],
                 const SizedBox(height: 30),
                 SizedBox(
@@ -106,7 +83,7 @@ class AvailabilityChoiceView extends StackedView<AvailabilityChoiceViewModel> {
                               color: Colors.white,
                             ),
                           )
-                        : const Text("Valider"),
+                        : const Text('Terminé'),
                   ),
                 ),
               ],
