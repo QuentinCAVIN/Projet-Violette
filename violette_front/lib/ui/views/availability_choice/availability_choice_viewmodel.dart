@@ -196,7 +196,6 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
 
   Future<void> onValidatePressed() async {
     _navigationService.replaceWithHomeView();
-    _showAccessibleSnackbar(message: 'Disponibilités enregistrées.');
   }
 
   Future<void> onBackPressed() async {
