@@ -48,13 +48,13 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
 
   List<ShowDate> showDates = [];
   final Map<String, AvailabilityStatus> _myAvailabilityByShowDateId = {};
-  final Set<String> _confirmedBookingShowDateIds = {};
+  final Map<String, BookingStatus> _bookingStatusByShowDateId = {};
 
   Future<void> loadShowDates() async {
     // runBusyFuture sert à faire un setBusy true + await + setBusy false.
     showDates = await runBusyFuture(_showDateRepository.getMyAvailableShowDates());
     await _loadMyAvailabilities();
-    await _loadMyConfirmedBookings();
+    await _loadMyBookingStatuses();
     rebuildUi();
   }
 
@@ -84,20 +84,20 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
     }
   }
 
-  Future<void> _loadMyConfirmedBookings() async {
-    _confirmedBookingShowDateIds.clear();
+  Future<void> _loadMyBookingStatuses() async {
+    _bookingStatusByShowDateId.clear();
 
     if (_authenticationService.currentUser == null) return;
 
     try {
       final bookings = await _bookingRepository.getMyBookings();
-      _confirmedBookingShowDateIds.addAll(
-        bookings
-            .where((booking) => booking.status == BookingStatus.confirmed)
-            .map((booking) => booking.dateId)
-            .whereType<String>()
-            .where((dateId) => dateId.isNotEmpty),
-      );
+      for (final booking in bookings) {
+        final dateId = booking.dateId;
+        if (dateId == null || dateId.isEmpty) continue;
+        // En cas de doublon (invariant back « un booking par paire »), le dernier
+        // booking de la liste l'emporte car il reflète l'état le plus récent.
+        _bookingStatusByShowDateId[dateId] = booking.status;
+      }
     } catch (_) {
       // L'absence temporaire d'information booking ne doit pas bloquer le chargement des disponibilités.
     }
@@ -240,8 +240,18 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
   String get confirmedBookingLockMessage =>
       'Confirmé — contactez le gérant pour modifier';
 
+  /// Statut de booking de l'artiste pour une date, ou null si aucun booking.
+  BookingStatus? getBookingStatusForShowDate(String showDateId) {
+    if (showDateId.isEmpty) return null;
+    return _bookingStatusByShowDateId[showDateId];
+  }
+
   bool isShowDateConfirmedByBooking(String showDateId) =>
-      _confirmedBookingShowDateIds.contains(showDateId);
+      getBookingStatusForShowDate(showDateId) == BookingStatus.confirmed;
+
+  /// Vrai si le gérant a désengagé l'artiste (booking annulé) sur cette date.
+  bool isBookingCancelledByManager(String showDateId) =>
+      getBookingStatusForShowDate(showDateId) == BookingStatus.cancelled;
 
   // Récupérer le statut pour un jour (calendrier : une seule couleur par jour).
   AvailabilityStatus? getStatusForDay(DateTime day) {

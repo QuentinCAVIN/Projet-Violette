@@ -11,6 +11,7 @@ import 'package:violette_front/models/enums/availability_status.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import '../helpers/test_data_builders.dart';
 import '../helpers/test_helpers.dart';
 
 void main() {
@@ -556,6 +557,246 @@ void main() {
           ).called(1);
           expect(
             viewModel.getStatusForShowDateId('free-date'),
+            AvailabilityStatus.available,
+          );
+        },
+      );
+    });
+
+    group('statuts de booking par date -', () {
+      test(
+        'loadShowDates_whenMyBookingsHaveVariedStatuses_storesEachDateIdWithStatus',
+        () async {
+          final showDateRepo = getAndRegisterShowDateRepository();
+          final availabilityRepo = getAndRegisterAvailabilityRepository();
+          final bookingRepo = getAndRegisterBookingRepository();
+          final authService = getAndRegisterFirebaseAuthenticationService();
+
+          final confirmedDate = TestDataBuilders.createTestShowDate(
+            id: 'date-confirmed',
+            date: DateTime(2026, 3, 1),
+          );
+          final pendingDate = TestDataBuilders.createTestShowDate(
+            id: 'date-pending',
+            date: DateTime(2026, 3, 2),
+          );
+          final cancelledDate = TestDataBuilders.createTestShowDate(
+            id: 'date-cancelled',
+            date: DateTime(2026, 3, 3),
+          );
+          final refusedDate = TestDataBuilders.createTestShowDate(
+            id: 'date-refused',
+            date: DateTime(2026, 3, 4),
+          );
+
+          when(() => showDateRepo.getMyAvailableShowDates()).thenAnswer(
+            (_) async => [confirmedDate, pendingDate, cancelledDate, refusedDate],
+          );
+          when(() => availabilityRepo.getMyAvailabilityForDate(any()))
+              .thenAnswer(
+            (_) async => Availability(
+              artistId: '1',
+              status: AvailabilityStatus.pending,
+            ),
+          );
+          when(() => bookingRepo.getMyBookings()).thenAnswer(
+            (_) async => [
+              TestDataBuilders.createTestArtistBooking(
+                dateId: 'date-confirmed',
+                status: BookingStatus.confirmed,
+              ),
+              TestDataBuilders.createTestArtistBooking(
+                dateId: 'date-pending',
+                status: BookingStatus.pendingConfirmation,
+              ),
+              TestDataBuilders.createTestArtistBooking(
+                dateId: 'date-cancelled',
+                status: BookingStatus.cancelled,
+              ),
+              TestDataBuilders.createTestArtistBooking(
+                dateId: 'date-refused',
+                status: BookingStatus.refused,
+              ),
+            ],
+          );
+          when(() => authService.currentUser).thenReturn(MockUser(uid: 'uid-1'));
+
+          final viewModel = AvailabilityChoiceViewModel();
+          await viewModel.loadShowDates();
+
+          expect(
+            viewModel.getBookingStatusForShowDate('date-confirmed'),
+            BookingStatus.confirmed,
+          );
+          expect(
+            viewModel.getBookingStatusForShowDate('date-pending'),
+            BookingStatus.pendingConfirmation,
+          );
+          expect(
+            viewModel.getBookingStatusForShowDate('date-cancelled'),
+            BookingStatus.cancelled,
+          );
+          expect(
+            viewModel.getBookingStatusForShowDate('date-refused'),
+            BookingStatus.refused,
+          );
+        },
+      );
+
+      test(
+        'getBookingStatusForShowDate_whenNoBookingForDate_returnsNull',
+        () async {
+          final showDateRepo = getAndRegisterShowDateRepository();
+          final availabilityRepo = getAndRegisterAvailabilityRepository();
+          final bookingRepo = getAndRegisterBookingRepository();
+          final authService = getAndRegisterFirebaseAuthenticationService();
+
+          final showDate = TestDataBuilders.createTestShowDate(id: 'date-alone');
+
+          when(() => showDateRepo.getMyAvailableShowDates())
+              .thenAnswer((_) async => [showDate]);
+          when(() => availabilityRepo.getMyAvailabilityForDate('date-alone'))
+              .thenAnswer(
+            (_) async => Availability(
+              artistId: '1',
+              status: AvailabilityStatus.pending,
+            ),
+          );
+          when(() => bookingRepo.getMyBookings()).thenAnswer((_) async => []);
+          when(() => authService.currentUser).thenReturn(MockUser(uid: 'uid-1'));
+
+          final viewModel = AvailabilityChoiceViewModel();
+          await viewModel.loadShowDates();
+
+          expect(viewModel.getBookingStatusForShowDate('date-alone'), isNull);
+          expect(viewModel.getBookingStatusForShowDate('unknown-date'), isNull);
+        },
+      );
+
+      test(
+        'isShowDateConfirmedByBooking_whenStatusIsConfirmed_returnsTrueOnlyForConfirmed',
+        () async {
+          final showDateRepo = getAndRegisterShowDateRepository();
+          final availabilityRepo = getAndRegisterAvailabilityRepository();
+          final bookingRepo = getAndRegisterBookingRepository();
+          final authService = getAndRegisterFirebaseAuthenticationService();
+
+          when(() => showDateRepo.getMyAvailableShowDates())
+              .thenAnswer((_) async => []);
+          when(() => availabilityRepo.getMyAvailabilityForDate(any()))
+              .thenAnswer(
+            (_) async => Availability(
+              artistId: '1',
+              status: AvailabilityStatus.pending,
+            ),
+          );
+          when(() => bookingRepo.getMyBookings()).thenAnswer(
+            (_) async => [
+              TestDataBuilders.createTestArtistBooking(
+                dateId: 'confirmed-only',
+                status: BookingStatus.confirmed,
+              ),
+              TestDataBuilders.createTestArtistBooking(
+                dateId: 'pending-only',
+                status: BookingStatus.pendingConfirmation,
+              ),
+              TestDataBuilders.createTestArtistBooking(
+                dateId: 'cancelled-only',
+                status: BookingStatus.cancelled,
+              ),
+              TestDataBuilders.createTestArtistBooking(
+                dateId: 'refused-only',
+                status: BookingStatus.refused,
+              ),
+            ],
+          );
+          when(() => authService.currentUser).thenReturn(MockUser(uid: 'uid-1'));
+
+          final viewModel = AvailabilityChoiceViewModel();
+          await viewModel.loadShowDates();
+
+          expect(viewModel.isShowDateConfirmedByBooking('confirmed-only'), true);
+          expect(viewModel.isShowDateConfirmedByBooking('pending-only'), false);
+          expect(viewModel.isShowDateConfirmedByBooking('cancelled-only'), false);
+          expect(viewModel.isShowDateConfirmedByBooking('refused-only'), false);
+          expect(viewModel.isShowDateConfirmedByBooking('no-booking'), false);
+        },
+      );
+
+      test(
+        'isBookingCancelledByManager_whenStatusIsCancelled_returnsTrueOnlyForCancelled',
+        () async {
+          final showDateRepo = getAndRegisterShowDateRepository();
+          final availabilityRepo = getAndRegisterAvailabilityRepository();
+          final bookingRepo = getAndRegisterBookingRepository();
+          final authService = getAndRegisterFirebaseAuthenticationService();
+
+          when(() => showDateRepo.getMyAvailableShowDates())
+              .thenAnswer((_) async => []);
+          when(() => availabilityRepo.getMyAvailabilityForDate(any()))
+              .thenAnswer(
+            (_) async => Availability(
+              artistId: '1',
+              status: AvailabilityStatus.pending,
+            ),
+          );
+          when(() => bookingRepo.getMyBookings()).thenAnswer(
+            (_) async => [
+              TestDataBuilders.createTestArtistBooking(
+                dateId: 'cancelled-date',
+                status: BookingStatus.cancelled,
+              ),
+              TestDataBuilders.createTestArtistBooking(
+                dateId: 'confirmed-date',
+                status: BookingStatus.confirmed,
+              ),
+              TestDataBuilders.createTestArtistBooking(
+                dateId: 'pending-date',
+                status: BookingStatus.pendingConfirmation,
+              ),
+            ],
+          );
+          when(() => authService.currentUser).thenReturn(MockUser(uid: 'uid-1'));
+
+          final viewModel = AvailabilityChoiceViewModel();
+          await viewModel.loadShowDates();
+
+          expect(viewModel.isBookingCancelledByManager('cancelled-date'), true);
+          expect(viewModel.isBookingCancelledByManager('confirmed-date'), false);
+          expect(viewModel.isBookingCancelledByManager('pending-date'), false);
+          expect(viewModel.isBookingCancelledByManager('no-booking'), false);
+        },
+      );
+
+      test(
+        'loadShowDates_whenGetMyBookingsThrows_keepsEmptyBookingMapAndLoadsAvailabilities',
+        () async {
+          final showDateRepo = getAndRegisterShowDateRepository();
+          final availabilityRepo = getAndRegisterAvailabilityRepository();
+          final bookingRepo = getAndRegisterBookingRepository();
+          final authService = getAndRegisterFirebaseAuthenticationService();
+
+          final showDate = TestDataBuilders.createTestShowDate(id: 'avail-date');
+
+          when(() => showDateRepo.getMyAvailableShowDates())
+              .thenAnswer((_) async => [showDate]);
+          when(() => availabilityRepo.getMyAvailabilityForDate('avail-date'))
+              .thenAnswer(
+            (_) async => Availability(
+              artistId: '1',
+              status: AvailabilityStatus.available,
+            ),
+          );
+          when(() => bookingRepo.getMyBookings()).thenThrow(Exception('réseau'));
+          when(() => authService.currentUser).thenReturn(MockUser(uid: 'uid-1'));
+
+          final viewModel = AvailabilityChoiceViewModel();
+          await viewModel.loadShowDates();
+
+          expect(viewModel.getBookingStatusForShowDate('avail-date'), isNull);
+          expect(viewModel.isShowDateConfirmedByBooking('avail-date'), false);
+          expect(
+            viewModel.getStatusForShowDateId('avail-date'),
             AvailabilityStatus.available,
           );
         },

@@ -1,3 +1,5 @@
+import 'package:violette_front/models/artist_booking.dart';
+import 'package:violette_front/models/enums/booking_status.dart';
 import 'package:violette_front/models/enums/role.dart';
 import 'package:violette_front/models/show_date.dart';
 import 'package:violette_front/models/violette_user.dart';
@@ -37,6 +39,18 @@ class TestDataBuilders {
       address: address,
       totalRequiredArtists: totalRequiredArtists,
       description: description,
+    );
+  }
+
+  static ArtistBooking createTestArtistBooking({
+    String artistId = 'artist-1',
+    String? dateId = 'show-date-1',
+    BookingStatus status = BookingStatus.pendingConfirmation,
+  }) {
+    return ArtistBooking(
+      artistId: artistId,
+      dateId: dateId,
+      status: status,
     );
   }
 
