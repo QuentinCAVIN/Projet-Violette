@@ -8,10 +8,10 @@ import 'package:violette_front/models/mappers/artist_booking_mapper.dart';
 
 /// Source de données distante pour le domaine réservations artistes (REST).
 ///
-/// Incréments : réponse artiste (`respondToRequest`), liste des demandes en
-/// attente (`getPendingRequestsForArtist`), envoi des demandes de confirmation
-/// gérant (`sendConfirmationRequests`), sélection / désélection gérant
-/// (`toggleSelection`).
+/// Incréments : réponse artiste (`respondToRequest`), annulation gérant
+/// (`cancelBooking`), liste des demandes en attente (`getPendingRequestsForArtist`),
+/// envoi des demandes de confirmation gérant (`sendConfirmationRequests`),
+/// sélection / désélection gérant (`toggleSelection`).
 class BookingRemoteDataSource {
   late final Dio _dio;
 
@@ -86,6 +86,49 @@ class BookingRemoteDataSource {
         '/api/artist-bookings/$bookingId/respond',
         data: <String, dynamic>{'accept': accept},
       );
+    } on DioException catch (e) {
+      throw Exception(_messageFromDio(e));
+    }
+  }
+
+  /// Annule une réservation PENDING_CONFIRMATION ou CONFIRMED pour la date
+  /// [showDateId] et l'artiste [artistId] (rôle MANAGER).
+  ///
+  /// Résout d'abord l'identifiant backend du booking via
+  /// `GET /api/artist-bookings/show-dates/{showDateId}`, puis appelle
+  /// `PATCH /api/artist-bookings/{id}/cancel` (sans corps).
+  Future<void> cancelBooking(String showDateId, String artistId) async {
+    final artistIdNum = int.tryParse(artistId.trim());
+    if (artistIdNum == null) {
+      throw Exception(
+        'Identifiant d’artiste invalide pour l’API (attendu : entier).',
+      );
+    }
+
+    late final List<Map<String, dynamic>> items;
+    try {
+      final listResponse =
+          await _dio.get('/api/artist-bookings/show-dates/$showDateId');
+      items = ArtistBookingMapper.parseBookingList(listResponse.data);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        throw Exception('Date de spectacle introuvable côté serveur.');
+      }
+      throw Exception(_messageFromDio(e));
+    }
+
+    final bookingId =
+        ArtistBookingMapper.findBookingIdForArtistId(items, artistIdNum);
+    if (bookingId == null) {
+      throw Exception(
+        'Aucune réservation correspondante sur le serveur pour cet artiste sur '
+        'cette date. Elle a peut-être déjà été traitée ou les données ne sont '
+        'pas encore synchronisées.',
+      );
+    }
+
+    try {
+      await _dio.patch<void>('/api/artist-bookings/$bookingId/cancel');
     } on DioException catch (e) {
       throw Exception(_messageFromDio(e));
     }

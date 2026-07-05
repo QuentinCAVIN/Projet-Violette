@@ -41,4 +41,8 @@ class RestBookingRepository implements BookingRepository {
     bool accept,
   ) =>
       _remote.respondToRequest(dateId, artistId, accept);
+
+  @override
+  Future<void> cancelBooking(String dateId, String artistId) =>
+      _remote.cancelBooking(dateId, artistId);
 }
