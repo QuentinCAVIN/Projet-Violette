@@ -211,6 +211,13 @@ class ManagerDateDetailViewModel extends BaseViewModel {
     }
   }
 
+  /// Indique si le gérant peut annuler la réservation de l'artiste.
+  bool canCancelBooking(ArtistBooking? booking) {
+    if (booking == null) return false;
+    return booking.status == BookingStatus.pendingConfirmation ||
+        booking.status == BookingStatus.confirmed;
+  }
+
   /// État visuel de la case à cocher (cohérent avec le statut de réservation).
   ///
   /// Refus : décochée. Sinon (sélectionné, en attente de réponse, confirmé) : cochée.
@@ -305,6 +312,48 @@ class ManagerDateDetailViewModel extends BaseViewModel {
     } catch (e) {
       _dialogService.showDialog(
         title: 'Erreur',
+        description: e.toString(),
+      );
+    }
+  }
+
+  /// Annule la réservation d'un artiste après confirmation explicite.
+  ///
+  /// Après la mutation REST, l'écran est rechargé via [_refreshAfterAction].
+  Future<void> cancelBooking(String artistId) async {
+    final dateId =
+        displayedShowDate.id.isNotEmpty ? displayedShowDate.id : showDate.id;
+    if (dateId.isEmpty) {
+      _snackbarService.showSnackbar(
+        message: "Identifiant de date manquant.",
+        duration: const Duration(seconds: 2),
+      );
+      return;
+    }
+
+    final response = await _dialogService.showDialog(
+      title: 'Annuler la réservation',
+      description:
+          'La réservation de cet artiste sera annulée et il sera désengagé de '
+          'cette date. Cette action est irréversible.',
+      buttonTitle: 'Annuler la réservation',
+      cancelTitle: 'Retour',
+    );
+
+    if (response?.confirmed != true) {
+      return;
+    }
+
+    try {
+      await _bookingRepository.cancelBooking(dateId, artistId);
+      await _refreshAfterAction();
+      _snackbarService.showSnackbar(
+        message: "Réservation annulée.",
+        duration: const Duration(seconds: 2),
+      );
+    } catch (e) {
+      await _dialogService.showDialog(
+        title: 'Annulation impossible',
         description: e.toString(),
       );
     }

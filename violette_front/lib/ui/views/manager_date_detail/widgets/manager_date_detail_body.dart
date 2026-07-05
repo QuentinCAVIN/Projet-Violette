@@ -75,6 +75,17 @@ class ManagerDateDetailBody extends ViewModelWidget<ManagerDateDetailViewModel> 
                   artist.email,
                   style: theme.textTheme.bodyMedium,
                 ),
+                if (booking != null) ...[
+                  const SizedBox(height: 4),
+                  BookingStatusPill(
+                    status: booking.status,
+                  ),
+                ] else if (availability != null) ...[
+                  const SizedBox(height: 4),
+                  AvailabilityStatusPill(
+                    status: availability,
+                  ),
+                ],
                 if (!isEnabled)
                   Text(
                     "Sélection indisponible",
@@ -85,21 +96,26 @@ class ManagerDateDetailBody extends ViewModelWidget<ManagerDateDetailViewModel> 
                   ),
               ],
             ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // TODO(v0.5.0): distinguer plus explicitement en UI
-                // "disponible", "préselectionné" et "confirmé" côté manager.
-                if (booking != null)
-                  BookingStatusPill(
-                    status: booking.status,
+            trailing: viewModel.canCancelBooking(booking)
+                ? PopupMenuButton<String>(
+                    tooltip: 'Actions',
+                    icon: const Icon(Icons.more_vert),
+                    onSelected: (value) {
+                      if (value == 'cancel') {
+                        viewModel.cancelBooking(apiArtistId);
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      PopupMenuItem<String>(
+                        value: 'cancel',
+                        child: Text(
+                          'Annuler la réservation',
+                          style: TextStyle(color: theme.colorScheme.error),
+                        ),
+                      ),
+                    ],
                   )
-                else if (availability != null)
-                  AvailabilityStatusPill(
-                    status: availability,
-                  ),
-              ],
-            ),
+                : null,
           ),
         ));
       },
