@@ -674,6 +674,140 @@ void main() {
       });
     });
 
+    group('cancelBooking -', () {
+      test('confirmation acceptée annule le booking', () async {
+        final showDateRepository =
+            locator<ShowDateRepository>() as MockShowDateRepository;
+        final bookingRepository =
+            locator<BookingRepository>() as MockBookingRepository;
+        final dialogService = locator<DialogService>() as MockDialogService;
+
+        final showDate = ShowDate(
+          id: 'date-1',
+          title: 'Date test',
+          date: DateTime(2026, 1, 1),
+          meetingTimeMinutes: 540,
+          address: 'Adresse',
+          totalRequiredArtists: 2,
+          status: ShowDateStatus.confirmed,
+        );
+
+        when(() => dialogService.showDialog(
+              title: any(named: 'title'),
+              description: any(named: 'description'),
+              buttonTitle: any(named: 'buttonTitle'),
+              cancelTitle: any(named: 'cancelTitle'),
+              dialogPlatform: any(named: 'dialogPlatform'),
+              barrierDismissible: any(named: 'barrierDismissible'),
+            )).thenAnswer((_) async => DialogResponse(confirmed: true));
+        when(() => bookingRepository.cancelBooking('date-1', '5'))
+            .thenAnswer((_) async {});
+        when(() => showDateRepository.getShowDateById('date-1'))
+            .thenAnswer((_) async => showDate);
+        when(() => bookingRepository.getBookingsForDate('date-1'))
+            .thenAnswer((_) async => []);
+
+        final viewModel = ManagerDateDetailViewModel(showDate: showDate);
+        await viewModel.cancelBooking('5');
+
+        verify(() => bookingRepository.cancelBooking('date-1', '5')).called(1);
+      });
+
+      test('confirmation refusée n\'annule pas le booking', () async {
+        final bookingRepository =
+            locator<BookingRepository>() as MockBookingRepository;
+        final dialogService = locator<DialogService>() as MockDialogService;
+
+        final showDate = ShowDate(
+          id: 'date-1',
+          title: 'Date active',
+          date: DateTime(2026, 1, 1),
+          meetingTimeMinutes: 540,
+          address: 'Adresse',
+          totalRequiredArtists: 2,
+          status: ShowDateStatus.confirmed,
+        );
+
+        when(() => dialogService.showDialog(
+              title: any(named: 'title'),
+              description: any(named: 'description'),
+              buttonTitle: any(named: 'buttonTitle'),
+              cancelTitle: any(named: 'cancelTitle'),
+              dialogPlatform: any(named: 'dialogPlatform'),
+              barrierDismissible: any(named: 'barrierDismissible'),
+            )).thenAnswer((_) async => DialogResponse(confirmed: false));
+
+        final viewModel = ManagerDateDetailViewModel(showDate: showDate);
+        await viewModel.cancelBooking('5');
+
+        verifyNever(() => bookingRepository.cancelBooking(any(), any()));
+      });
+
+      test('dateId vide n\'annule pas le booking', () async {
+        final bookingRepository =
+            locator<BookingRepository>() as MockBookingRepository;
+
+        final showDateSansId = ShowDate(
+          id: '',
+          title: 'Date sans id',
+          date: DateTime(2026, 1, 1),
+          meetingTimeMinutes: 540,
+          address: 'Adresse test',
+          totalRequiredArtists: 2,
+        );
+
+        final viewModel = ManagerDateDetailViewModel(showDate: showDateSansId);
+        await viewModel.cancelBooking('5');
+
+        verifyNever(() => bookingRepository.cancelBooking(any(), any()));
+      });
+
+      test("en cas d'erreur, n'applique pas de faux succès", () async {
+        final bookingRepository =
+            locator<BookingRepository>() as MockBookingRepository;
+        final dialogService = locator<DialogService>() as MockDialogService;
+
+        final showDate = ShowDate(
+          id: 'date-1',
+          title: 'Date initiale',
+          date: DateTime(2026, 1, 1),
+          meetingTimeMinutes: 540,
+          address: 'Adresse',
+          totalRequiredArtists: 2,
+          status: ShowDateStatus.confirmed,
+        );
+
+        when(() => dialogService.showDialog(
+              title: any(named: 'title'),
+              description: any(named: 'description'),
+              buttonTitle: any(named: 'buttonTitle'),
+              cancelTitle: any(named: 'cancelTitle'),
+              dialogPlatform: any(named: 'dialogPlatform'),
+              barrierDismissible: any(named: 'barrierDismissible'),
+            )).thenAnswer((invocation) async {
+          final title = invocation.namedArguments[#title] as String?;
+          if (title == 'Annuler la réservation') {
+            return DialogResponse(confirmed: true);
+          }
+          return DialogResponse();
+        });
+        when(() => bookingRepository.cancelBooking('date-1', '5'))
+            .thenThrow(Exception('boom'));
+
+        final viewModel = ManagerDateDetailViewModel(showDate: showDate);
+        await viewModel.cancelBooking('5');
+
+        verify(() => dialogService.showDialog(
+              title: 'Annulation impossible',
+              description: any(named: 'description'),
+              buttonTitle: any(named: 'buttonTitle'),
+              cancelTitle: any(named: 'cancelTitle'),
+              dialogPlatform: any(named: 'dialogPlatform'),
+              barrierDismissible: any(named: 'barrierDismissible'),
+            )).called(1);
+      });
+    });
+
     group('isSelectionEnabled -', () {
       test(
           'devrait autoriser la désélection quand un booking existe avec status selected',
