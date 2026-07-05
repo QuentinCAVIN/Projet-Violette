@@ -20,6 +20,12 @@ class VioletteTheme {
   static const Color textSecondary = Color(0xFFE8E0FF);
   static const Color textHint = Color(0xFFD0C8F0);
 
+  // Tokens de carte opaque (WCAG 2.2 AA — planning v0.5.0)
+  static const Color cardSurface = Color(0xFFEDE7FA);
+  static const Color textOnCard = Color(0xFF2E2A45);
+  static const Color textOnCardSecondary = Color(0xFF564F6F);
+  static const Color cardTitle = darkPurple;
+
   // Couleurs pour les champs de saisie
   static const Color inputBackground =
       Color(0x33FFFFFF); // Blanc à 20% d'opacité
