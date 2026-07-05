@@ -115,7 +115,7 @@ class HomeView extends StackedView<HomeViewModel> {
                         ),
                       ),
                     ],
-                    // Bouton navigation sélection des dispos visible par les artistes uniquement
+                    // Bouton navigation planning artiste visible par les artistes uniquement
                     if (currentUser.roles.contains(Role.artist))
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
@@ -123,7 +123,7 @@ class HomeView extends StackedView<HomeViewModel> {
                         ),
                         onPressed: viewModel.navigateToAvailabilityChoiceView,
                         child: const Text(
-                          'Sélection des dispos',
+                          'Planning Artiste',
                         ),
                       ),
                     verticalSpaceMassive,

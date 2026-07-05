@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:violette_front/models/enums/availability_status.dart';
 import 'package:violette_front/models/enums/booking_status.dart';
 import 'package:violette_front/models/show_date.dart';
+import 'package:violette_front/ui/common/app_theme.dart';
 import 'package:violette_front/ui/widgets/common/availability_status_pill.dart';
 import 'package:violette_front/ui/widgets/common/date_badge.dart';
 
@@ -54,6 +55,7 @@ class ArtistShowDateCard extends StatelessWidget {
     return Semantics(
       label: _accessibilityLabel,
       child: Card(
+        color: VioletteTheme.cardSurface,
         margin: const EdgeInsets.symmetric(vertical: 8),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -69,8 +71,8 @@ class ArtistShowDateCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   'Artistes conviés : ${showDate.totalRequiredArtists}',
-                  style: TextStyle(
-                    color: Colors.grey[700],
+                  style: const TextStyle(
+                    color: VioletteTheme.textOnCard,
                     fontSize: 14,
                   ),
                 ),
@@ -80,8 +82,8 @@ class ArtistShowDateCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   showDate.description!,
-                  style: TextStyle(
-                    color: Colors.grey[700],
+                  style: const TextStyle(
+                    color: VioletteTheme.textOnCard,
                     fontSize: 14,
                   ),
                 ),
@@ -90,8 +92,8 @@ class ArtistShowDateCard extends StatelessWidget {
               if (isAvailabilityLocked)
                 Text(
                   availabilityLockMessage,
-                  style: TextStyle(
-                    color: Colors.grey[600],
+                  style: const TextStyle(
+                    color: VioletteTheme.textOnCardSecondary,
                     fontSize: 12,
                     fontStyle: FontStyle.italic,
                   ),
@@ -118,7 +120,7 @@ class ArtistShowDateCard extends StatelessWidget {
               Text(
                 showDate.title,
                 style: const TextStyle(
-                  color: Color(0xFF673AB7),
+                  color: VioletteTheme.cardTitle,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -145,8 +147,8 @@ class ArtistShowDateCard extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 4),
       child: Text(
         '$label : $value',
-        style: TextStyle(
-          color: Colors.grey[700],
+        style: const TextStyle(
+          color: VioletteTheme.textOnCard,
           fontSize: 14,
         ),
       ),
@@ -162,10 +164,10 @@ class ArtistShowDateCard extends StatelessWidget {
           label: 'Ma disponibilité : ${availabilityStatus.label}',
           child: Row(
             children: [
-              Text(
+              const Text(
                 'Ma disponibilité : ',
                 style: TextStyle(
-                  color: Colors.grey[800],
+                  color: VioletteTheme.textOnCard,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -177,6 +179,9 @@ class ArtistShowDateCard extends StatelessWidget {
         const SizedBox(height: 8),
         TextButton(
           onPressed: onEditAvailability,
+          style: TextButton.styleFrom(
+            foregroundColor: VioletteTheme.cardTitle,
+          ),
           child: const Text('Modifier ma disponibilité'),
         ),
       ],
@@ -194,23 +199,37 @@ class _ArtistBookingStatusPill extends StatelessWidget {
     required this.label,
   });
 
+  /// Fond saturé opaque compatible WCAG AA (texte blanc ≥ 4,5:1).
+  /// Aligné sur la palette des pills de disponibilité.
+  Color get _pillBackgroundColor {
+    switch (status) {
+      case BookingStatus.preselected:
+        return const Color(0xFF1565C0);
+      case BookingStatus.pendingConfirmation:
+        return const Color(0xFFE65100);
+      case BookingStatus.confirmed:
+        return const Color(0xFF2E7D32);
+      case BookingStatus.refused:
+        return const Color(0xFFC62828);
+      case BookingStatus.cancelled:
+        return const Color(0xFF616161);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final color = status.color;
-
     return Semantics(
       label: 'Engagement : $label',
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.2),
+          color: _pillBackgroundColor,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color),
         ),
         child: Text(
           label,
-          style: TextStyle(
-            color: color,
+          style: const TextStyle(
+            color: Colors.white,
             fontSize: 12,
             fontWeight: FontWeight.bold,
           ),
