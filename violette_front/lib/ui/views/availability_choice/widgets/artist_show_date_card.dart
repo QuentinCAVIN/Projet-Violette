@@ -179,6 +179,9 @@ class ArtistShowDateCard extends StatelessWidget {
         const SizedBox(height: 8),
         TextButton(
           onPressed: onEditAvailability,
+          style: TextButton.styleFrom(
+            foregroundColor: VioletteTheme.cardTitle,
+          ),
           child: const Text('Modifier ma disponibilité'),
         ),
       ],

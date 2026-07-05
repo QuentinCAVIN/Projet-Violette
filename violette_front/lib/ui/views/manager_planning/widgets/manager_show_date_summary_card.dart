@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:violette_front/models/show_date.dart';
+import 'package:violette_front/ui/common/app_theme.dart';
 import 'package:violette_front/ui/widgets/common/date_badge.dart';
 
 class ManagerShowDateSummaryCard extends StatelessWidget {
@@ -22,12 +23,8 @@ class ManagerShowDateSummaryCard extends StatelessWidget {
         margin: const EdgeInsets.symmetric(vertical: 20),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFFE0F7FA),
+          color: VioletteTheme.cardSurface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: const Color(0xFF00C853),
-            width: 2,
-          ),
         ),
         child: Row(
           children: [
@@ -40,7 +37,7 @@ class ManagerShowDateSummaryCard extends StatelessWidget {
                   Text(
                     showDate.title,
                     style: const TextStyle(
-                      color: Color(0xFF673AB7),
+                      color: VioletteTheme.cardTitle,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
@@ -49,8 +46,8 @@ class ManagerShowDateSummaryCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     timeStr,
-                    style: TextStyle(
-                      color: Colors.grey[700],
+                    style: const TextStyle(
+                      color: VioletteTheme.textOnCard,
                       fontSize: 14,
                     ),
                   ),
@@ -58,8 +55,8 @@ class ManagerShowDateSummaryCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       showDate.address,
-                      style: TextStyle(
-                        color: Colors.grey[700],
+                      style: const TextStyle(
+                        color: VioletteTheme.textOnCard,
                         fontSize: 12,
                       ),
                       overflow: TextOverflow.ellipsis,
