@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:violette_front/models/show_date.dart';
+import 'package:violette_front/ui/widgets/common/date_badge.dart';
 
 class ManagerShowDateSummaryCard extends StatelessWidget {
   final ShowDate showDate;
@@ -14,8 +14,6 @@ class ManagerShowDateSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dayStr = DateFormat('d', 'fr_FR').format(showDate.date);
-    final monthStr = DateFormat('MMM', 'fr_FR').format(showDate.date);
     final timeStr = showDate.formattedMeetingTime.replaceFirst(':', 'h');
 
     return GestureDetector(
@@ -33,34 +31,7 @@ class ManagerShowDateSummaryCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                color: const Color(0xFF673AB7),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    dayStr,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    monthStr,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            DateBadge(date: showDate.date),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
