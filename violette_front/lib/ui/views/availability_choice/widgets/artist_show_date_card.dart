@@ -41,6 +41,10 @@ class ArtistShowDateCard extends StatelessWidget {
     final bookingPart = bookingStatus != null
         ? ', engagement : $_bookingStatusLabel'
         : '';
+    if (isAvailabilityLocked) {
+      return '$formattedDate, ${showDate.title}$bookingPart, '
+          'engagement confirmé, $availabilityLockMessage';
+    }
     return '$formattedDate, ${showDate.title}$bookingPart, '
         'disponibilité : ${availabilityStatus.label}';
   }
@@ -83,7 +87,17 @@ class ArtistShowDateCard extends StatelessWidget {
                 ),
               ],
               const SizedBox(height: 12),
-              _buildAvailabilitySection(),
+              if (isAvailabilityLocked)
+                Text(
+                  availabilityLockMessage,
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                )
+              else
+                _buildAvailabilitySection(),
             ],
           ),
         ),
@@ -161,25 +175,10 @@ class ArtistShowDateCard extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        if (isAvailabilityLocked) ...[
-          TextButton.icon(
-            onPressed: null,
-            icon: const Icon(Icons.lock, size: 18),
-            label: const Text('Disponibilité verrouillée'),
-          ),
-          Text(
-            availabilityLockMessage,
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ] else
-          TextButton(
-            onPressed: onEditAvailability,
-            child: const Text('Modifier ma disponibilité'),
-          ),
+        TextButton(
+          onPressed: onEditAvailability,
+          child: const Text('Modifier ma disponibilité'),
+        ),
       ],
     );
   }
