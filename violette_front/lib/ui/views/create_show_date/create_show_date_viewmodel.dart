@@ -45,7 +45,6 @@ class CreateShowDateViewModel extends FormViewModel {
     setDateValidationMessage(null);
     setStartTimeValidationMessage(null);
     setAddressValidationMessage(null);
-    setArtistsCountValidationMessage(null);
     setDescriptionValidationMessage(null);
     clientContactNameError = null;
     clientContactPhoneError = null;
@@ -69,10 +68,6 @@ class CreateShowDateViewModel extends FormViewModel {
     if (addressValue == null || addressValue!.trim().isEmpty) {
       setAddressValidationMessage('Adresse obligatoire');
     }
-
-    // v0.4.0 : le champ "Artistes nécessaires" est conservé visuellement,
-    // mais non utilisé par l'API de création (les besoins viennent des
-    // ShowDateSkillRequirement). Aucune validation bloquante ici.
 
     if (clientContactNameController.text.trim().isEmpty) {
       clientContactNameError = 'Nom du contact client obligatoire';

@@ -68,7 +68,6 @@ void main() {
         viewModel.dateValue = '2026-04-25';
         viewModel.startTimeValue = '21:00';
         viewModel.addressValue = 'Paris';
-        viewModel.artistsCountValue = '3';
         viewModel.clientContactNameController.text = 'Contact';
         viewModel.clientContactPhoneController.text = '0102030405';
         viewModel.onDateChanged(DateTime(2026, 4, 25));
@@ -115,7 +114,6 @@ void main() {
         viewModel.dateValue = '2026-04-25';
         viewModel.startTimeValue = '21:00';
         viewModel.addressValue = 'Paris';
-        viewModel.artistsCountValue = '3';
         viewModel.clientContactNameController.text = 'Contact';
         viewModel.clientContactPhoneController.text = '0102030405';
         viewModel.onDateChanged(DateTime(2026, 4, 25));

@@ -13,6 +13,11 @@ class ManagerShowDateSummaryCard extends StatelessWidget {
     this.onTap,
   });
 
+  String _artistCountNoun(int count) => count <= 1 ? 'artiste' : 'artistes';
+
+  String _formatTeamLine(int count) =>
+      'Équipe : $count ${_artistCountNoun(count)}';
+
   @override
   Widget build(BuildContext context) {
     final timeStr = showDate.formattedMeetingTime.replaceFirst(':', 'h');
@@ -63,6 +68,14 @@ class ManagerShowDateSummaryCard extends StatelessWidget {
                       maxLines: 1,
                     ),
                   ],
+                  const SizedBox(height: 4),
+                  Text(
+                    _formatTeamLine(showDate.selectedCount),
+                    style: const TextStyle(
+                      color: VioletteTheme.textOnCard,
+                      fontSize: 14,
+                    ),
+                  ),
                 ],
               ),
             ),
