@@ -12,7 +12,6 @@ import 'create_show_date_viewmodel.dart';
     FormTextField(name: 'date'),
     FormTextField(name: 'startTime'),
     FormTextField(name: 'address'),
-    FormTextField(name: 'artistsCount'),
     FormTextField(name: 'description'),
   ],
 )
@@ -39,7 +38,6 @@ class CreateShowDateView extends StackedView<CreateShowDateViewModel>
               dateController: dateController,
               startTimeController: startTimeController,
               addressController: addressController,
-              artistsCountController: artistsCountController,
               descriptionController: descriptionController,
             ),
           ),

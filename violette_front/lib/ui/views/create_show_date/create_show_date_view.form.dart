@@ -1,4 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
+// dart format width=80
 
 // **************************************************************************
 // StackedFormGenerator
@@ -15,7 +16,6 @@ const String TitleValueKey = 'title';
 const String DateValueKey = 'date';
 const String StartTimeValueKey = 'startTime';
 const String AddressValueKey = 'address';
-const String ArtistsCountValueKey = 'artistsCount';
 const String DescriptionValueKey = 'description';
 
 final Map<String, TextEditingController>
@@ -29,7 +29,6 @@ final Map<String, String? Function(String?)?>
   DateValueKey: null,
   StartTimeValueKey: null,
   AddressValueKey: null,
-  ArtistsCountValueKey: null,
   DescriptionValueKey: null,
 };
 
@@ -42,8 +41,6 @@ mixin $CreateShowDateView {
       _getFormTextEditingController(StartTimeValueKey);
   TextEditingController get addressController =>
       _getFormTextEditingController(AddressValueKey);
-  TextEditingController get artistsCountController =>
-      _getFormTextEditingController(ArtistsCountValueKey);
   TextEditingController get descriptionController =>
       _getFormTextEditingController(DescriptionValueKey);
 
@@ -51,8 +48,6 @@ mixin $CreateShowDateView {
   FocusNode get dateFocusNode => _getFormFocusNode(DateValueKey);
   FocusNode get startTimeFocusNode => _getFormFocusNode(StartTimeValueKey);
   FocusNode get addressFocusNode => _getFormFocusNode(AddressValueKey);
-  FocusNode get artistsCountFocusNode =>
-      _getFormFocusNode(ArtistsCountValueKey);
   FocusNode get descriptionFocusNode => _getFormFocusNode(DescriptionValueKey);
 
   TextEditingController _getFormTextEditingController(
@@ -83,7 +78,6 @@ mixin $CreateShowDateView {
     dateController.addListener(() => _updateFormData(model));
     startTimeController.addListener(() => _updateFormData(model));
     addressController.addListener(() => _updateFormData(model));
-    artistsCountController.addListener(() => _updateFormData(model));
     descriptionController.addListener(() => _updateFormData(model));
 
     _updateFormData(model, forceValidate: _autoTextFieldValidation);
@@ -100,7 +94,6 @@ mixin $CreateShowDateView {
     dateController.addListener(() => _updateFormData(model));
     startTimeController.addListener(() => _updateFormData(model));
     addressController.addListener(() => _updateFormData(model));
-    artistsCountController.addListener(() => _updateFormData(model));
     descriptionController.addListener(() => _updateFormData(model));
 
     _updateFormData(model, forceValidate: _autoTextFieldValidation);
@@ -115,7 +108,6 @@ mixin $CreateShowDateView {
           DateValueKey: dateController.text,
           StartTimeValueKey: startTimeController.text,
           AddressValueKey: addressController.text,
-          ArtistsCountValueKey: artistsCountController.text,
           DescriptionValueKey: descriptionController.text,
         }),
     );
@@ -162,8 +154,6 @@ extension ValueProperties on FormStateHelper {
   String? get dateValue => this.formValueMap[DateValueKey] as String?;
   String? get startTimeValue => this.formValueMap[StartTimeValueKey] as String?;
   String? get addressValue => this.formValueMap[AddressValueKey] as String?;
-  String? get artistsCountValue =>
-      this.formValueMap[ArtistsCountValueKey] as String?;
   String? get descriptionValue =>
       this.formValueMap[DescriptionValueKey] as String?;
 
@@ -213,18 +203,6 @@ extension ValueProperties on FormStateHelper {
     }
   }
 
-  set artistsCountValue(String? value) {
-    this.setData(
-      this.formValueMap..addAll({ArtistsCountValueKey: value}),
-    );
-
-    if (_CreateShowDateViewTextEditingControllers.containsKey(
-        ArtistsCountValueKey)) {
-      _CreateShowDateViewTextEditingControllers[ArtistsCountValueKey]?.text =
-          value ?? '';
-    }
-  }
-
   set descriptionValue(String? value) {
     this.setData(
       this.formValueMap..addAll({DescriptionValueKey: value}),
@@ -249,9 +227,6 @@ extension ValueProperties on FormStateHelper {
   bool get hasAddress =>
       this.formValueMap.containsKey(AddressValueKey) &&
       (addressValue?.isNotEmpty ?? false);
-  bool get hasArtistsCount =>
-      this.formValueMap.containsKey(ArtistsCountValueKey) &&
-      (artistsCountValue?.isNotEmpty ?? false);
   bool get hasDescription =>
       this.formValueMap.containsKey(DescriptionValueKey) &&
       (descriptionValue?.isNotEmpty ?? false);
@@ -264,8 +239,6 @@ extension ValueProperties on FormStateHelper {
       this.fieldsValidationMessages[StartTimeValueKey]?.isNotEmpty ?? false;
   bool get hasAddressValidationMessage =>
       this.fieldsValidationMessages[AddressValueKey]?.isNotEmpty ?? false;
-  bool get hasArtistsCountValidationMessage =>
-      this.fieldsValidationMessages[ArtistsCountValueKey]?.isNotEmpty ?? false;
   bool get hasDescriptionValidationMessage =>
       this.fieldsValidationMessages[DescriptionValueKey]?.isNotEmpty ?? false;
 
@@ -277,24 +250,20 @@ extension ValueProperties on FormStateHelper {
       this.fieldsValidationMessages[StartTimeValueKey];
   String? get addressValidationMessage =>
       this.fieldsValidationMessages[AddressValueKey];
-  String? get artistsCountValidationMessage =>
-      this.fieldsValidationMessages[ArtistsCountValueKey];
   String? get descriptionValidationMessage =>
       this.fieldsValidationMessages[DescriptionValueKey];
 }
 
 extension Methods on FormStateHelper {
-  setTitleValidationMessage(String? validationMessage) =>
+  void setTitleValidationMessage(String? validationMessage) =>
       this.fieldsValidationMessages[TitleValueKey] = validationMessage;
-  setDateValidationMessage(String? validationMessage) =>
+  void setDateValidationMessage(String? validationMessage) =>
       this.fieldsValidationMessages[DateValueKey] = validationMessage;
-  setStartTimeValidationMessage(String? validationMessage) =>
+  void setStartTimeValidationMessage(String? validationMessage) =>
       this.fieldsValidationMessages[StartTimeValueKey] = validationMessage;
-  setAddressValidationMessage(String? validationMessage) =>
+  void setAddressValidationMessage(String? validationMessage) =>
       this.fieldsValidationMessages[AddressValueKey] = validationMessage;
-  setArtistsCountValidationMessage(String? validationMessage) =>
-      this.fieldsValidationMessages[ArtistsCountValueKey] = validationMessage;
-  setDescriptionValidationMessage(String? validationMessage) =>
+  void setDescriptionValidationMessage(String? validationMessage) =>
       this.fieldsValidationMessages[DescriptionValueKey] = validationMessage;
 
   /// Clears text input fields on the Form
@@ -303,7 +272,6 @@ extension Methods on FormStateHelper {
     dateValue = '';
     startTimeValue = '';
     addressValue = '';
-    artistsCountValue = '';
     descriptionValue = '';
   }
 
@@ -314,7 +282,6 @@ extension Methods on FormStateHelper {
       DateValueKey: getValidationMessage(DateValueKey),
       StartTimeValueKey: getValidationMessage(StartTimeValueKey),
       AddressValueKey: getValidationMessage(AddressValueKey),
-      ArtistsCountValueKey: getValidationMessage(ArtistsCountValueKey),
       DescriptionValueKey: getValidationMessage(DescriptionValueKey),
     });
   }
@@ -326,7 +293,7 @@ String? getValidationMessage(String key) {
   if (validatorForKey == null) return null;
 
   String? validationMessageForKey = validatorForKey(
-    _CreateShowDateViewTextEditingControllers[key]!.text,
+    _CreateShowDateViewTextEditingControllers[key]?.text,
   );
 
   return validationMessageForKey;
@@ -339,6 +306,5 @@ void updateValidationData(FormStateHelper model) =>
       DateValueKey: getValidationMessage(DateValueKey),
       StartTimeValueKey: getValidationMessage(StartTimeValueKey),
       AddressValueKey: getValidationMessage(AddressValueKey),
-      ArtistsCountValueKey: getValidationMessage(ArtistsCountValueKey),
       DescriptionValueKey: getValidationMessage(DescriptionValueKey),
     });

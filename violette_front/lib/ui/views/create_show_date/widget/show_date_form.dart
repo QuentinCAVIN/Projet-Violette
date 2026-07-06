@@ -9,7 +9,6 @@ class ShowDateForm extends ViewModelWidget<CreateShowDateViewModel> {
   final TextEditingController dateController;
   final TextEditingController startTimeController;
   final TextEditingController addressController;
-  final TextEditingController artistsCountController;
   final TextEditingController descriptionController;
 
   const ShowDateForm({
@@ -18,7 +17,6 @@ class ShowDateForm extends ViewModelWidget<CreateShowDateViewModel> {
     required this.dateController,
     required this.startTimeController,
     required this.addressController,
-    required this.artistsCountController,
     required this.descriptionController,
   });
 
@@ -104,21 +102,6 @@ class ShowDateForm extends ViewModelWidget<CreateShowDateViewModel> {
           ),
           keyboardType: TextInputType.phone,
           textInputAction: TextInputAction.next,
-        ),
-        const SizedBox(height: 16),
-
-        TextFormField(
-          controller: artistsCountController,
-          enabled: false,
-          readOnly: true,
-          decoration: InputDecoration(
-            labelText: 'Artistes nécessaires',
-            hintText: 'Géré via les besoins artistiques (v0.5.0)',
-            helperText:
-                'Non utilisé à la création en v0.4.0. La gestion détaillée arrive en v0.5.0.',
-            errorText: viewModel.artistsCountValidationMessage,
-          ),
-          keyboardType: TextInputType.number,
         ),
         const SizedBox(height: 16),
 
