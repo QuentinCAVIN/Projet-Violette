@@ -110,6 +110,47 @@ La différence principale est l'engagement : une présélection aide le gérant 
 
 ---
 
+## Écarts terrain identifiés (reportés post-v0.5.0)
+
+Deux comportements ont été identifiés lors de tests avec la compagnie pilote.
+Ils sont documentés comme choix assumés pour v0.5.0 et feront l'objet d'une
+évolution en v0.6.0 / v0.7.0.
+
+### 1. Découplage disponibilité / présélection (choix assumé)
+
+Un artiste présélectionné (`SELECTED`) qui modifie ensuite sa disponibilité
+vers `UNAVAILABLE` conserve sa présélection et continue de compter dans
+l'effectif de la date.
+
+Ce comportement est **volontaire** : la présélection est une décision du gérant,
+qu'un changement de disponibilité de l'artiste ne doit pas défaire silencieusement.
+La contradiction éventuelle (présélectionné mais déclaré indisponible) se résout
+par un échange direct entre l'artiste et le gérant, conformément à la règle
+« une disponibilité ne réserve pas l'artiste et ne bloque pas d'autre engagement ».
+
+**Évolution envisagée (v0.6.0)** : signaler visuellement au gérant qu'un artiste
+présélectionné s'est déclaré indisponible, sans désélection automatique.
+
+### 2. Engagement ferme dès le stade OPTION (report v0.6.0/v0.7.0)
+
+Retour terrain (compagnie pilote) : dans la pratique, les compagnies demandent
+aux artistes de s'engager dès que la date est en `OPTION`, sans attendre le
+passage en `CONFIRMED`.
+
+Le workflow actuel réserve l'envoi des demandes fermes (`sendConfirmationRequests`,
+`SELECTED → PENDING_CONFIRMATION`) aux dates `CONFIRMED`. La règle
+« `PENDING_CONFIRMATION` ne doit exister que pour une date `CONFIRMED` » est donc
+maintenue en v0.5.0.
+
+**Évolution envisagée** : autoriser l'envoi des demandes fermes dès `OPTION`.
+Impact à traiter proprement (hors périmètre gel v0.5.0) : assouplissement de la
+garde `validerDateConfirmee` dans `sendConfirmationRequests`, révision de la
+sémantique de `PENDING_CONFIRMATION`, mise à jour des tests associés et de la
+capacité (comptage de l'effectif sur les bookings confirmés plutôt que
+présélectionnés). Reporté en v0.6.0 / v0.7.0.
+
+---
+
 ## Capacité et cachet
 
 - La capacité se calcule par besoin artistique (`ShowDateSkillRequirement.requiredCount`).
