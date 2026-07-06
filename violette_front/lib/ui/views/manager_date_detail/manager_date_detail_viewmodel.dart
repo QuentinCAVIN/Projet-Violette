@@ -183,6 +183,12 @@ class ManagerDateDetailViewModel extends BaseViewModel {
       _loadBookings(dateId),
       _loadShowDateDetail(dateId),
     ]);
+
+    // Propage selectedCount (et le reste du détail) vers le planning parent.
+    if (onShowDateUpdated != null && currentShowDate != null) {
+      await onShowDateUpdated!(currentShowDate!);
+    }
+
     rebuildUi();
   }
 
@@ -429,9 +435,6 @@ class ManagerDateDetailViewModel extends BaseViewModel {
       await _refreshAfterAction();
       await _loadAvailabilities();
       await _loadAllArtists();
-      if (onShowDateUpdated != null) {
-        await onShowDateUpdated!(displayedShowDate);
-      }
       rebuildUi();
       _snackbarService.showSnackbar(
         message: "Statut mis à jour : ${targetStatus.label}.",
@@ -475,9 +478,6 @@ class ManagerDateDetailViewModel extends BaseViewModel {
         ShowDateStatus.cancelled,
       );
       await _refreshAfterAction();
-      if (onShowDateUpdated != null) {
-        await onShowDateUpdated!(displayedShowDate);
-      }
       rebuildUi();
       _snackbarService.showSnackbar(
         message: "Date annulée.",

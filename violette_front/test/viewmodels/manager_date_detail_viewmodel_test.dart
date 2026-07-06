@@ -249,6 +249,15 @@ void main() {
           address: 'Adresse',
           totalRequiredArtists: 2,
         );
+        final showDateApresSelection = ShowDate(
+          id: '7',
+          title: 'Test',
+          date: DateTime(2026, 1, 1),
+          meetingTimeMinutes: 540,
+          address: 'Adresse',
+          totalRequiredArtists: 2,
+          selectedCount: 1,
+        );
 
         final bookingApresSelection = ArtistBooking(
           artistId: '5',
@@ -263,18 +272,27 @@ void main() {
         when(() => availabilityRepository.getAvailabilitiesForDate('7'))
             .thenAnswer((_) async => []);
 
-        final viewModel = ManagerDateDetailViewModel(showDate: showDate);
+        ShowDate? callbackShowDate;
+        final viewModel = ManagerDateDetailViewModel(
+          showDate: showDate,
+          onShowDateUpdated: (updated) async {
+            callbackShowDate = updated;
+          },
+        );
         await viewModel.initialize();
 
         when(() => bookingRepository.toggleSelection('7', '5', true))
             .thenAnswer((_) async {});
         when(() => bookingRepository.getBookingsForDate('7'))
             .thenAnswer((_) async => [bookingApresSelection]);
+        when(() => showDateRepository.getShowDateById('7'))
+            .thenAnswer((_) async => showDateApresSelection);
 
         await viewModel.toggleSelection('5', true);
 
         expect(viewModel.bookings.length, 1);
         expect(viewModel.bookings.first.status, BookingStatus.preselected);
+        expect(callbackShowDate?.selectedCount, 1);
         verify(() => bookingRepository.toggleSelection('7', '5', true))
             .called(1);
         verify(() => showDateRepository.getShowDateById('7')).called(2);

@@ -36,17 +36,24 @@ class ArtistShowDateCard extends StatelessWidget {
     return bookingStatus!.displayName;
   }
 
+  String _artistCountNoun(int count) => count <= 1 ? 'artiste' : 'artistes';
+
+  String _formatTeamLine(int count) =>
+      'Équipe : $count ${_artistCountNoun(count)}';
+
   String get _accessibilityLabel {
     final formattedDate =
         DateFormat('d MMMM y', 'fr_FR').format(showDate.date);
     final bookingPart = bookingStatus != null
         ? ', engagement : $_bookingStatusLabel'
         : '';
+    final teamPart =
+        ', équipe : ${showDate.selectedCount} ${_artistCountNoun(showDate.selectedCount)}';
     if (isAvailabilityLocked) {
-      return '$formattedDate, ${showDate.title}$bookingPart, '
+      return '$formattedDate, ${showDate.title}$bookingPart$teamPart, '
           'engagement confirmé, $availabilityLockMessage';
     }
-    return '$formattedDate, ${showDate.title}$bookingPart, '
+    return '$formattedDate, ${showDate.title}$bookingPart$teamPart, '
         'disponibilité : ${availabilityStatus.label}';
   }
 
@@ -67,6 +74,16 @@ class ArtistShowDateCard extends StatelessWidget {
               _buildInfoRow('Date', showDate.formattedDate),
               _buildInfoRow('Heure', showDate.formattedMeetingTimeForDisplay),
               _buildInfoRow('Adresse', showDate.address),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  _formatTeamLine(showDate.selectedCount),
+                  style: const TextStyle(
+                    color: VioletteTheme.textOnCard,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
               if (showDate.totalRequiredArtists > 0) ...[
                 const SizedBox(height: 4),
                 Text(
