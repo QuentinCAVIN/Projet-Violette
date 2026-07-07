@@ -48,7 +48,7 @@ class ShowDateControllerUpdateTest {
 
     @Test
     @TestSecurity(user = "ctrl-update-mgr", roles = {"MANAGER"})
-    @DisplayName("PATCH /show-dates/{id} en MANAGER met à jour les champs fournis et retourne 200")
+    @DisplayName("PATCH /show-dates/{id} — met à jour les champs fournis et retourne 200 quand le rôle est MANAGER")
     void patchById_whenRoleIsManagerAndShowDateExists_returns200AndUpdatesFields() throws Exception {
         ShowDateFixture fx = persistShowDateFixture("ctrl-upd-ok");
         mockManagerPrincipal(fx);
@@ -89,7 +89,7 @@ class ShowDateControllerUpdateTest {
 
     @Test
     @TestSecurity(user = "ctrl-update-mgr-404", roles = {"MANAGER"})
-    @DisplayName("PATCH /show-dates/{id} en MANAGER retourne 404 si la date n'existe pas")
+    @DisplayName("PATCH /show-dates/{id} — retourne 404 quand la date n'existe pas et le rôle est MANAGER")
     void patchById_whenRoleIsManagerAndShowDateMissing_returns404() {
         given()
                 .contentType("application/json")
@@ -102,7 +102,7 @@ class ShowDateControllerUpdateTest {
 
     @Test
     @TestSecurity(user = "ctrl-update-status-mgr", roles = {"MANAGER"})
-    @DisplayName("PATCH /show-dates/{id} en MANAGER peut passer INQUIRY -> OPTION")
+    @DisplayName("PATCH /show-dates/{id} — autorise la transition INQUIRY -> OPTION quand le rôle est MANAGER")
     void patchById_whenManagerUpdatesStatusToOption_returns200AndPersistsStatus() throws Exception {
         ShowDateFixture fx = persistShowDateFixture("ctrl-upd-status");
         mockManagerPrincipal(fx);
@@ -132,7 +132,7 @@ class ShowDateControllerUpdateTest {
 
     @Test
     @TestSecurity(user = "ctrl-update-status-bad", roles = {"MANAGER"})
-    @DisplayName("PATCH /show-dates/{id} en MANAGER refuse INQUIRY -> CONFIRMED en v0.4.0 (400)")
+    @DisplayName("PATCH /show-dates/{id} — refuse INQUIRY -> CONFIRMED et retourne 400 quand le rôle est MANAGER")
     void patchById_whenManagerUsesInvalidStatusTransition_returns400() throws Exception {
         ShowDateFixture fx = persistShowDateFixture("ctrl-upd-status-bad");
         mockManagerPrincipal(fx);
@@ -151,7 +151,7 @@ class ShowDateControllerUpdateTest {
 
     @Test
     @TestSecurity(user = "ctrl-update-artist", roles = {"ARTIST"})
-    @DisplayName("PATCH /show-dates/{id} en ARTIST retourne 403 et ne modifie pas la date")
+    @DisplayName("PATCH /show-dates/{id} — retourne 403 et ne modifie pas la date quand le rôle est ARTIST")
     void patchById_whenRoleIsArtist_returns403AndDoesNotUpdate() throws Exception {
         ShowDateFixture fx = persistShowDateFixture("ctrl-upd-forbidden");
 

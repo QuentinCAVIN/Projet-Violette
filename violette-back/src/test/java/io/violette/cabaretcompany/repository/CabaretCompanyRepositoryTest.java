@@ -8,6 +8,7 @@ import io.violette.violetteuser.repository.VioletteUserRepository;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import io.quarkus.test.junit.QuarkusTest;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;
@@ -28,6 +29,7 @@ class CabaretCompanyRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("persist — relit la compagnie avec son manager")
     void givenCompanyWithManager_whenPersisted_thenCanBeReloadedWithManager() {
         VioletteUserEntity manager = buildAndPersistUser("uid-mgr-company-1", "mgr@company.test", "Marie", "Manager", Set.of(UserRole.MANAGER));
         CabaretCompanyEntity company = new CabaretCompanyEntity();
@@ -53,6 +55,7 @@ class CabaretCompanyRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("findByManagerId — retourne toutes les compagnies d'un même manager")
     void givenCompaniesWithSameManager_whenFindByManagerId_thenReturnAll() {
         VioletteUserEntity manager = buildAndPersistUser("uid-mgr-multi", "mgr-multi@test.com", "Jean", "Gérant", Set.of(UserRole.MANAGER));
         CabaretCompanyEntity c1 = new CabaretCompanyEntity();
@@ -74,6 +77,7 @@ class CabaretCompanyRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("findByName — retourne la compagnie quand le nom correspond")
     void givenCompany_whenFindByName_thenReturnCompany() {
         VioletteUserEntity manager = buildAndPersistUser("uid-mgr-name", "mgr-name@test.com", "Paul", "Dupont", Set.of(UserRole.MANAGER));
         CabaretCompanyEntity company = new CabaretCompanyEntity();

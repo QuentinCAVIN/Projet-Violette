@@ -20,7 +20,7 @@ class PingResourceTest {
     private static final Pattern SEMVER_LIKE = Pattern.compile("\\d+\\.\\d+\\.\\d+.*");
 
     @Test
-    @DisplayName("GET /api/ping retourne 200 avec status pong et une version au format SemVer")
+    @DisplayName("GET /api/ping — retourne 200 avec status pong et une version au format SemVer")
     void ping_returns200WithPongAndSemver() {
         given()
             .when().get("/api/ping")

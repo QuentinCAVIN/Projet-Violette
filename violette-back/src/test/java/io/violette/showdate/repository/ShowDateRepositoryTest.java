@@ -12,6 +12,7 @@ import io.violette.violetteuser.model.VioletteUserEntity;
 import io.violette.violetteuser.repository.VioletteUserRepository;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -41,6 +42,7 @@ class ShowDateRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("persist — relit tous les champs logistiques d'une date de spectacle")
     void givenShowDateWithAllLogisticsFields_whenPersisted_thenCanBeFullyReloaded() {
         CabaretCompanyEntity company = buildAndPersistCompany("sd-mgr-1", "sd-mgr-1@test.com", "Compagnie Logistics");
 
@@ -69,6 +71,7 @@ class ShowDateRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("persist — lie la revue optionnelle quand cabaretShow est renseigné")
     void givenShowDateWithOptionalCabaretShow_whenPersisted_thenCabaretShowIsLinked() {
         CabaretCompanyEntity company = buildAndPersistCompany("sd-mgr-2", "sd-mgr-2@test.com", "Compagnie Revue Liée");
 
@@ -92,6 +95,7 @@ class ShowDateRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("persist — garde cabaretShow à null quand aucune revue n'est liée")
     void givenShowDateWithoutCabaretShow_whenPersisted_thenCabaretShowIsNull() {
         CabaretCompanyEntity company = buildAndPersistCompany("sd-mgr-3", "sd-mgr-3@test.com", "Compagnie Sans Revue");
 
@@ -105,6 +109,7 @@ class ShowDateRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("persist — stocke le lieu de la date de spectacle")
     void givenShowDateWithLocation_whenPersisted_thenLocationIsStored() {
         CabaretCompanyEntity company = buildAndPersistCompany("sd-mgr-4", "sd-mgr-4@test.com", "Compagnie Sans Lieu");
 
@@ -118,6 +123,7 @@ class ShowDateRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("findByCompanyId — retourne toutes les dates triées par eventDate croissant")
     void givenMultipleShowDatesForCompany_whenFindByCompanyId_thenReturnAllOrderedByEventDateAsc() {
         CabaretCompanyEntity company = buildAndPersistCompany("sd-mgr-5", "sd-mgr-5@test.com", "Compagnie Multi-Dates");
 

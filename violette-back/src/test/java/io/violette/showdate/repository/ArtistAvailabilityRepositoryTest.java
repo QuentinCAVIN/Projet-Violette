@@ -14,6 +14,7 @@ import io.violette.violetteuser.model.VioletteUserEntity;
 import io.violette.violetteuser.repository.VioletteUserRepository;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -47,6 +48,7 @@ class ArtistAvailabilityRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("persist — relit une disponibilité par sa clé composite")
     void givenArtistAvailability_whenPersisted_thenCanBeReloadedByCompositeKey() {
         VioletteUserEntity manager = buildAndPersistUser("avail-mgr-1", "avail-mgr-1@test.com", Set.of(UserRole.MANAGER));
         VioletteUserEntity artist = buildAndPersistUser("avail-artist-1", "avail-artist-1@test.com", Set.of(UserRole.ARTIST));
@@ -77,6 +79,7 @@ class ArtistAvailabilityRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("persist — applique le statut PENDING par défaut quand aucun statut n'est fourni")
     void givenAvailabilityWithoutExplicitStatus_whenPersisted_thenStatusDefaultsToPending() {
         VioletteUserEntity manager = buildAndPersistUser("avail-mgr-2", "avail-mgr-2@test.com", Set.of(UserRole.MANAGER));
         VioletteUserEntity artist = buildAndPersistUser("avail-artist-2", "avail-artist-2@test.com", Set.of(UserRole.ARTIST));
@@ -98,6 +101,7 @@ class ArtistAvailabilityRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("findByShowDateId — retourne toutes les disponibilités d'une même date")
     void givenMultipleArtistsForSameDate_whenFindByShowDateId_thenReturnAll() {
         VioletteUserEntity manager = buildAndPersistUser("avail-mgr-3", "avail-mgr-3@test.com", Set.of(UserRole.MANAGER));
         VioletteUserEntity artist1 = buildAndPersistUser("avail-artist-3a", "avail-artist-3a@test.com", Set.of(UserRole.ARTIST));
@@ -121,6 +125,7 @@ class ArtistAvailabilityRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("findByArtistId — retourne les disponibilités de l'artiste sur toutes les dates")
     void givenArtistWithAvailabilitiesOnMultipleDates_whenFindByArtistId_thenReturnAllDatesForArtist() {
         VioletteUserEntity manager = buildAndPersistUser("avail-mgr-4", "avail-mgr-4@test.com", Set.of(UserRole.MANAGER));
         VioletteUserEntity artist = buildAndPersistUser("avail-artist-4", "avail-artist-4@test.com", Set.of(UserRole.ARTIST));
@@ -145,6 +150,7 @@ class ArtistAvailabilityRepositoryTest {
      */
     @Test
     @Transactional
+    @DisplayName("findByShowDateId — coexiste avec les besoins par compétence sur la même date")
     void givenShowDateWithSkillRequirementsAndAvailabilities_whenQueried_thenBothModelsCoexist() {
         VioletteUserEntity manager = buildAndPersistUser("avail-mgr-c1", "avail-mgr-c1@test.com", Set.of(UserRole.MANAGER));
         VioletteUserEntity artist1 = buildAndPersistUser("avail-artist-c1", "avail-artist-c1@test.com", Set.of(UserRole.ARTIST));

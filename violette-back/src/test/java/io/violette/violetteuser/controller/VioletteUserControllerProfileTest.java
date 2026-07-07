@@ -45,7 +45,7 @@ class VioletteUserControllerProfileTest {
 
     @Test
     @TestSecurity(authorizationEnabled = false)
-    @DisplayName("GET /me/profile avec principal JWT mocké et profil backend existant devrait retourner 200 et le DTO complet")
+    @DisplayName("GET /me/profile — retourne 200 et le DTO complet quand le profil backend existe")
     void getMyProfile_whenBackendProfileExists_returns200AndFullDto() throws Exception {
         String firebaseUid = "ctrl-profile-exists-001";
         VioletteUserEntity user = new VioletteUserEntity();
@@ -95,7 +95,7 @@ class VioletteUserControllerProfileTest {
 
     @Test
     @TestSecurity(authorizationEnabled = false)
-    @DisplayName("GET /me/profile avec principal JWT mocké et sans profil backend devrait retourner 404")
+    @DisplayName("GET /me/profile — retourne 404 quand aucun profil backend n'existe")
     void getMyProfile_whenBackendProfileMissing_returns404() {
         String firebaseUid = "ctrl-profile-missing-001";
         when(currentUserContextProvider.getCurrentPrincipal())
@@ -110,7 +110,7 @@ class VioletteUserControllerProfileTest {
 
     @Test
     @TestSecurity(authorizationEnabled = false)
-    @DisplayName("GET /me/profile sans principal JWT (mock vide) devrait retourner 401")
+    @DisplayName("GET /me/profile — retourne 401 quand le principal JWT est absent")
     void getMyProfile_whenJwtPrincipalEmpty_returns401() {
         when(currentUserContextProvider.getCurrentPrincipal()).thenReturn(Optional.empty());
 

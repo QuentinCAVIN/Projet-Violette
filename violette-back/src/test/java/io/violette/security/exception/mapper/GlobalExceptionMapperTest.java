@@ -23,7 +23,7 @@ class GlobalExceptionMapperTest {
     private final ShowDateNotFoundExceptionMapper showDateNotFoundMapper = new ShowDateNotFoundExceptionMapper();
 
     @Test
-    @DisplayName("Exception non mappée → 500 avec corps neutre sans détail technique")
+    @DisplayName("GlobalExceptionMapper — retourne 500 avec corps neutre quand l'exception n'est pas mappée")
     void unmappedException_returnsNeutralInternalServerError() {
         Response response = globalMapper.toResponse(
                 new NullPointerException("détail-interne-ne-doit-pas-fuirer")
@@ -41,7 +41,7 @@ class GlobalExceptionMapperTest {
     }
 
     @Test
-    @DisplayName("WebApplicationException / BadRequestException → statut d'origine (400), pas 500")
+    @DisplayName("GlobalExceptionMapper — conserve le statut d'origine 400 quand une WebApplicationException est levée")
     void webApplicationException_preservesOriginalStatus() {
         // BadRequestException(String) : le message est dans getMessage(), pas dans getResponse().getEntity().
         Response response = globalMapper.toResponse(
@@ -53,7 +53,7 @@ class GlobalExceptionMapperTest {
     }
 
     @Test
-    @DisplayName("Mapper métier ShowDateNotFoundException → 404 inchangé (non-régression)")
+    @DisplayName("ShowDateNotFoundExceptionMapper — retourne 404 inchangé (non-régression)")
     void businessExceptionMapper_stillReturnsOriginalStatus() {
         Response response = showDateNotFoundMapper.toResponse(new ShowDateNotFoundException());
 

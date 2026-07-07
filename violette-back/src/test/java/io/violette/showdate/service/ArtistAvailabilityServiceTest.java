@@ -67,7 +67,7 @@ class ArtistAvailabilityServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("getAvailabilitiesForShowDate lève une erreur si la date n'existe pas")
+    @DisplayName("getAvailabilitiesForShowDate — lève ShowDateNotFoundException quand la date n'existe pas")
     void getAvailabilitiesForShowDate_whenShowDateNotFound_throwsShowDateNotFoundException() {
         assertThrows(ShowDateNotFoundException.class,
                 () -> artistAvailabilityService.getAvailabilitiesForShowDate(999_999L));
@@ -75,7 +75,7 @@ class ArtistAvailabilityServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("getAvailabilitiesForShowDate retourne une liste vide si aucune disponibilité n'existe")
+    @DisplayName("getAvailabilitiesForShowDate — retourne une liste vide quand aucune disponibilité n'existe")
     void getAvailabilitiesForShowDate_whenNoAvailability_thenReturnsEmptyList() {
         ShowDateFixture fx = buildShowDateFixture("avail-svc-empty");
         when(managerCompanyResolver.resolveCurrentManagerCompany()).thenReturn(fx.company());
@@ -87,7 +87,7 @@ class ArtistAvailabilityServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("getAvailabilitiesForShowDate retourne toutes les disponibilités de la date")
+    @DisplayName("getAvailabilitiesForShowDate — retourne toutes les disponibilités de la date")
     void getAvailabilitiesForShowDate_whenSeveralExist_thenReturnsAllDtos() {
         ShowDateFixture fx = buildShowDateFixture("avail-svc-list");
         when(managerCompanyResolver.resolveCurrentManagerCompany()).thenReturn(fx.company());
@@ -106,7 +106,7 @@ class ArtistAvailabilityServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("upsertMyAvailability crée une entrée lorsqu'aucune disponibilité n'existe encore")
+    @DisplayName("upsertMyAvailability — crée une entrée quand aucune disponibilité n'existe encore")
     void upsertMyAvailability_whenNoExistingRow_thenCreatesAvailability() {
         ShowDateFixture fx = buildShowDateFixture("avail-svc-ins");
         VioletteUserEntity artist = buildAndPersistUser("avail-svc-ins-art", "avail-svc-ins-art@test.com", Set.of(UserRole.ARTIST));
@@ -127,7 +127,7 @@ class ArtistAvailabilityServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("upsertMyAvailability met à jour le statut lorsque l'entrée existe déjà")
+    @DisplayName("upsertMyAvailability — met à jour le statut quand l'entrée existe déjà")
     void upsertMyAvailability_whenRowExists_thenUpdatesStatus() {
         ShowDateFixture fx = buildShowDateFixture("avail-svc-upd");
         VioletteUserEntity artist = buildAndPersistUser("avail-svc-upd-art", "avail-svc-upd-art@test.com", Set.of(UserRole.ARTIST));
@@ -145,7 +145,7 @@ class ArtistAvailabilityServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("upsertMyAvailability refuse explicitement le statut PENDING")
+    @DisplayName("upsertMyAvailability — refuse explicitement le statut PENDING")
     void upsertMyAvailability_whenStatusIsPending_thenThrowsInvalidAvailabilityStatusException() {
         ShowDateFixture fx = buildShowDateFixture("avail-svc-pend");
         VioletteUserEntity artist = buildAndPersistUser("avail-svc-pend-art", "avail-svc-pend-art@test.com", Set.of(UserRole.ARTIST));
@@ -157,7 +157,7 @@ class ArtistAvailabilityServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("upsertMyAvailability lève une erreur si la date n'existe pas")
+    @DisplayName("upsertMyAvailability — lève ShowDateNotFoundException quand la date n'existe pas")
     void upsertMyAvailability_whenShowDateNotFound_throwsShowDateNotFoundException() {
         VioletteUserEntity artist = buildAndPersistUser("avail-svc-sdnf", "avail-svc-sdnf@test.com", Set.of(UserRole.ARTIST));
         JwtPrincipalInfo principal = new JwtPrincipalInfo(artist.getFirebaseUid(), artist.getEmail(), "X");
@@ -168,7 +168,7 @@ class ArtistAvailabilityServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("upsertMyAvailability lève une erreur si aucun profil backend ne correspond au JWT")
+    @DisplayName("upsertMyAvailability — lève UserNotFoundException quand aucun profil backend ne correspond au JWT")
     void upsertMyAvailability_whenUserNotFound_throwsUserNotFoundException() {
         ShowDateFixture fx = buildShowDateFixture("avail-svc-unf");
         JwtPrincipalInfo principal = new JwtPrincipalInfo("inexistant-firebase-uid-xyz", "nope@test.com", "");
@@ -179,7 +179,7 @@ class ArtistAvailabilityServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("upsertMyAvailability persiste correctement le statut IF_NEEDED")
+    @DisplayName("upsertMyAvailability — persiste correctement le statut IF_NEEDED")
     void upsertMyAvailability_whenIfNeeded_thenPersistsIfNeeded() {
         ShowDateFixture fx = buildShowDateFixture("avail-svc-ifn");
         VioletteUserEntity artist = buildAndPersistUser("avail-svc-ifn-art", "avail-svc-ifn-art@test.com", Set.of(UserRole.ARTIST));
@@ -195,7 +195,7 @@ class ArtistAvailabilityServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("upsertMyAvailability — refuse la modification si un booking CONFIRMED existe pour l'artiste")
+    @DisplayName("upsertMyAvailability — refuse la modification quand un booking CONFIRMED existe pour l'artiste")
     void upsertMyAvailability_whenConfirmedBookingExists_throwsAvailabilityLockedByConfirmedBookingException() {
         ShowDateFixture fx = buildShowDateFixture("avail-lock-conf");
         fx.showDate().setStatus(ShowDateStatus.CONFIRMED);
@@ -216,7 +216,7 @@ class ArtistAvailabilityServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("upsertMyAvailability — autorise la modification si le booking n'est pas CONFIRMED")
+    @DisplayName("upsertMyAvailability — autorise la modification quand le booking n'est pas CONFIRMED")
     void upsertMyAvailability_whenPendingConfirmationBookingExists_persistsNewAvailabilityStatus() {
         ShowDateFixture fx = buildShowDateFixture("avail-lock-pend");
         fx.showDate().setStatus(ShowDateStatus.CONFIRMED);
@@ -259,7 +259,7 @@ class ArtistAvailabilityServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("getMyAvailability retourne PENDING si aucune disponibilité n'existe encore")
+    @DisplayName("getMyAvailability — retourne PENDING quand aucune disponibilité n'existe encore")
     void getMyAvailability_whenNoRow_thenReturnsPending() {
         ShowDateFixture fx = buildShowDateFixture("avail-svc-get-me-pending");
         VioletteUserEntity artist = buildAndPersistUser("avail-svc-get-me-artist", "avail-svc-get-me@test.com", Set.of(UserRole.ARTIST));

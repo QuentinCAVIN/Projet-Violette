@@ -9,6 +9,7 @@ import io.violette.violetteuser.repository.VioletteUserRepository;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;
@@ -32,6 +33,7 @@ class CabaretShowRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("persist — relit la revue avec sa compagnie")
     void givenShowForCompany_whenPersisted_thenCanBeReloadedWithCompany() {
         CabaretCompanyEntity company = createCompanyWithManager("Compagnie Revues", "uid-mgr-show-1", "mgr-show@test.com");
         cabaretCompanyRepository.persistAndFlush(company);
@@ -58,6 +60,7 @@ class CabaretShowRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("findByCompanyId — retourne toutes les revues d'une même compagnie")
     void givenMultipleShowsForSameCompany_whenFindByCompanyId_thenReturnAll() {
         CabaretCompanyEntity company = createCompanyWithManager("Compagnie Multi-Revues", "uid-mgr-multi-show", "mgr-multi-show@test.com");
         cabaretCompanyRepository.persistAndFlush(company);

@@ -43,7 +43,7 @@ class ManagerCompanyResolverTest {
 
     @Test
     @Transactional
-    @DisplayName("resolveCurrentManagerCompany — lève ForbiddenCompanyAccessException si le principal JWT est absent")
+    @DisplayName("resolveCurrentManagerCompany — lève ForbiddenCompanyAccessException quand le principal JWT est absent")
     void resolveCurrentManagerCompany_whenPrincipalAbsent_throwsForbiddenCompanyAccessException() {
         when(currentUserContextProvider.getCurrentPrincipal()).thenReturn(Optional.empty());
 
@@ -53,7 +53,7 @@ class ManagerCompanyResolverTest {
 
     @Test
     @Transactional
-    @DisplayName("resolveCurrentManagerCompany — lève ForbiddenCompanyAccessException si l'utilisateur backend est introuvable")
+    @DisplayName("resolveCurrentManagerCompany — lève ForbiddenCompanyAccessException quand l'utilisateur backend est introuvable")
     void resolveCurrentManagerCompany_whenUserNotFound_throwsForbiddenCompanyAccessException() {
         String firebaseUid = "uid-resolver-notfound";
         when(currentUserContextProvider.getCurrentPrincipal())
@@ -66,7 +66,7 @@ class ManagerCompanyResolverTest {
 
     @Test
     @Transactional
-    @DisplayName("resolveCurrentManagerCompany — lève ForbiddenCompanyAccessException si l'utilisateur n'a pas le rôle MANAGER")
+    @DisplayName("resolveCurrentManagerCompany — lève ForbiddenCompanyAccessException quand l'utilisateur n'a pas le rôle MANAGER")
     void resolveCurrentManagerCompany_whenUserHasNoManagerRole_throwsForbiddenCompanyAccessException() {
         String firebaseUid = "uid-resolver-artist";
         VioletteUserEntity artist = buildUser(1L, firebaseUid, Set.of(UserRole.ARTIST));
@@ -81,7 +81,7 @@ class ManagerCompanyResolverTest {
 
     @Test
     @Transactional
-    @DisplayName("resolveCurrentManagerCompany — lève ForbiddenCompanyAccessException si le manager n'a aucune compagnie")
+    @DisplayName("resolveCurrentManagerCompany — lève ForbiddenCompanyAccessException quand le manager n'a aucune compagnie")
     void resolveCurrentManagerCompany_whenManagerHasNoCompany_throwsForbiddenCompanyAccessException() {
         String firebaseUid = "uid-resolver-nocompany";
         VioletteUserEntity manager = buildUser(2L, firebaseUid, Set.of(UserRole.MANAGER));
@@ -97,7 +97,7 @@ class ManagerCompanyResolverTest {
 
     @Test
     @Transactional
-    @DisplayName("resolveCurrentManagerCompany — retourne la compagnie du manager authentifié (cas nominal)")
+    @DisplayName("resolveCurrentManagerCompany — retourne la compagnie quand le manager est authentifié (cas nominal)")
     void resolveCurrentManagerCompany_whenManagerHasCompany_returnsCompany() {
         String firebaseUid = "uid-resolver-nominal";
         VioletteUserEntity manager = buildUser(3L, firebaseUid, Set.of(UserRole.MANAGER));
@@ -116,7 +116,7 @@ class ManagerCompanyResolverTest {
 
     @Test
     @Transactional
-    @DisplayName("resolveCurrentManagerCompanyId — retourne l'identifiant de la compagnie du manager authentifié (cas nominal)")
+    @DisplayName("resolveCurrentManagerCompanyId — retourne l'identifiant de la compagnie quand le manager est authentifié (cas nominal)")
     void resolveCurrentManagerCompanyId_whenManagerHasCompany_returnsCompanyId() {
         String firebaseUid = "uid-resolver-id-nominal";
         VioletteUserEntity manager = buildUser(4L, firebaseUid, Set.of(UserRole.MANAGER));

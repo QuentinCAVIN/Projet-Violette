@@ -34,7 +34,7 @@ class VioletteUserRepositoryIT {
 
     @Test
     @TestTransaction
-    @DisplayName("Créer un utilisateur et le retrouver par firebaseUid sur MySQL")
+    @DisplayName("persist — retrouve l'utilisateur par firebaseUid sur MySQL")
     void createAndFindByFirebaseUid_onRealMySQL() {
         VioletteUserEntity user = buildUser("it-uid-001", "it-find@test.com");
         repository.persist(user);
@@ -48,7 +48,7 @@ class VioletteUserRepositoryIT {
 
     @Test
     @TestTransaction
-    @DisplayName("Créer un utilisateur et le retrouver par email sur MySQL")
+    @DisplayName("persist — retrouve l'utilisateur par email sur MySQL")
     void createAndFindByEmail_onRealMySQL() {
         VioletteUserEntity user = buildUser("it-uid-002", "it-email@test.com");
         repository.persist(user);
@@ -61,7 +61,7 @@ class VioletteUserRepositoryIT {
 
     @Test
     @TestTransaction
-    @DisplayName("Les timestamps createdAt et updatedAt sont renseignés automatiquement par @PrePersist")
+    @DisplayName("persist — renseigne createdAt et updatedAt automatiquement via @PrePersist")
     void createUser_prePersistSetsTimestamps() {
         VioletteUserEntity user = buildUser("it-uid-timestamps", "it-ts@test.com");
         assertNull(user.getCreatedAt(), "createdAt doit être null avant persist");
@@ -75,7 +75,7 @@ class VioletteUserRepositoryIT {
 
     @Test
     @TestTransaction
-    @DisplayName("Les rôles et compétences d'un artiste sont persistés via les tables user_role et artist_skill")
+    @DisplayName("persist — enregistre les rôles et compétences d'un artiste via user_role et artist_skill")
     void createArtistWithRolesAndSkills_onRealMySQL() {
         VioletteUserEntity artist = buildUser("it-uid-artist", "it-artist@test.com");
         artist.setRoles(Set.of(UserRole.ARTIST));
@@ -93,7 +93,7 @@ class VioletteUserRepositoryIT {
 
     @Test
     @TestTransaction
-    @DisplayName("countAll() retourne le nombre correct d'utilisateurs persistés")
+    @DisplayName("countAll — retourne le nombre correct d'utilisateurs persistés")
     void countAll_returnsCorrectCount() {
         long before = repository.countAll();
 

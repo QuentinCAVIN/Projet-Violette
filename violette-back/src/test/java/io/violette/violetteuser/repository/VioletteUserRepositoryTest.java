@@ -4,6 +4,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.violette.violetteuser.model.ArtistSkill;
 import io.violette.violetteuser.model.UserRole;
 import io.violette.violetteuser.model.VioletteUserEntity;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import jakarta.inject.Inject;
@@ -23,6 +24,7 @@ class VioletteUserRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("findByFirebaseUid — retourne l'utilisateur quand il existe")
     void givenExistingUser_whenFindByFirebaseUid_thenReturnUser() {
         VioletteUserEntity user = buildUser(
                 "uid-find-001",
@@ -51,6 +53,7 @@ class VioletteUserRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("findByFirebaseUid — retourne vide quand le firebaseUid est inconnu")
     void givenUnknownFirebaseUid_whenFindByFirebaseUid_thenReturnEmpty() {
         var found = repository.findByFirebaseUid("uid-inexistant-12345");
         assertTrue(found.isEmpty());
@@ -58,6 +61,7 @@ class VioletteUserRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("findByEmail — retourne l'utilisateur quand il existe")
     void givenExistingUser_whenFindByEmail_thenReturnUser() {
         VioletteUserEntity user = buildUser(
                 "uid-email-001",
@@ -83,6 +87,7 @@ class VioletteUserRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("persist — stocke les rôles et compétences multiples")
     void givenUserWithMultipleRolesAndSkills_whenPersisted_thenCollectionsAreStored() {
         VioletteUserEntity user = buildUser(
                 "uid-multi-role-001",
@@ -111,6 +116,7 @@ class VioletteUserRepositoryTest {
 
     @Test
     @Transactional
+    @DisplayName("findByEmail — retourne vide quand l'email est inconnu")
     void givenUnknownEmail_whenFindByEmail_thenReturnEmpty() {
         var found = repository.findByEmail("nobody@nowhere.com");
         assertTrue(found.isEmpty());

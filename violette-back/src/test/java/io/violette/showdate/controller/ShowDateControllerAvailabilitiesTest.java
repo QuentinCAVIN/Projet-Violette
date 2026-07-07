@@ -63,7 +63,7 @@ class ShowDateControllerAvailabilitiesTest {
 
     @Test
     @TestSecurity(user = "ctrl-avail-mgr", roles = {"MANAGER"})
-    @DisplayName("GET /show-dates/{id}/availabilities en MANAGER retourne 200 et une liste (vide si aucune dispo)")
+    @DisplayName("GET /show-dates/{id}/availabilities — retourne 200 et une liste vide quand le rôle est MANAGER et aucune dispo n'existe")
     void getAvailabilities_whenRoleIsManager_returns200AndList() throws Exception {
         ShowDateFixture fx = persistShowDateFixture("ctrl-avail-get-mgr");
         when(currentUserContextProvider.getCurrentPrincipal())
@@ -82,7 +82,7 @@ class ShowDateControllerAvailabilitiesTest {
 
     @Test
     @TestSecurity(user = "ctrl-avail-art-deny", roles = {"ARTIST"})
-    @DisplayName("GET /show-dates/{id}/availabilities en ARTIST retourne 403")
+    @DisplayName("GET /show-dates/{id}/availabilities — retourne 403 quand le rôle est ARTIST")
     void getAvailabilities_whenRoleIsArtist_returns403() throws Exception {
         ShowDateFixture fx = persistShowDateFixture("ctrl-avail-get-art");
 
@@ -98,7 +98,7 @@ class ShowDateControllerAvailabilitiesTest {
 
     @Test
     @TestSecurity(user = "ctrl-dates-art-ok", roles = {"ARTIST"})
-    @DisplayName("GET /show-dates/me/available en ARTIST retourne uniquement OPTION/CONFIRMED/STAFFED")
+    @DisplayName("GET /show-dates/me/available — retourne uniquement les dates OPTION, CONFIRMED et STAFFED quand le rôle est ARTIST")
     void getMyAvailableShowDates_whenRoleIsArtist_returnsFilteredStatuses() throws Exception {
         ShowDateFixture fx = persistShowDateFixture("ctrl-dates-visible");
         when(currentUserContextProvider.getCurrentPrincipal())
@@ -120,7 +120,7 @@ class ShowDateControllerAvailabilitiesTest {
 
     @Test
     @TestSecurity(user = "ctrl-avail-art-ok", roles = {"ARTIST"})
-    @DisplayName("PUT /show-dates/{id}/availabilities/me en ARTIST avec principal JWT retourne 200")
+    @DisplayName("PUT /show-dates/{id}/availabilities/me — retourne 200 quand le rôle est ARTIST et le principal JWT est fourni")
     void upsertMyAvailability_whenRoleIsArtist_returns200() throws Exception {
         ShowDateFixture fx = persistShowDateFixture("ctrl-avail-put-art");
         VioletteUserEntity artist = violetteUserRepository.findByIdOptional(fx.artistId).orElseThrow();
@@ -145,7 +145,7 @@ class ShowDateControllerAvailabilitiesTest {
 
     @Test
     @TestSecurity(user = "ctrl-avail-art-me", roles = {"ARTIST"})
-    @DisplayName("GET /show-dates/{id}/availabilities/me en ARTIST retourne PENDING si aucune ligne n'existe")
+    @DisplayName("GET /show-dates/{id}/availabilities/me — retourne PENDING quand aucune ligne n'existe et le rôle est ARTIST")
     void getMyAvailability_whenNoRow_returnsPending() throws Exception {
         ShowDateFixture fx = persistShowDateFixture("ctrl-avail-get-me");
         when(currentUserContextProvider.getCurrentPrincipal())
@@ -166,7 +166,7 @@ class ShowDateControllerAvailabilitiesTest {
 
     @Test
     @TestSecurity(user = "ctrl-avail-mgr-deny", roles = {"MANAGER"})
-    @DisplayName("PUT /show-dates/{id}/availabilities/me en MANAGER retourne 403")
+    @DisplayName("PUT /show-dates/{id}/availabilities/me — retourne 403 quand le rôle est MANAGER")
     void upsertMyAvailability_whenRoleIsManager_returns403() throws Exception {
         ShowDateFixture fx = persistShowDateFixture("ctrl-avail-put-mgr");
 
@@ -184,7 +184,7 @@ class ShowDateControllerAvailabilitiesTest {
 
     @Test
     @TestSecurity(user = "ctrl-avail-pending", roles = {"ARTIST"})
-    @DisplayName("PUT /show-dates/{id}/availabilities/me avec statut PENDING retourne 400")
+    @DisplayName("PUT /show-dates/{id}/availabilities/me — retourne 400 quand le statut PENDING est envoyé")
     void upsertMyAvailability_whenStatusPending_returns400() throws Exception {
         ShowDateFixture fx = persistShowDateFixture("ctrl-avail-pend");
         VioletteUserEntity artist = violetteUserRepository.findByIdOptional(fx.artistId).orElseThrow();
