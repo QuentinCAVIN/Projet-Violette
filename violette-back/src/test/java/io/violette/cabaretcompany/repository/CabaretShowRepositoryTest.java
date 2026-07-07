@@ -60,7 +60,7 @@ class CabaretShowRepositoryTest {
 
     @Test
     @Transactional
-    @DisplayName("findByCompanyId — liste toutes les revues rattachees a une compagnie")
+    @DisplayName("findByCompanyId — liste toutes les revues rattachées à une compagnie")
     void givenMultipleShowsForSameCompany_whenFindByCompanyId_thenReturnAll() {
         CabaretCompanyEntity company = createCompanyWithManager("Compagnie Multi-Revues", "uid-mgr-multi-show", "mgr-multi-show@test.com");
         cabaretCompanyRepository.persistAndFlush(company);

@@ -90,7 +90,7 @@ class CompanyMemberRepositoryTest {
 
     @Test
     @Transactional
-    @DisplayName("findByArtistId — expose les appartenances multi-compagnies d'un meme artiste")
+    @DisplayName("findByArtistId — expose les appartenances multi-compagnies d'un même artiste")
     void givenArtistInMultipleCompanies_whenFindByArtistId_thenReturnAllMemberships() {
         VioletteUserEntity manager1 = buildAndPersistUser("uid-mgr-multi-1", "mgr-m1@test.com", "M1", "Manager", Set.of(UserRole.MANAGER));
         VioletteUserEntity manager2 = buildAndPersistUser("uid-mgr-multi-2", "mgr-m2@test.com", "M2", "Manager", Set.of(UserRole.MANAGER));

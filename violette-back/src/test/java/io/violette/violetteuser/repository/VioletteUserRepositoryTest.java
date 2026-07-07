@@ -24,7 +24,7 @@ class VioletteUserRepositoryTest {
 
     @Test
     @Transactional
-    @DisplayName("findByFirebaseUid — relit roles, skills et identite apres persistance")
+    @DisplayName("findByFirebaseUid — relit rôles, skills et identité après persistance")
     void givenExistingUser_whenFindByFirebaseUid_thenReturnUser() {
         VioletteUserEntity user = buildUser(
                 "uid-find-001",

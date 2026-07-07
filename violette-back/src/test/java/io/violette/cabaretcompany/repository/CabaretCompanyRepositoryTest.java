@@ -55,7 +55,7 @@ class CabaretCompanyRepositoryTest {
 
     @Test
     @Transactional
-    @DisplayName("findByManagerId — liste toutes les compagnies gerees par un meme manager")
+    @DisplayName("findByManagerId — liste toutes les compagnies gérées par un même manager")
     void givenCompaniesWithSameManager_whenFindByManagerId_thenReturnAll() {
         VioletteUserEntity manager = buildAndPersistUser("uid-mgr-multi", "mgr-multi@test.com", "Jean", "Gérant", Set.of(UserRole.MANAGER));
         CabaretCompanyEntity c1 = new CabaretCompanyEntity();
