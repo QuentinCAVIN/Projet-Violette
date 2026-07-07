@@ -13,7 +13,7 @@ class AvailabilityCalendar
     BuildContext context,
     AvailabilityChoiceViewModel viewModel,
   ) {
-    //TODO Bouton "2 weeks" sur le calendrier mort, voir pour le faire disparaitre
+    // DETTE-10 : retirer ou activer le bouton « 2 weeks » du calendrier TableCalendar
     return TableCalendar(
       firstDay: DateTime.utc(2010, 10, 16),
       lastDay: DateTime.utc(2030, 3, 14),
@@ -34,7 +34,6 @@ class AvailabilityCalendar
             day: day,
             status: viewModel.getStatusForDay(day),
           );
-          //********
         },
         // Builder pour construire uniquement les jours selectionnées par le selectedDayPredicate
         selectedBuilder: (context, day, focusedDay) {

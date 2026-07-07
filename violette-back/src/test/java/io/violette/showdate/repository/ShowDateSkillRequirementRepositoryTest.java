@@ -42,7 +42,7 @@ class ShowDateSkillRequirementRepositoryTest {
 
     @Test
     @Transactional
-    @DisplayName("Un besoin artistique persisté est relu avec tous ses champs")
+    @DisplayName("persist — relit tous les champs d'un besoin artistique")
     void givenSkillRequirement_whenPersisted_thenAllFieldsCanBeReloaded() {
         ShowDateEntity showDate = buildAndPersistShowDate("req-mgr-1", "req-mgr-1@test.com");
 
@@ -67,7 +67,7 @@ class ShowDateSkillRequirementRepositoryTest {
 
     @Test
     @Transactional
-    @DisplayName("Pour une date, findByShowDateId retourne tous les besoins liés")
+    @DisplayName("findByShowDateId — liste les besoins par compétence pour une date")
     void givenMultipleSkillRequirementsForSameDate_whenFindByShowDateId_thenReturnAll() {
         ShowDateEntity showDate = buildAndPersistShowDate("req-mgr-2", "req-mgr-2@test.com");
 
@@ -89,7 +89,7 @@ class ShowDateSkillRequirementRepositoryTest {
 
     @Test
     @Transactional
-    @DisplayName("Pour deux dates distinctes, findByShowDateId ne mélange pas les besoins")
+    @DisplayName("findByShowDateId — ne mélange pas les besoins de deux dates distinctes")
     void givenTwoDatesWithDifferentRequirements_whenFindByShowDateId_thenReturnOnlyCorrectDate() {
         ShowDateEntity date1 = buildAndPersistShowDate("req-mgr-3", "req-mgr-3@test.com");
         ShowDateEntity date2 = buildAndPersistShowDate("req-mgr-4", "req-mgr-4@test.com");
@@ -112,7 +112,7 @@ class ShowDateSkillRequirementRepositoryTest {
 
     @Test
     @Transactional
-    @DisplayName("Un besoin avec cachet net à zéro est accepté en persistance")
+    @DisplayName("persist — accepte un besoin avec cachet net à zéro")
     void givenSkillRequirementWithNetFeeZero_whenPersisted_thenNetFeeIsAccepted() {
         ShowDateEntity showDate = buildAndPersistShowDate("req-mgr-5", "req-mgr-5@test.com");
 
@@ -126,7 +126,7 @@ class ShowDateSkillRequirementRepositoryTest {
 
     @Test
     @Transactional
-    @DisplayName("sumRequiredCountByShowDateId additionne les effectifs requis de tous les besoins de la date")
+    @DisplayName("sumRequiredCountByShowDateId — additionne les effectifs requis de tous les besoins de la date")
     void sumRequiredCountByShowDateId_whenMultipleRequirementsExist_returnsSumOfRequiredCounts() {
         ShowDateEntity showDate = buildAndPersistShowDate("req-mgr-6", "req-mgr-6@test.com");
 
@@ -142,7 +142,7 @@ class ShowDateSkillRequirementRepositoryTest {
 
     @Test
     @Transactional
-    @DisplayName("sumRequiredCountByShowDateId retourne 0 lorsqu'aucun besoin n'existe pour la date")
+    @DisplayName("sumRequiredCountByShowDateId — retourne 0 sans erreur quand la date n'a aucun besoin")
     void sumRequiredCountByShowDateId_whenNoRequirementsExist_returnsZero() {
         ShowDateEntity showDate = buildAndPersistShowDate("req-mgr-7", "req-mgr-7@test.com");
 

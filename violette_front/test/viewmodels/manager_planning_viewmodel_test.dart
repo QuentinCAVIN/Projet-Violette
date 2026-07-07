@@ -11,13 +11,12 @@ import '../helpers/test_helpers.dart';
 import '../helpers/test_data_builders.dart';
 
 void main() {
-  group('ManagerPlanningViewModel Tests -', () {
+  group('ManagerPlanningViewModel - Planning côté manager', () {
     setUp(() => registerServices());
     tearDown(() => locator.reset());
 
-    group('onDaySelected -', () {
-      test('devrait effacer la sélection quand aucune date n\'existe',
-          () async {
+    group('Sélection d\'un jour dans le calendrier', () {
+      test('onDaySelected_whenNoShowDateExists_clearsSelection', () async {
         final showDateRepo = getAndRegisterShowDateRepository();
         when(() => showDateRepo.getAllShowDates())
             .thenAnswer((_) => Future.value([]));
@@ -35,7 +34,7 @@ void main() {
       });
 
       test(
-          'devrait charger les artistes avec statut != pending pour une date sélectionnée',
+          'onDaySelected_whenDateIsSelected_loadsOnlyArtistsWithNonPendingStatus',
           () async {
         final showDateRepo = getAndRegisterShowDateRepository();
         final userRepo = getAndRegisterUserRepository();
@@ -100,7 +99,7 @@ void main() {
             .getUser('artist3')); // le status pending ne doit pas être chargé
       });
 
-      test('devrait gérer le cas où getUser retourne null', () async {
+      test('onDaySelected_whenGetUserReturnsNull_keepsArtistListEmpty', () async {
         final showDateRepo = getAndRegisterShowDateRepository();
         final userRepo = getAndRegisterUserRepository();
         final availabilityRepo = getAndRegisterAvailabilityRepository();
@@ -131,7 +130,7 @@ void main() {
         expect(viewModel.artists, isEmpty);
       });
 
-      test('plusieurs dates le même jour : devrait exposer toute la liste du jour',
+      test('onDaySelected_whenSeveralDatesOnSameDay_exposesAllDatesOfTheDay',
           () async {
         final showDateRepo = getAndRegisterShowDateRepository();
         final userRepo = getAndRegisterUserRepository();
@@ -172,8 +171,8 @@ void main() {
       });
     });
 
-    group('expanded state -', () {
-      test('isExpanded devrait être false par défaut', () async {
+    group('État d\'expansion d\'une carte de date', () {
+      test('isExpanded_whenNothingWasToggled_returnsFalseByDefault', () async {
         final viewModel = ManagerPlanningViewModel();
         final showDate = TestDataBuilders.createTestShowDate(
           id: 'date-1',
@@ -183,7 +182,7 @@ void main() {
         expect(viewModel.expandedShowDateId, isNull);
       });
 
-      test('toggleExpanded devrait ouvrir puis refermer la même date',
+      test('toggleExpanded_whenCalledTwiceOnSameDate_opensThenClosesIt',
           () async {
         final viewModel = ManagerPlanningViewModel();
         final showDate = TestDataBuilders.createTestShowDate(
@@ -200,7 +199,7 @@ void main() {
       });
 
       test(
-          'toggleExpanded devrait fermer la date précédente lorsqu’une nouvelle est ouverte',
+          'toggleExpanded_whenAnotherDateIsOpened_closesPreviousDate',
           () async {
         final viewModel = ManagerPlanningViewModel();
         final firstDate = TestDataBuilders.createTestShowDate(
@@ -220,7 +219,7 @@ void main() {
       });
 
       test(
-          'onDaySelected devrait réinitialiser expandedShowDateId lors d’un changement de jour',
+          'onDaySelected_whenDayChanges_resetsExpandedShowDateId',
           () async {
         final showDateRepo = getAndRegisterShowDateRepository();
         final userRepo = getAndRegisterUserRepository();
@@ -262,8 +261,8 @@ void main() {
       });
     });
 
-    group('loadShowDates -', () {
-      test('filtre les dates annulées et archivées', () async {
+    group('Chargement des dates de spectacle', () {
+      test('loadShowDates_whenSomeDatesAreCancelledOrArchived_filtersThemOut', () async {
         final showDateRepo = getAndRegisterShowDateRepository();
         final testDate = DateTime(2026, 2, 15);
 
@@ -332,8 +331,8 @@ void main() {
       });
     });
 
-    group('refreshShowDateAfterStatusChange -', () {
-      test('devrait mettre à jour uniquement la date concernée', () async {
+    group('Rafraîchissement après changement de statut', () {
+      test('refreshShowDateAfterStatusChange_whenOneDateChanges_updatesOnlyThatDate', () async {
         final viewModel = ManagerPlanningViewModel();
         final testDate = DateTime(2026, 2, 15);
         final unchangedDate = ShowDate(
@@ -382,7 +381,7 @@ void main() {
         expect(viewModel.showDatePicked?.status, ShowDateStatus.option);
       });
 
-      test('retire une date passée au statut cancelled', () async {
+      test('refreshShowDateAfterStatusChange_whenDateBecomesCancelled_removesItFromLists', () async {
         final viewModel = ManagerPlanningViewModel();
         final testDate = DateTime(2026, 2, 15);
         final activeDate = ShowDate(

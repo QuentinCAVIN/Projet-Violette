@@ -82,8 +82,7 @@ class RegisterViewModel extends FormViewModel {
     final authResult = await _authenticationService.createAccountWithEmail(
         email: email, password: password);
 
-    //TODO: Faire un mapper pour les erreurs de Firebase,
-    // éviter de signaler via les erreurs qu'un compte existe déja dans l'app
+    // DETTE-9 : mapper les erreurs Firebase vers des messages utilisateur neutres
     if (authResult.hasError) {
       globalErrorMessage = authResult.errorMessage;
       rebuildUi();
@@ -122,6 +121,3 @@ class RegisterViewModel extends FormViewModel {
     rebuildUi();
   }
 }
-
-//TODO: METTRE EN PRATIQUE CERTAINES REGLES OPQUAST
-//Règle n° 17 - La création d'un compte est soumise à un processus de confirmation. https://checklists.opquast.com/fr/assurance-qualite-web/la-creation-dun-compte-est-soumise-a-un-processus-de-confirmation

@@ -40,8 +40,8 @@ class DayCell extends ViewModelWidget<AvailabilityChoiceViewModel> {
       child: Center(
         child: Text(
           '${day.day}',
+          // DETTE-11 : utiliser le thème pour la couleur du texte des jours colorés
           style: const TextStyle(
-            //TODO  passer par un thème
             color: Colors.white,
             fontSize: 14,
             fontWeight: FontWeight.bold,

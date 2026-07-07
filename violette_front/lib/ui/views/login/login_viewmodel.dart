@@ -57,7 +57,7 @@ class LoginViewModel extends FormViewModel {
     );
 
     if (authResult.hasError) {
-      //TODO Faire un mapper pour les erreurs de Firebase
+      // DETTE-9 : mapper les erreurs Firebase vers des messages utilisateur neutres
       globalErrorMessage =
           "Combinaison adresse mail / mot de passe incorrecte.";
       rebuildUi();

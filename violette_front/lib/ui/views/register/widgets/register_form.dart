@@ -6,13 +6,10 @@ import 'package:violette_front/ui/views/register/register_viewmodel.dart';
 import '../../../../models/enums/role.dart';
 import '../register_view.form.dart';
 
+/// Formulaire d'inscription avec approche hybride Stacked :
+/// les [TextEditingController] sont passés au constructeur car ils sont générés
+/// par `@FormView` sur [RegisterView], pas sur ce widget.
 class RegisterForm extends ViewModelWidget<RegisterViewModel> {
-  // Note pour moi-même:
-  // Le ViewModelWidget est lié au RegisterViewModel et peu donc accéder a toutes ses méthodes et attribut.
-  // Comme RegisterViewModel extend FormViewModel on a acces aux ValidationMessage.
-  // En revanche on est obligé de passer les TextEditingController via le constructeur car les controller sont générés par stacked
-  // à partir de l'annotation @FormView et ne sont lié qu'a RegisterView. D'ou l'approche "hybride"
-
   final TextEditingController firstNameController;
   final TextEditingController lastNameController;
   final TextEditingController emailController;
@@ -114,10 +111,7 @@ class RegisterForm extends ViewModelWidget<RegisterViewModel> {
           keyboardType: TextInputType.visiblePassword,
         ),
 
-        //TODO Vu avec ELies : faire un Widget avec le message d'erreur (register et login)
-        //********************************
-        // Affichage du message d'erreur *
-        //********************************
+        // DETTE-7 : extraire un widget partagé pour le message d'erreur global (login et register)
         if (viewModel.globalErrorMessage != null)
           Padding(
             padding: const EdgeInsets.only(top: 12.0, bottom: 8.0),
@@ -131,7 +125,6 @@ class RegisterForm extends ViewModelWidget<RegisterViewModel> {
               textAlign: TextAlign.center,
             ),
           ),
-        //*******************************
         const SizedBox(height: 24),
 
         // Bouton de validation

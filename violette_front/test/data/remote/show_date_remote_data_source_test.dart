@@ -3,8 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:violette_front/data/remote/show_date_remote_data_source.dart';
 
 void main() {
-  group('ShowDateRemoteDataSource.getMyCompanyId', () {
-    test('retourne l\'id de compagnie depuis GET /api/companies/mine', () async {
+  group('ShowDateRemoteDataSource - Récupération de l\'identifiant compagnie', () {
+    test('getMyCompanyId_whenBackendReturnsCompany_returnsCompanyId', () async {
       final dio = Dio(BaseOptions(baseUrl: 'http://test'));
 
       dio.interceptors.add(
@@ -29,7 +29,7 @@ void main() {
       expect(companyId, '42');
     });
 
-    test('retourne null si le backend répond 404', () async {
+    test('getMyCompanyId_whenBackendReturns404_returnsNull', () async {
       final dio = Dio(BaseOptions(baseUrl: 'http://test'));
 
       dio.interceptors.add(
@@ -55,7 +55,7 @@ void main() {
       expect(companyId, isNull);
     });
 
-    test('propage une erreur HTTP autre que 404', () async {
+    test('getMyCompanyId_whenHttpErrorIsNot404_rethrowsError', () async {
       final dio = Dio(BaseOptions(baseUrl: 'http://test'));
 
       dio.interceptors.add(
@@ -80,9 +80,8 @@ void main() {
     });
   });
 
-  group('ShowDateRemoteDataSource.deleteShowDate', () {
-    test('appelle DELETE /api/show-dates/{id} pour un id numérique valide',
-        () async {
+  group('ShowDateRemoteDataSource - Suppression d\'une date', () {
+    test('deleteShowDate_whenIdIsNumeric_callsDeleteEndpoint', () async {
       final dio = Dio(BaseOptions(baseUrl: 'http://test'));
       String? deletedPath;
 
@@ -106,7 +105,7 @@ void main() {
       expect(deletedPath, '/api/show-dates/12');
     });
 
-    test('lève ArgumentError si id vide', () async {
+    test('deleteShowDate_whenIdIsBlank_throwsArgumentError', () async {
       final ds = ShowDateRemoteDataSource(dio: Dio());
       expect(
         () => ds.deleteShowDate('   '),
@@ -114,7 +113,7 @@ void main() {
       );
     });
 
-    test('lève FormatException si id non numérique', () async {
+    test('deleteShowDate_whenIdIsNotNumeric_throwsFormatException', () async {
       final ds = ShowDateRemoteDataSource(dio: Dio());
       expect(
         () => ds.deleteShowDate('abc'),
@@ -123,9 +122,8 @@ void main() {
     });
   });
 
-  group('ShowDateRemoteDataSource.updateShowDate', () {
-    test('appelle PATCH /api/show-dates/{id} avec un payload partiel formaté',
-        () async {
+  group('ShowDateRemoteDataSource - Mise à jour d\'une date', () {
+    test('updateShowDate_whenIdIsNumeric_callsPatchEndpointWithFormattedPayload', () async {
       final dio = Dio(BaseOptions(baseUrl: 'http://test'));
       String? patchPath;
       Map<String, dynamic>? patchPayload;
@@ -176,7 +174,7 @@ void main() {
       );
     });
 
-    test('lève ArgumentError si id vide', () async {
+    test('updateShowDate_whenIdIsBlank_throwsArgumentError', () async {
       final ds = ShowDateRemoteDataSource(dio: Dio());
       expect(
         () => ds.updateShowDate(showDateId: '  '),
@@ -184,7 +182,7 @@ void main() {
       );
     });
 
-    test('lève FormatException si id non numérique', () async {
+    test('updateShowDate_whenIdIsNotNumeric_throwsFormatException', () async {
       final ds = ShowDateRemoteDataSource(dio: Dio());
       expect(
         () => ds.updateShowDate(showDateId: 'abc'),

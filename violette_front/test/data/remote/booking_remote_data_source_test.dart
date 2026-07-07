@@ -4,9 +4,9 @@ import 'package:violette_front/data/remote/booking_remote_data_source.dart';
 import 'package:violette_front/models/enums/booking_status.dart';
 
 void main() {
-  group('BookingRemoteDataSource.respondToRequest', () {
+  group('BookingRemoteDataSource - Réponse à une demande de confirmation', () {
     test(
-      'enchaîne GET /me/pending puis PATCH /{id}/respond avec accept',
+      'respondToRequest_whenAccepting_fetchesPendingThenPatchesRespondWithAcceptTrue',
       () async {
         final dio = Dio(BaseOptions(baseUrl: 'http://test'));
         String? patchedPath;
@@ -57,7 +57,7 @@ void main() {
     );
 
     test(
-      'enchaîne GET /me/pending puis PATCH avec accept: false pour un refus',
+      'respondToRequest_whenDeclining_fetchesPendingThenPatchesRespondWithAcceptFalse',
       () async {
         final dio = Dio(BaseOptions(baseUrl: 'http://test'));
         String? patchedPath;
@@ -107,7 +107,7 @@ void main() {
       },
     );
 
-    test('lève une exception explicite si aucun booking ne correspond', () async {
+    test('respondToRequest_whenNoBookingMatches_throwsExplicitException', () async {
       final dio = Dio(BaseOptions(baseUrl: 'http://test'));
       dio.interceptors.add(
         InterceptorsWrapper(
@@ -133,8 +133,7 @@ void main() {
     });
 
     test(
-      'ne déclenche aucun PATCH si aucun booking PENDING_CONFIRMATION ne '
-      'correspond à la date',
+      'respondToRequest_whenNoPendingBookingMatchesDate_neverSendsPatch',
       () async {
         final dio = Dio(BaseOptions(baseUrl: 'http://test'));
         var patchCount = 0;
@@ -175,7 +174,7 @@ void main() {
       },
     );
 
-    test('remonte le corps texte du backend en 409', () async {
+    test('respondToRequest_whenBackendReturns409_surfacesResponseBodyText', () async {
       final dio = Dio(BaseOptions(baseUrl: 'http://test'));
       dio.interceptors.add(
         InterceptorsWrapper(
@@ -223,9 +222,9 @@ void main() {
     });
   });
 
-  group('BookingRemoteDataSource.cancelBooking', () {
+  group('BookingRemoteDataSource - Annulation d\'une réservation', () {
     test(
-      'enchaîne GET show-dates puis PATCH /{id}/cancel sans corps',
+      'cancelBooking_whenBookingExists_fetchesShowDateBookingsThenPatchesCancelWithoutBody',
       () async {
         final dio = Dio(BaseOptions(baseUrl: 'http://test'));
         String? patchedPath;
@@ -276,7 +275,7 @@ void main() {
       },
     );
 
-    test('lève une exception explicite si aucun booking ne correspond', () async {
+    test('cancelBooking_whenNoBookingMatches_throwsExplicitException', () async {
       final dio = Dio(BaseOptions(baseUrl: 'http://test'));
       dio.interceptors.add(
         InterceptorsWrapper(
@@ -307,9 +306,9 @@ void main() {
     });
   });
 
-  group('BookingRemoteDataSource.sendConfirmationRequests', () {
+  group('BookingRemoteDataSource - Envoi des demandes de confirmation', () {
     test(
-      'appelle POST /show-dates/{id}/send-confirmations sans corps',
+      'sendConfirmationRequests_whenCalled_postsSendConfirmationsWithoutBody',
       () async {
         final dio = Dio(BaseOptions(baseUrl: 'http://test'));
         String? postPath;
@@ -348,7 +347,7 @@ void main() {
     );
 
     test(
-      'remonte un message clair si la date est introuvable (404)',
+      'sendConfirmationRequests_whenShowDateIsNotFound_throwsExplicitMessage',
       () async {
         final dio = Dio(BaseOptions(baseUrl: 'http://test'));
         dio.interceptors.add(
@@ -383,9 +382,9 @@ void main() {
     );
   });
 
-  group('BookingRemoteDataSource.toggleSelection', () {
+  group('BookingRemoteDataSource - Bascule de sélection', () {
     test(
-      'sélection : POST /api/artist-bookings avec showDateId et artistId',
+      'toggleSelection_whenSelecting_postsBookingWithShowDateIdAndArtistId',
       () async {
         final dio = Dio(BaseOptions(baseUrl: 'http://test'));
         Object? posted;
@@ -417,7 +416,7 @@ void main() {
     );
 
     test(
-      'désélection : GET show-dates puis DELETE le booking SELECTED',
+      'toggleSelection_whenDeselecting_fetchesBookingsThenDeletesSelectedBooking',
       () async {
         final dio = Dio(BaseOptions(baseUrl: 'http://test'));
         String? deletedPath;
@@ -464,7 +463,7 @@ void main() {
     );
 
     test(
-      'lève une exception si aucun booking serveur pour la désélection',
+      'toggleSelection_whenDeselectingWithoutServerBooking_throwsException',
       () async {
         final dio = Dio(BaseOptions(baseUrl: 'http://test'));
         dio.interceptors.add(
@@ -490,9 +489,9 @@ void main() {
     );
   });
 
-  group('BookingRemoteDataSource.getBookingsForDate', () {
+  group('BookingRemoteDataSource - Récupération des réservations d\'une date', () {
     test(
-      'retourne la liste des ArtistBooking pour une date',
+      'getBookingsForDate_whenBackendReturnsBookings_returnsArtistBookingList',
       () async {
         final dio = Dio(BaseOptions(baseUrl: 'http://test'));
         dio.interceptors.add(
@@ -537,7 +536,7 @@ void main() {
     );
 
     test(
-      'retourne une liste vide si le serveur répond 404',
+      'getBookingsForDate_whenBackendReturns404_returnsEmptyList',
       () async {
         final dio = Dio(BaseOptions(baseUrl: 'http://test'));
         dio.interceptors.add(
@@ -565,7 +564,7 @@ void main() {
     );
 
     test(
-      'lève une exception pour une erreur serveur autre que 404',
+      'getBookingsForDate_whenHttpErrorIsNot404_throwsException',
       () async {
         final dio = Dio(BaseOptions(baseUrl: 'http://test'));
         dio.interceptors.add(
@@ -595,9 +594,9 @@ void main() {
     );
   });
 
-  group('BookingRemoteDataSource.getPendingRequestsForArtist', () {
+  group('BookingRemoteDataSource - Demandes en attente pour un artiste', () {
     test(
-      'appelle GET /me/pending et retourne des ArtistBooking',
+      'getPendingRequestsForArtist_whenCalled_fetchesPendingAndReturnsArtistBookings',
       () async {
         final dio = Dio(BaseOptions(baseUrl: 'http://test'));
         dio.interceptors.add(
@@ -634,7 +633,7 @@ void main() {
     );
 
     test(
-      'lève une exception si le serveur répond une erreur HTTP',
+      'getPendingRequestsForArtist_whenBackendReturnsHttpError_throwsException',
       () async {
         final dio = Dio(BaseOptions(baseUrl: 'http://test'));
         dio.interceptors.add(

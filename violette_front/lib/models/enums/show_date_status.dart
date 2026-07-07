@@ -15,11 +15,8 @@ import 'package:flutter/material.dart';
 /// - une `ShowDate` en `inquiry` ne devrait pas forcément apparaître dans
 ///   le calendrier principal tant qu'elle n'est pas suffisamment qualifiée.
 ///
-/// TODO V2 :
-/// prévoir un statut spécifique de type `postponed` / "date reportée"
-/// pour les cas de force majeure (ex. décès, tempête, événement exceptionnel)
-/// où la date initiale ne peut pas avoir lieu, mais où le client reste engagé
-/// et la prestation doit être reprogrammée ultérieurement.
+/// DETTE-17 : prévoir un statut `postponed` pour les reports de force majeure
+/// (client engagé, prestation à reprogrammer ultérieurement).
 enum ShowDateStatus {
   inquiry(
     label: 'Demande client',

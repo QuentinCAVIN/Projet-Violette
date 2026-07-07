@@ -23,7 +23,7 @@ import static io.restassured.RestAssured.given;
 class VioletteUserControllerTest {
 
     @Test
-    @DisplayName("GET /me sans token retourne 401")
+    @DisplayName("GET /me — retourne 401 quand aucun token n'est fourni")
     void getMe_withoutToken_returns401() {
         given()
             .when().get("/api/users/me")
@@ -32,7 +32,7 @@ class VioletteUserControllerTest {
     }
 
     @Test
-    @DisplayName("GET /me/profile sans token retourne 401")
+    @DisplayName("GET /me/profile — retourne 401 quand aucun token n'est fourni")
     void getMyProfile_withoutToken_returns401() {
         given()
             .when().get("/api/users/me/profile")

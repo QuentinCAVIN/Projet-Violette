@@ -86,7 +86,7 @@ class HomeView extends StackedView<HomeViewModel> {
                     Card(
                       child: ListTile(
                         title: Text(
-                          // TODO rajouter de quoi afficher une liste de role et non pas le premier de la liste
+                          // DETTE-12 : afficher tous les rôles de l'utilisateur, pas seulement le premier
                           "Profil : ${currentUser.roles[0].label} ",
                           style: Theme.of(context)
                               .textTheme

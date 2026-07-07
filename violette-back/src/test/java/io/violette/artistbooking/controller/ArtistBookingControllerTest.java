@@ -36,7 +36,7 @@ class ArtistBookingControllerTest {
 
     @Test
     @TestSecurity(user = "ctrl-booking-mgr", roles = {"MANAGER"})
-    @DisplayName("POST /artist-bookings en MANAGER crée une sélection et retourne 201")
+    @DisplayName("POST /artist-bookings — retourne 201 quand le rôle est MANAGER")
     void createBooking_whenRoleIsManager_returns201() {
         when(artistBookingService.createBooking(any(CreateBookingRequestDto.class)))
                 .thenReturn(dto(11L, 100L, 200L, BookingStatus.SELECTED));
@@ -60,7 +60,7 @@ class ArtistBookingControllerTest {
 
     @Test
     @TestSecurity(user = "ctrl-booking-artist-forbidden", roles = {"ARTIST"})
-    @DisplayName("POST /artist-bookings en ARTIST retourne 403 et ne délègue pas au service")
+    @DisplayName("POST /artist-bookings — retourne 403 et ne délègue pas au service quand le rôle est ARTIST")
     void createBooking_whenRoleIsArtist_returns403() {
         given()
                 .contentType("application/json")
@@ -79,7 +79,7 @@ class ArtistBookingControllerTest {
 
     @Test
     @TestSecurity(user = "ctrl-booking-artist", roles = {"ARTIST"})
-    @DisplayName("PATCH /artist-bookings/{id}/respond en ARTIST avec principal retourne 200")
+    @DisplayName("PATCH /artist-bookings/{id}/respond — retourne 200 quand le rôle est ARTIST et le principal existe")
     void respondToRequest_whenRoleIsArtistAndPrincipalExists_returns200() {
         JwtPrincipalInfo principal = new JwtPrincipalInfo("firebase-artist-1", "artist@test.com", "Artiste");
         when(currentUserContextProvider.getCurrentPrincipal()).thenReturn(Optional.of(principal));
@@ -100,7 +100,7 @@ class ArtistBookingControllerTest {
 
     @Test
     @TestSecurity(user = "ctrl-booking-artist-no-principal", roles = {"ARTIST"})
-    @DisplayName("GET /artist-bookings/me/pending sans principal retourne 401")
+    @DisplayName("GET /artist-bookings/me/pending — retourne 401 quand le principal est absent")
     void getPendingBookings_whenPrincipalIsMissing_returns401() {
         when(currentUserContextProvider.getCurrentPrincipal()).thenReturn(Optional.empty());
 
@@ -114,7 +114,7 @@ class ArtistBookingControllerTest {
 
     @Test
     @TestSecurity(user = "ctrl-booking-artist-pending", roles = {"ARTIST"})
-    @DisplayName("GET /artist-bookings/me/pending avec principal retourne 200 et la liste")
+    @DisplayName("GET /artist-bookings/me/pending — retourne 200 et la liste quand le principal existe")
     void getPendingBookings_whenPrincipalExists_returns200AndList() {
         JwtPrincipalInfo principal = new JwtPrincipalInfo("firebase-artist-2", "artist2@test.com", "Artiste 2");
         when(currentUserContextProvider.getCurrentPrincipal()).thenReturn(Optional.of(principal));
@@ -134,7 +134,7 @@ class ArtistBookingControllerTest {
 
     @Test
     @TestSecurity(user = "ctrl-booking-artist-me", roles = {"ARTIST"})
-    @DisplayName("GET /artist-bookings/me avec principal retourne les réservations de l'artiste")
+    @DisplayName("GET /artist-bookings/me — retourne les réservations de l'artiste quand le principal existe")
     void getMyBookings_whenPrincipalExists_returns200AndList() {
         JwtPrincipalInfo principal = new JwtPrincipalInfo("firebase-artist-3", "artist3@test.com", "Artiste 3");
         when(currentUserContextProvider.getCurrentPrincipal()).thenReturn(Optional.of(principal));

@@ -39,10 +39,7 @@ class LoginForm extends ViewModelWidget<LoginViewModel> {
           obscureText: true,
           keyboardType: TextInputType.visiblePassword,
         ),
-        //TODO Voir avec ELies si on peut faire un Widget avec le message d'erreur (utilisé dans 2 endroits)
-        //********************************
-        // Affichage du message d'erreur *
-        //********************************
+        // DETTE-7 : extraire un widget partagé pour le message d'erreur global (login et register)
         if (viewModel.globalErrorMessage != null)
           Padding(
             padding: const EdgeInsets.only(top: 12.0, bottom: 8.0),
@@ -55,7 +52,6 @@ class LoginForm extends ViewModelWidget<LoginViewModel> {
               textAlign: TextAlign.center,
             ),
           ),
-        //*******************************
         const SizedBox(height: 24),
 
         // Bouton "Se connecter"
@@ -72,7 +68,7 @@ class LoginForm extends ViewModelWidget<LoginViewModel> {
         // Lien mot de passe oublié - Mort pour l'instant
         TextButton(
           onPressed: () {
-            // TODO: Créer la fonctionalité de modification du mot de passe
+            // DETTE-8 : implémenter la réinitialisation du mot de passe
           },
           child: const Text('Mot de passe oublié ?(Bouton inactif)'),
         ),

@@ -16,7 +16,7 @@ void main() {
     registerFallbackValue(DateTime.utc(2000, 1, 1));
   });
 
-  group('RestShowDateRepository.addShowDate', () {
+  group('RestShowDateRepository - Création d\'une date', () {
     late _MockShowDateRemoteDataSource remote;
     late RestShowDateRepository repository;
 
@@ -25,7 +25,7 @@ void main() {
       repository = RestShowDateRepository(remoteDataSource: remote);
     });
 
-    test('lève StateError si aucune compagnie (GET /api/companies/mine vide)', () async {
+    test('addShowDate_whenNoCompanyIsFound_throwsStateErrorWithoutCreating', () async {
       when(() => remote.getMyCompanyId()).thenAnswer((_) async => null);
 
       final showDate = ShowDate(
@@ -57,7 +57,7 @@ void main() {
     });
   });
 
-  group('RestShowDateRepository.deleteShowDate', () {
+  group('RestShowDateRepository - Suppression d\'une date', () {
     late _MockShowDateRemoteDataSource remote;
     late RestShowDateRepository repository;
 
@@ -68,7 +68,7 @@ void main() {
       );
     });
 
-    test('supprime via REST quand uid numérique', () async {
+    test('deleteShowDate_whenIdIsNumeric_deletesThroughRemoteDataSource', () async {
       when(() => remote.deleteShowDate('15')).thenAnswer((_) async {});
 
       await repository.deleteShowDate('15');
@@ -76,7 +76,7 @@ void main() {
       verify(() => remote.deleteShowDate('15')).called(1);
     });
 
-    test('propage FormatException quand uid non numérique', () async {
+    test('deleteShowDate_whenIdIsNotNumeric_rethrowsFormatException', () async {
       when(() => remote.deleteShowDate('firestore-doc-id')).thenThrow(
         const FormatException('Identifiant de date invalide pour REST'),
       );
@@ -87,7 +87,7 @@ void main() {
       );
     });
 
-    test('ignore DioException 404 (suppression idempotente)', () async {
+    test('deleteShowDate_whenBackendReturns404_ignoresErrorForIdempotency', () async {
       when(() => remote.deleteShowDate('42')).thenThrow(
         DioException(
           requestOptions: RequestOptions(path: '/api/show-dates/42'),
@@ -104,7 +104,7 @@ void main() {
       verify(() => remote.deleteShowDate('42')).called(1);
     });
 
-    test('propage l’erreur REST si statut différent de 404', () async {
+    test('deleteShowDate_whenHttpErrorIsNot404_rethrowsError', () async {
       when(() => remote.deleteShowDate('42')).thenThrow(
         DioException(
           requestOptions: RequestOptions(path: '/api/show-dates/42'),
@@ -122,7 +122,7 @@ void main() {
       );
     });
 
-    test('lève ArgumentError si uid vide', () async {
+    test('deleteShowDate_whenIdIsBlank_throwsArgumentError', () async {
       expect(
         () => repository.deleteShowDate('   '),
         throwsA(isA<ArgumentError>()),
@@ -131,7 +131,7 @@ void main() {
     });
   });
 
-  group('RestShowDateRepository.updateShowDate', () {
+  group('RestShowDateRepository - Mise à jour d\'une date', () {
     late _MockShowDateRemoteDataSource remote;
     late RestShowDateRepository repository;
 
@@ -142,7 +142,7 @@ void main() {
       );
     });
 
-    test('met à jour via REST quand uid numérique', () async {
+    test('updateShowDate_whenIdIsNumeric_updatesThroughRemoteDataSource', () async {
       final showDate = ShowDate(
         id: '17',
         title: 'Titre',
@@ -182,7 +182,7 @@ void main() {
       ).called(1);
     });
 
-    test('propage FormatException quand uid non numérique', () async {
+    test('updateShowDate_whenIdIsNotNumeric_rethrowsFormatException', () async {
       final showDate = ShowDate(
         id: 'legacy-firestore-id',
         title: 'Titre',
@@ -211,7 +211,7 @@ void main() {
       );
     });
 
-    test('propage l’erreur REST pour uid numérique', () async {
+    test('updateShowDate_whenBackendFails_rethrowsError', () async {
       final showDate = ShowDate(
         id: '17',
         title: 'Titre',
@@ -248,7 +248,7 @@ void main() {
       );
     });
 
-    test('lève ArgumentError si uid vide', () async {
+    test('updateShowDate_whenIdIsBlank_throwsArgumentError', () async {
       final showDate = ShowDate(
         id: '   ',
         title: 'Titre',

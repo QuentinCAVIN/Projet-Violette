@@ -10,7 +10,7 @@ void main() {
     await initializeDateFormatting('fr_FR', null);
   });
 
-  group('ShowDateDetail Tests -', () {
+  group('ShowDateDetail - Affichage du détail d\'une date', () {
     testWidgets(
         'whenStatusIsProvided_exposesLiveRegionWithDateAndStatusLabel',
         (WidgetTester tester) async {

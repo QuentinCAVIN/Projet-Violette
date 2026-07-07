@@ -8,7 +8,7 @@ import 'package:violette_front/models/violette_user.dart';
 void main() {
   group('UserMapper - Mapping DTO → profil utilisateur (fromDto)', () {
     test(
-      'DTO complet devrait mapper firebaseUid vers uid et recopier prénom, nom, email et rôles',
+      'fromDto_whenDtoIsComplete_mapsFirebaseUidToUidAndCopiesIdentityFields',
       () {
         final dto = api.VioletteUserDto(
           (b) => b
@@ -36,7 +36,7 @@ void main() {
     );
 
     test(
-      'Champs texte absents du DTO devraient utiliser des chaînes vides (uid, prénom, nom, email)',
+      'fromDto_whenTextFieldsAreMissing_returnsEmptyStrings',
       () {
         final dto = api.VioletteUserDto((b) => b);
 
@@ -50,7 +50,7 @@ void main() {
     );
 
     test(
-      'Rôles null sur le DTO devraient retourner une liste de rôles métier vide',
+      'fromDto_whenRolesAreNull_returnsEmptyRoleList',
       () {
         final dto = api.VioletteUserDto(
           (b) => b..firebaseUid = 'u',
@@ -63,7 +63,7 @@ void main() {
     );
 
     test(
-      'Ensemble de rôles vide sur le DTO devrait retourner une liste de rôles métier vide',
+      'fromDto_whenRoleSetIsEmpty_returnsEmptyRoleList',
       () {
         final dto = api.VioletteUserDto(
           (b) => b
@@ -78,7 +78,7 @@ void main() {
     );
 
     test(
-      'UserRole ARTIST du DTO devrait mapper vers Role.artist',
+      'fromDto_whenRoleIsApiArtist_mapsToArtistRole',
       () {
         final dto = api.VioletteUserDto(
           (b) => b
@@ -91,7 +91,7 @@ void main() {
     );
 
     test(
-      'UserRole MANAGER du DTO devrait mapper vers Role.manager',
+      'fromDto_whenRoleIsApiManager_mapsToManagerRole',
       () {
         final dto = api.VioletteUserDto(
           (b) => b
@@ -104,8 +104,7 @@ void main() {
     );
 
     test(
-      'Chaque valeur UserRole déclarée par le client API ne devrait pas lever d’exception ; '
-      'ARTIST et MANAGER devraient mapper ; un rôle futur non géré devrait être ignoré',
+      'fromDto_whenAnyDeclaredApiRole_neverThrowsAndIgnoresUnhandledRoles',
       () {
         for (final apiRole in api.UserRole.values) {
           final dto = api.VioletteUserDto(
@@ -138,14 +137,14 @@ void main() {
 
   group('UserMapper - Mapping rôles métier → DTO API (rolesToApi)', () {
     test(
-      'Liste de rôles métier vide devrait retourner un BuiltSet API vide',
+      'rolesToApi_whenRoleListIsEmpty_returnsEmptyApiSet',
       () {
         expect(UserMapper.rolesToApi(<Role>[]), isEmpty);
       },
     );
 
     test(
-      'Role.artist et Role.manager devraient mapper vers UserRole.ARTIST et UserRole.MANAGER',
+      'rolesToApi_whenArtistAndManagerRoles_mapsToApiArtistAndManager',
       () {
         expect(
           UserMapper.rolesToApi(<Role>[Role.artist, Role.manager]),

@@ -16,12 +16,12 @@ import 'package:stacked_services/stacked_services.dart';
 import '../helpers/test_helpers.dart';
 
 void main() {
-  group('ManagerDateDetailViewModel Tests -', () {
+  group('ManagerDateDetailViewModel - Détail de date côté manager', () {
     setUp(() => registerServices());
     tearDown(() => locator.reset());
 
-    group('initialize -', () {
-      test('devrait charger le détail showDate via le repository REST', () async {
+    group('Initialisation du détail', () {
+      test('initialize_whenShowDateHasId_loadsDetailFromRestRepository', () async {
         final showDateRepository = locator<ShowDateRepository>() as MockShowDateRepository;
         final bookingRepository = locator<BookingRepository>() as MockBookingRepository;
         final availabilityRepository =
@@ -63,7 +63,7 @@ void main() {
         verify(() => bookingRepository.getBookingsForDate('date-1')).called(1);
       });
 
-      test('devrait ignorer le chargement distant si uid est null', () async {
+      test('initialize_whenShowDateIdIsEmpty_skipsRemoteLoading', () async {
         final showDateRepository = locator<ShowDateRepository>() as MockShowDateRepository;
         final bookingRepository = locator<BookingRepository>() as MockBookingRepository;
 
@@ -86,7 +86,7 @@ void main() {
       });
 
       test(
-          'devrait conserver la showDate initiale quand le backend retourne null',
+          'initialize_whenBackendReturnsNull_keepsInitialShowDate',
           () async {
         final showDateRepository =
             locator<ShowDateRepository>() as MockShowDateRepository;
@@ -119,7 +119,7 @@ void main() {
         verify(() => showDateRepository.getShowDateById('date-1')).called(1);
       });
 
-      test("devrait charger les bookings REST à l'initialisation", () async {
+      test('initialize_whenBookingsExist_loadsRestBookings', () async {
         final showDateRepository =
             locator<ShowDateRepository>() as MockShowDateRepository;
         final bookingRepository =
@@ -159,8 +159,8 @@ void main() {
       });
     });
 
-    group('refreshShowDateDetail -', () {
-      test('devrait recharger le détail via getShowDateById', () async {
+    group('Rafraîchissement du détail', () {
+      test('refreshShowDateDetail_whenCalled_reloadsDetailViaGetShowDateById', () async {
         final showDateRepository =
             locator<ShowDateRepository>() as MockShowDateRepository;
         final bookingRepository =
@@ -207,14 +207,14 @@ void main() {
       });
     });
 
-    group('toggleSelection -', () {
+    group('Bascule de sélection d\'un artiste', () {
       test(
           'toggleSelection_whenDateIdIsNull_doesNotCallRepository',
           () async {
         final bookingRepository =
             locator<BookingRepository>() as MockBookingRepository;
 
-        final showDateSansId = ShowDate(
+        final showDateWithoutId = ShowDate(
           id: '',
           title: 'Date sans id',
           date: DateTime(2026, 1, 1),
@@ -223,7 +223,7 @@ void main() {
           totalRequiredArtists: 2,
         );
 
-        final viewModel = ManagerDateDetailViewModel(showDate: showDateSansId);
+        final viewModel = ManagerDateDetailViewModel(showDate: showDateWithoutId);
 
         await viewModel.toggleSelection('artist1', true);
 
@@ -232,7 +232,7 @@ void main() {
       });
 
       test(
-          'toggleSelection_afterSuccess_rechargeBookingsEtShowDate',
+          'toggleSelection_whenCallSucceeds_reloadsBookingsAndShowDate',
           () async {
         final bookingRepository =
             locator<BookingRepository>() as MockBookingRepository;
@@ -249,7 +249,7 @@ void main() {
           address: 'Adresse',
           totalRequiredArtists: 2,
         );
-        final showDateApresSelection = ShowDate(
+        final showDateAfterSelection = ShowDate(
           id: '7',
           title: 'Test',
           date: DateTime(2026, 1, 1),
@@ -259,7 +259,7 @@ void main() {
           selectedCount: 1,
         );
 
-        final bookingApresSelection = ArtistBooking(
+        final bookingAfterSelection = ArtistBooking(
           artistId: '5',
           dateId: '7',
           status: BookingStatus.preselected,
@@ -284,9 +284,9 @@ void main() {
         when(() => bookingRepository.toggleSelection('7', '5', true))
             .thenAnswer((_) async {});
         when(() => bookingRepository.getBookingsForDate('7'))
-            .thenAnswer((_) async => [bookingApresSelection]);
+            .thenAnswer((_) async => [bookingAfterSelection]);
         when(() => showDateRepository.getShowDateById('7'))
-            .thenAnswer((_) async => showDateApresSelection);
+            .thenAnswer((_) async => showDateAfterSelection);
 
         await viewModel.toggleSelection('5', true);
 
@@ -299,7 +299,7 @@ void main() {
       });
     });
 
-    group('sendConfirmation -', () {
+    group('Envoi des demandes de confirmation', () {
       test(
         'sendConfirmation_whenShowDateIsNotConfirmed_doesNotCallRepository',
         () async {
@@ -338,7 +338,7 @@ void main() {
         final bookingRepository =
             locator<BookingRepository>() as MockBookingRepository;
 
-        final showDateSansId = ShowDate(
+        final showDateWithoutId = ShowDate(
           id: '',
           title: 'Date sans id',
           date: DateTime(2026, 1, 1),
@@ -347,7 +347,7 @@ void main() {
           totalRequiredArtists: 2,
         );
 
-        final viewModel = ManagerDateDetailViewModel(showDate: showDateSansId);
+        final viewModel = ManagerDateDetailViewModel(showDate: showDateWithoutId);
 
         await viewModel.sendConfirmation();
 
@@ -355,7 +355,7 @@ void main() {
       });
 
       test(
-          'sendConfirmation_afterSuccess_rechargeBookingsEtShowDate',
+          'sendConfirmation_whenCallSucceeds_reloadsBookingsAndShowDate',
           () async {
         final bookingRepository =
             locator<BookingRepository>() as MockBookingRepository;
@@ -374,7 +374,7 @@ void main() {
           status: ShowDateStatus.confirmed,
         );
 
-        final bookingApresEnvoi = ArtistBooking(
+        final bookingAfterConfirmationRequest = ArtistBooking(
           artistId: '5',
           dateId: '7',
           status: BookingStatus.pendingConfirmation,
@@ -399,7 +399,7 @@ void main() {
         when(() => bookingRepository.sendConfirmationRequests('7'))
             .thenAnswer((_) async {});
         when(() => bookingRepository.getBookingsForDate('7'))
-            .thenAnswer((_) async => [bookingApresEnvoi]);
+            .thenAnswer((_) async => [bookingAfterConfirmationRequest]);
 
         await viewModel.sendConfirmation();
 
@@ -411,8 +411,8 @@ void main() {
       });
     });
 
-    group('changeShowDateStatus -', () {
-      test('appelle le repository et recharge le détail après succès', () async {
+    group('Changement de statut de la date', () {
+      test('changeShowDateStatus_whenCallSucceeds_updatesStatusAndReloadsDetail', () async {
         final showDateRepository =
             locator<ShowDateRepository>() as MockShowDateRepository;
         final bookingRepository =
@@ -472,7 +472,7 @@ void main() {
         expect(callbackShowDate?.status, ShowDateStatus.option);
       });
 
-      test("en cas d'erreur, n'applique pas de faux succès", () async {
+      test('changeShowDateStatus_whenCallFails_doesNotApplyFakeSuccess', () async {
         final showDateRepository =
             locator<ShowDateRepository>() as MockShowDateRepository;
         final bookingRepository =
@@ -526,8 +526,8 @@ void main() {
       });
     });
 
-    group('cancelShowDate -', () {
-      test('confirmation acceptée annule la date', () async {
+    group('Annulation de la date', () {
+      test('cancelShowDate_whenConfirmationIsAccepted_cancelsShowDate', () async {
         final showDateRepository =
             locator<ShowDateRepository>() as MockShowDateRepository;
         final bookingRepository =
@@ -588,7 +588,7 @@ void main() {
         expect(callbackShowDate?.status, ShowDateStatus.cancelled);
       });
 
-      test('confirmation refusée n\'annule pas la date', () async {
+      test('cancelShowDate_whenConfirmationIsDeclined_doesNotCancelShowDate', () async {
         final showDateRepository =
             locator<ShowDateRepository>() as MockShowDateRepository;
         final dialogService = locator<DialogService>() as MockDialogService;
@@ -621,11 +621,11 @@ void main() {
             ));
       });
 
-      test('dateId vide n\'annule pas la date', () async {
+      test('cancelShowDate_whenDateIdIsEmpty_doesNotCancelShowDate', () async {
         final showDateRepository =
             locator<ShowDateRepository>() as MockShowDateRepository;
 
-        final showDateSansId = ShowDate(
+        final showDateWithoutId = ShowDate(
           id: '',
           title: 'Date sans id',
           date: DateTime(2026, 1, 1),
@@ -634,7 +634,7 @@ void main() {
           totalRequiredArtists: 2,
         );
 
-        final viewModel = ManagerDateDetailViewModel(showDate: showDateSansId);
+        final viewModel = ManagerDateDetailViewModel(showDate: showDateWithoutId);
         await viewModel.cancelShowDate();
 
         verifyNever(() => showDateRepository.updateShowDateStatus(
@@ -643,7 +643,7 @@ void main() {
             ));
       });
 
-      test("en cas d'erreur, n'applique pas de faux succès", () async {
+      test('cancelShowDate_whenCallFails_doesNotApplyFakeSuccess', () async {
         final showDateRepository =
             locator<ShowDateRepository>() as MockShowDateRepository;
         final dialogService = locator<DialogService>() as MockDialogService;
@@ -692,8 +692,8 @@ void main() {
       });
     });
 
-    group('cancelBooking -', () {
-      test('confirmation acceptée annule le booking', () async {
+    group('Annulation d\'une réservation', () {
+      test('cancelBooking_whenConfirmationIsAccepted_cancelsBooking', () async {
         final showDateRepository =
             locator<ShowDateRepository>() as MockShowDateRepository;
         final bookingRepository =
@@ -731,7 +731,7 @@ void main() {
         verify(() => bookingRepository.cancelBooking('date-1', '5')).called(1);
       });
 
-      test('confirmation refusée n\'annule pas le booking', () async {
+      test('cancelBooking_whenConfirmationIsDeclined_doesNotCancelBooking', () async {
         final bookingRepository =
             locator<BookingRepository>() as MockBookingRepository;
         final dialogService = locator<DialogService>() as MockDialogService;
@@ -761,11 +761,11 @@ void main() {
         verifyNever(() => bookingRepository.cancelBooking(any(), any()));
       });
 
-      test('dateId vide n\'annule pas le booking', () async {
+      test('cancelBooking_whenDateIdIsEmpty_doesNotCancelBooking', () async {
         final bookingRepository =
             locator<BookingRepository>() as MockBookingRepository;
 
-        final showDateSansId = ShowDate(
+        final showDateWithoutId = ShowDate(
           id: '',
           title: 'Date sans id',
           date: DateTime(2026, 1, 1),
@@ -774,13 +774,13 @@ void main() {
           totalRequiredArtists: 2,
         );
 
-        final viewModel = ManagerDateDetailViewModel(showDate: showDateSansId);
+        final viewModel = ManagerDateDetailViewModel(showDate: showDateWithoutId);
         await viewModel.cancelBooking('5');
 
         verifyNever(() => bookingRepository.cancelBooking(any(), any()));
       });
 
-      test("en cas d'erreur, n'applique pas de faux succès", () async {
+      test('cancelBooking_whenCallFails_doesNotApplyFakeSuccess', () async {
         final bookingRepository =
             locator<BookingRepository>() as MockBookingRepository;
         final dialogService = locator<DialogService>() as MockDialogService;
@@ -826,9 +826,9 @@ void main() {
       });
     });
 
-    group('isSelectionEnabled -', () {
+    group('Autorisation de sélection', () {
       test(
-          'devrait autoriser la désélection quand un booking existe avec status selected',
+          'isSelectionEnabled_whenBookingIsPreselected_allowsDeselection',
           () {
         final showDate = ShowDate(
           id: 'date-1',
@@ -862,7 +862,7 @@ void main() {
       });
 
       test(
-          'devrait refuser la sélection quand un booking existe avec status non selected',
+          'isSelectionEnabled_whenBookingHasNonPreselectedStatus_returnsFalse',
           () {
         final showDate = ShowDate(
           id: 'date-1',
@@ -895,7 +895,7 @@ void main() {
       });
 
       test(
-          "devrait refuser la sélection si l'artiste n'est pas available",
+          'isSelectionEnabled_whenArtistIsNotAvailable_returnsFalse',
           () {
         final currentShowDate = ShowDate(
           id: 'date-1',
@@ -1005,7 +1005,7 @@ void main() {
       );
 
       test(
-          'devrait refuser la sélection si le plafond artistsCount est atteint',
+          'isSelectionEnabled_whenRequiredArtistCountIsReached_returnsFalse',
           () {
         final currentShowDate = ShowDate(
           id: 'date-1',
@@ -1034,7 +1034,7 @@ void main() {
       });
 
       test(
-        'devrait autoriser la sélection quand totalRequiredArtists vaut 0',
+        'isSelectionEnabled_whenTotalRequiredArtistsIsZero_returnsTrue',
         () {
           final currentShowDate = ShowDate(
             id: 'date-1',
@@ -1062,7 +1062,7 @@ void main() {
       );
 
       test(
-        'devrait refuser une nouvelle sélection si le statut de date est inquiry',
+        'isSelectionEnabled_whenShowDateStatusIsInquiry_returnsFalse',
         () {
           final currentShowDate = ShowDate(
             id: 'date-1',
@@ -1093,7 +1093,7 @@ void main() {
       );
 
       test(
-        'devrait refuser une nouvelle sélection pour staffed, cancelled ou archived',
+        'isSelectionEnabled_whenStatusIsStaffedCancelledOrArchived_returnsFalse',
         () {
           for (final status in [
             ShowDateStatus.staffed,
@@ -1131,7 +1131,7 @@ void main() {
       );
 
       test(
-        'devrait autoriser une nouvelle sélection en option ou confirmée si dispo et plafond OK',
+        'isSelectionEnabled_whenStatusIsOptionOrConfirmedWithCapacityAndAvailability_returnsTrue',
         () {
           for (final status in [
             ShowDateStatus.option,
@@ -1168,7 +1168,7 @@ void main() {
       );
     });
 
-    group('isBookingCheckboxChecked -', () {
+    group('État de la case à cocher de réservation', () {
       test('isBookingCheckboxChecked_whenBookingIsNullRefusedOrCancelled_returnsFalse', () {
         // CANCELLED : un booking annulé n'est pas considéré comme actif.
         final viewModel = ManagerDateDetailViewModel(
@@ -1203,7 +1203,7 @@ void main() {
         );
       });
 
-      test('retourne true pour selected, pendingConfirmation ou confirmed', () {
+      test('isBookingCheckboxChecked_whenStatusIsActiveSelectionState_returnsTrue', () {
         final viewModel = ManagerDateDetailViewModel(
           showDate: ShowDate(
             id: 'date-1',

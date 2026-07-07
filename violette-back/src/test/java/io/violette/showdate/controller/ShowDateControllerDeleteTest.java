@@ -56,7 +56,7 @@ class ShowDateControllerDeleteTest {
 
     @Test
     @TestSecurity(user = "ctrl-delete-mgr", roles = {"MANAGER"})
-    @DisplayName("DELETE /show-dates/{id} en MANAGER retourne 204 et supprime la date")
+    @DisplayName("DELETE /show-dates/{id} — retourne 204 et supprime la date quand le rôle est MANAGER")
     void deleteById_whenRoleIsManagerAndShowDateExists_returns204() throws Exception {
         ShowDateFixture fx = persistShowDateFixture("ctrl-del-ok");
         when(currentUserContextProvider.getCurrentPrincipal())
@@ -73,7 +73,7 @@ class ShowDateControllerDeleteTest {
 
     @Test
     @TestSecurity(user = "ctrl-delete-mgr-404", roles = {"MANAGER"})
-    @DisplayName("DELETE /show-dates/{id} en MANAGER retourne 404 si la date n'existe pas")
+    @DisplayName("DELETE /show-dates/{id} — retourne 404 quand la date n'existe pas et le rôle est MANAGER")
     void deleteById_whenRoleIsManagerAndShowDateMissing_returns404() {
         given()
                 .when().delete("/api/show-dates/999999")
@@ -84,7 +84,7 @@ class ShowDateControllerDeleteTest {
 
     @Test
     @TestSecurity(user = "ctrl-delete-artist", roles = {"ARTIST"})
-    @DisplayName("DELETE /show-dates/{id} en ARTIST retourne 403 et ne supprime pas la date")
+    @DisplayName("DELETE /show-dates/{id} — retourne 403 et ne supprime pas la date quand le rôle est ARTIST")
     void deleteById_whenRoleIsArtist_returns403() throws Exception {
         ShowDateFixture fx = persistShowDateFixture("ctrl-del-forbidden");
         assertEquals(1, countShowDateById(fx.showDateId()));

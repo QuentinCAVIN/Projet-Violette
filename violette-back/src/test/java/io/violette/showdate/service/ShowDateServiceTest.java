@@ -69,7 +69,7 @@ class ShowDateServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("Le titre affiché inclut le libellé de la revue lorsque celle-ci est liée")
+    @DisplayName("getById — inclut le libellé de la revue dans le titre affiché quand celle-ci est liée")
     void getById_whenCabaretShowLinked_thenDisplayTitleIncludesShowTitleLocationAndFormattedDate() {
         Seed seed = seedCompanyAndManager("svc-dt-1");
         CabaretShowEntity revue = persistCabaretShow(seed.company, "Les Étoiles d'hiver");
@@ -95,7 +95,7 @@ class ShowDateServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("Le titre affiché ne contient pas de libellé de revue lorsqu'aucune revue n'est liée")
+    @DisplayName("getById — n'inclut pas de libellé de revue dans le titre affiché quand aucune revue n'est liée")
     void getById_whenCabaretShowAbsent_thenDisplayTitleIncludesOnlyLocationAndFormattedDate() {
         Seed seed = seedCompanyAndManager("svc-dt-2");
         LocalDate eventDate = LocalDate.of(2026, 7, 20);
@@ -120,7 +120,7 @@ class ShowDateServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("totalRequiredArtists est la somme des effectifs requis des besoins artistiques")
+    @DisplayName("getById — retourne totalRequiredArtists comme somme des effectifs requis quand plusieurs besoins existent")
     void getById_whenMultipleSkillRequirementsExist_thenTotalRequiredArtistsEqualsSum() {
         Seed seed = seedCompanyAndManager("svc-tr-1");
 
@@ -147,7 +147,7 @@ class ShowDateServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("totalRequiredArtists vaut 0 lorsqu'aucun besoin artistique n'est défini")
+    @DisplayName("createShowDate — retourne totalRequiredArtists à 0 quand aucun besoin artistique n'est défini")
     void createShowDate_whenNoSkillRequirements_thenTotalRequiredArtistsIsZero() {
         Seed seed = seedCompanyAndManager("svc-tr-0");
 
@@ -167,7 +167,7 @@ class ShowDateServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("selectedCount ne compte que les réservations sélectionnées, en attente ou confirmées")
+    @DisplayName("getById — ne compte dans selectedCount que les réservations sélectionnées, en attente ou confirmées")
     void getById_whenBookingsHaveMixedStatuses_thenSelectedCountCountsOnlyActiveOnes() {
         Seed seed = seedCompanyAndManager("svc-sc-1");
 
@@ -198,7 +198,7 @@ class ShowDateServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("deleteShowDate supprime la date existante par id")
+    @DisplayName("deleteShowDate — supprime la date existante quand l'id est valide")
     void deleteShowDate_whenShowDateExists_thenDeleteRow() {
         Seed seed = seedCompanyAndManager("svc-del-ok");
         ShowDateDto created = showDateService.createShowDate(new CreateShowDateRequestDto(
@@ -220,14 +220,14 @@ class ShowDateServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("deleteShowDate lève ShowDateNotFoundException si l'id est introuvable")
+    @DisplayName("deleteShowDate — lève ShowDateNotFoundException quand l'id est introuvable")
     void deleteShowDate_whenShowDateMissing_thenThrowNotFound() {
         assertThrows(ShowDateNotFoundException.class, () -> showDateService.deleteShowDate(999_999L));
     }
 
     @Test
     @Transactional
-    @DisplayName("updateShowDate met à jour uniquement les champs fournis")
+    @DisplayName("updateShowDate — met à jour uniquement les champs fournis")
     void updateShowDate_whenPartialPayload_thenOnlyProvidedFieldsAreUpdated() {
         Seed seed = seedCompanyAndManager("svc-upd-ok");
         ShowDateDto created = showDateService.createShowDate(new CreateShowDateRequestDto(
@@ -262,7 +262,7 @@ class ShowDateServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("updateShowDate lève ShowDateNotFoundException si l'id est introuvable")
+    @DisplayName("updateShowDate — lève ShowDateNotFoundException quand l'id est introuvable")
     void updateShowDate_whenShowDateMissing_thenThrowNotFound() {
         assertThrows(ShowDateNotFoundException.class, () -> showDateService.updateShowDate(
                 999_999L,
@@ -272,7 +272,7 @@ class ShowDateServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("updateShowDate autorise la transition minimale INQUIRY -> OPTION")
+    @DisplayName("updateShowDate — autorise la transition minimale INQUIRY -> OPTION")
     void updateShowDate_whenStatusTransitionIsInquiryToOption_thenSucceeds() {
         Seed seed = seedCompanyAndManager("svc-upd-status-ok");
         ShowDateDto created = showDateService.createShowDate(new CreateShowDateRequestDto(
@@ -302,7 +302,7 @@ class ShowDateServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("updateShowDate refuse une transition hors séquence INQUIRY -> CONFIRMED")
+    @DisplayName("updateShowDate — refuse une transition hors séquence INQUIRY -> CONFIRMED")
     void updateShowDate_whenStatusTransitionSkipsStep_thenThrowsBadRequest() {
         Seed seed = seedCompanyAndManager("svc-upd-status-ko");
         ShowDateDto created = showDateService.createShowDate(new CreateShowDateRequestDto(
@@ -334,7 +334,7 @@ class ShowDateServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("annulation d'une date CONFIRMED — les bookings actifs passent CANCELLED")
+    @DisplayName("updateShowDate — passe les bookings actifs en CANCELLED quand une date CONFIRMED est annulée")
     void updateShowDate_whenDateCancelled_thenActiveBookingsAreCancelled() {
         Seed seed = seedCompanyAndManager("svc-casc-base");
         ShowDateDto created = createDefaultShowDate(seed, "casc-base");
@@ -355,7 +355,7 @@ class ShowDateServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("annulation d'une date CONFIRMED — les bookings terminaux préexistants ne sont pas modifiés")
+    @DisplayName("updateShowDate — ne modifie pas les bookings terminaux préexistants quand une date CONFIRMED est annulée")
     void updateShowDate_whenDateCancelled_thenTerminalBookingsAreUntouched() {
         Seed seed = seedCompanyAndManager("svc-casc-term");
         ShowDateDto created = createDefaultShowDate(seed, "casc-term");
@@ -376,7 +376,7 @@ class ShowDateServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("annulation d'une date STAFFED — les bookings passent CANCELLED et la date n'est pas re-staffée")
+    @DisplayName("updateShowDate — passe les bookings en CANCELLED sans re-staffer la date quand une date STAFFED est annulée")
     void updateShowDate_whenStaffedDateCancelled_thenBookingsCancelledAndDateNotRestaffed() {
         Seed seed = seedCompanyAndManager("svc-casc-staff");
         ShowDateDto created = createDefaultShowDate(seed, "casc-staff");
@@ -397,7 +397,7 @@ class ShowDateServiceTest {
 
     @Test
     @Transactional
-    @DisplayName("annulation d'une date CONFIRMED sans booking actif — succès et date CANCELLED")
+    @DisplayName("updateShowDate — annule la date en CANCELLED quand une date CONFIRMED n'a aucun booking actif")
     void updateShowDate_whenDateCancelledWithNoActiveBookings_thenSucceedsAndDateIsCancelled() {
         Seed seed = seedCompanyAndManager("svc-casc-empty");
         ShowDateDto created = createDefaultShowDate(seed, "casc-empty");

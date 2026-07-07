@@ -3,9 +3,9 @@ import 'package:violette_front/models/enums/booking_status.dart';
 import 'package:violette_front/models/mappers/artist_booking_mapper.dart';
 
 void main() {
-  group('ArtistBookingMapper', () {
-    group('findPendingBookingIdForShowDate', () {
-      test('retourne l’id quand showDateId correspond (nombre JSON)', () {
+  group('ArtistBookingMapper - Conversion JSON ↔ domaine', () {
+    group('Recherche du booking en attente pour une date', () {
+      test('findPendingBookingIdForShowDate_whenShowDateIdMatchesAsJsonNumber_returnsBookingId', () {
         final items = <Map<String, dynamic>>[
           {'id': 10, 'showDateId': 5, 'status': 'PENDING_CONFIRMATION'},
           {'id': 42, 'showDateId': 7, 'status': 'PENDING_CONFIRMATION'},
@@ -16,7 +16,7 @@ void main() {
         );
       });
 
-      test('retourne l’id quand showDateId est une chaîne côté API', () {
+      test('findPendingBookingIdForShowDate_whenShowDateIdIsApiString_returnsBookingId', () {
         final items = <Map<String, dynamic>>[
           {'id': 3, 'showDateId': '12', 'status': 'PENDING_CONFIRMATION'},
         ];
@@ -26,7 +26,7 @@ void main() {
         );
       });
 
-      test('retourne null si aucune ligne ne correspond', () {
+      test('findPendingBookingIdForShowDate_whenNoRowMatches_returnsNull', () {
         final items = <Map<String, dynamic>>[
           {'id': 1, 'showDateId': 99, 'status': 'PENDING_CONFIRMATION'},
         ];
@@ -37,8 +37,7 @@ void main() {
       });
 
       test(
-        'ignore CONFIRMED et REFUSED pour la même date et retient '
-        'PENDING_CONFIRMATION',
+        'findPendingBookingIdForShowDate_whenConfirmedAndRefusedRowsExist_keepsOnlyPendingConfirmation',
         () {
           final items = <Map<String, dynamic>>[
             {
@@ -65,8 +64,7 @@ void main() {
       );
 
       test(
-        'priorise la première ligne PENDING_CONFIRMATION quand plusieurs '
-        'lignes existent pour le même showDateId',
+        'findPendingBookingIdForShowDate_whenSeveralPendingRowsExist_returnsFirstOne',
         () {
           final items = <Map<String, dynamic>>[
             {
@@ -88,7 +86,7 @@ void main() {
       );
 
       test(
-        'retourne null si seules des lignes CONFIRMED ou REFUSED matchent la date',
+        'findPendingBookingIdForShowDate_whenOnlyConfirmedOrRefusedRowsMatch_returnsNull',
         () {
           final items = <Map<String, dynamic>>[
             {'id': 1, 'showDateId': 7, 'status': 'CONFIRMED'},
@@ -101,7 +99,7 @@ void main() {
         },
       );
 
-      test('accepte le statut API en casse mixte (Pending_Confirmation)', () {
+      test('findPendingBookingIdForShowDate_whenStatusHasMixedCase_matchesCaseInsensitively', () {
         final items = <Map<String, dynamic>>[
           {
             'id': 5,
@@ -115,7 +113,7 @@ void main() {
         );
       });
 
-      test('retourne null pour showDateId vide', () {
+      test('findPendingBookingIdForShowDate_whenShowDateIdIsBlank_returnsNull', () {
         expect(
           ArtistBookingMapper.findPendingBookingIdForShowDate([], '  '),
           isNull,
@@ -123,8 +121,8 @@ void main() {
       });
     });
 
-    group('findBookingIdForArtistId', () {
-      test('retourne l’id du booking pour un artistId backend', () {
+    group('Recherche du booking par identifiant artiste', () {
+      test('findBookingIdForArtistId_whenArtistIdMatches_returnsBookingId', () {
         final items = <Map<String, dynamic>>[
           {'id': 100, 'artistId': 2, 'status': 'SELECTED'},
           {'id': 55, 'artistId': 3, 'status': 'SELECTED'},
@@ -132,7 +130,7 @@ void main() {
         expect(ArtistBookingMapper.findBookingIdForArtistId(items, 3), 55);
       });
 
-      test('accepte artistId numérique ou chaîne dans le JSON', () {
+      test('findBookingIdForArtistId_whenArtistIdIsJsonString_matchesNumericId', () {
         final items = <Map<String, dynamic>>[
           {'id': 1, 'artistId': '9'},
         ];
@@ -140,15 +138,15 @@ void main() {
       });
     });
 
-    group('parseBookingList', () {
-      test('parse une liste directe', () {
+    group('Parsing d\'une liste JSON de réservations', () {
+      test('parseBookingList_whenDataIsDirectList_returnsParsedList', () {
         final data = [
           {'id': 1, 'showDateId': 2},
         ];
         expect(ArtistBookingMapper.parseBookingList(data).length, 1);
       });
 
-      test('parse une chaîne JSON', () {
+      test('parseBookingList_whenDataIsJsonString_returnsParsedList', () {
         const data = '[{"id":1,"showDateId":2}]';
         final list = ArtistBookingMapper.parseBookingList(data);
         expect(list.length, 1);
@@ -156,8 +154,8 @@ void main() {
       });
     });
 
-    group('toArtistBooking', () {
-      test('convertit un item SELECTED en ArtistBooking', () {
+    group('Conversion JSON vers ArtistBooking', () {
+      test('toArtistBooking_whenStatusIsSelected_returnsPreselectedBooking', () {
         final json = <String, dynamic>{
           'id': 42,
           'artistId': 5,
@@ -171,7 +169,7 @@ void main() {
         expect(booking.status, BookingStatus.preselected);
       });
 
-      test('convertit PENDING_CONFIRMATION correctement', () {
+      test('toArtistBooking_whenStatusIsPendingConfirmation_returnsPendingConfirmation', () {
         final json = <String, dynamic>{
           'id': 1,
           'artistId': 3,
@@ -182,7 +180,7 @@ void main() {
         expect(booking!.status, BookingStatus.pendingConfirmation);
       });
 
-      test('convertit CONFIRMED correctement', () {
+      test('toArtistBooking_whenStatusIsConfirmed_returnsConfirmed', () {
         final json = <String, dynamic>{
           'id': 1,
           'artistId': 3,
@@ -195,7 +193,7 @@ void main() {
         );
       });
 
-      test('convertit REFUSED correctement', () {
+      test('toArtistBooking_whenStatusIsRefused_returnsRefused', () {
         final json = <String, dynamic>{
           'id': 1,
           'artistId': 3,
@@ -222,7 +220,7 @@ void main() {
         );
       });
 
-      test('retourne null si le statut est absent', () {
+      test('toArtistBooking_whenStatusIsMissing_returnsNull', () {
         final json = <String, dynamic>{
           'id': 1,
           'artistId': 3,
@@ -231,7 +229,7 @@ void main() {
         expect(ArtistBookingMapper.toArtistBooking(json), isNull);
       });
 
-      test('retourne null si le statut est inconnu', () {
+      test('toArtistBooking_whenStatusIsUnknown_returnsNull', () {
         final json = <String, dynamic>{
           'id': 1,
           'artistId': 3,
@@ -241,7 +239,7 @@ void main() {
         expect(ArtistBookingMapper.toArtistBooking(json), isNull);
       });
 
-      test('accepte artistId en String JSON', () {
+      test('toArtistBooking_whenArtistIdIsJsonString_returnsStringArtistId', () {
         final json = <String, dynamic>{
           'id': 1,
           'artistId': '9',
@@ -253,8 +251,8 @@ void main() {
       });
     });
 
-    group('toArtistBookingList', () {
-      test('convertit une liste en ignorant les entrées sans statut valide', () {
+    group('Conversion JSON vers liste de réservations', () {
+      test('toArtistBookingList_whenSomeEntriesHaveNoValidStatus_skipsInvalidEntries', () {
         final items = <Map<String, dynamic>>[
           {'id': 1, 'artistId': 1, 'showDateId': 7, 'status': 'SELECTED'},
           {'id': 2, 'artistId': 2, 'showDateId': 7},
@@ -265,7 +263,7 @@ void main() {
         expect(list.map((b) => b.artistId), containsAll(['1', '3']));
       });
 
-      test('retourne une liste vide pour une entrée vide', () {
+      test('toArtistBookingList_whenInputIsEmpty_returnsEmptyList', () {
         expect(ArtistBookingMapper.toArtistBookingList([]), isEmpty);
       });
     });

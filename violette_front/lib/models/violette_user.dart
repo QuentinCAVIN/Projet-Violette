@@ -15,8 +15,3 @@ class VioletteUser {
     required this.roles,
   });
 }
-// TODO Poser la question a ELies sur l'emplacement de l'enum ROle qui ne sert que pour User
-// Felix -> Ne pas placer dans User pour faciliter la testabilité en appellant User.getRole == Role.mescouilles
-// François ->
-
-// Enum

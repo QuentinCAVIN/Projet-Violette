@@ -34,14 +34,14 @@ class FlywayMigrationIT {
     @Inject ArtistBookingRepository bookingRepository;
 
     @Test
-    @DisplayName("V1 : tables violette_user, user_role, artist_skill créées et accessibles")
+    @DisplayName("migration V1 — crée les tables violette_user, user_role et artist_skill accessibles")
     void v1Migration_userTablesAreAccessible() {
         assertTrue(userRepository.count() >= 0,
                 "La table violette_user doit être accessible après la migration V1");
     }
 
     @Test
-    @DisplayName("V2 : refactoring user_roles — table user_role accessible")
+    @DisplayName("migration V2 — rend la table user_role accessible après le refactoring des rôles")
     void v2Migration_userRoleTableIsAccessible() {
         // La migration V2 refactorise les rôles utilisateur.
         // Si count() s'exécute sans exception, la table et ses colonnes sont corrects.
@@ -50,14 +50,14 @@ class FlywayMigrationIT {
     }
 
     @Test
-    @DisplayName("V3 : cabaret_company avec colonne updated_at — table accessible")
+    @DisplayName("migration V3 — rend la table cabaret_company accessible avec updated_at")
     void v3Migration_companyTableIsAccessible() {
         assertTrue(companyRepository.count() >= 0,
                 "La table cabaret_company doit être accessible après la migration V3");
     }
 
     @Test
-    @DisplayName("V4 : tables show_date, show_date_skill_requirement, artist_availability créées")
+    @DisplayName("migration V4 — crée les tables show_date, show_date_skill_requirement et artist_availability")
     void v4Migration_showDateTablesAreAccessible() {
         assertTrue(showDateRepository.count() >= 0,
                 "La table show_date doit être accessible après la migration V4");
@@ -68,14 +68,14 @@ class FlywayMigrationIT {
     }
 
     @Test
-    @DisplayName("V5 : table artist_booking créée et accessible")
+    @DisplayName("migration V5 — crée la table artist_booking accessible")
     void v5Migration_artistBookingTableIsAccessible() {
         assertTrue(bookingRepository.count() >= 0,
                 "La table artist_booking doit être accessible après la migration V5");
     }
 
     @Test
-    @DisplayName("Toutes les tables des 4 domaines métier sont accessibles après V1–V5")
+    @DisplayName("migrations V1–V5 — rendent accessibles toutes les tables des quatre domaines métier")
     void allMigrations_allDomainTablesAreAccessible() {
         assertTrue(userRepository.count() >= 0);
         assertTrue(companyRepository.count() >= 0);

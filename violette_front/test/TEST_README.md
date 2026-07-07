@@ -97,7 +97,7 @@ Les tests de ViewModels se concentrent sur les **états observables finaux**, pa
 ### Exemple : AvailabilityChoiceViewModel
 
 ```dart
-test('2e tap sur le même jour devrait modifier le statut local', () {
+test('onDaySelected_whenSameDayIsTappedTwice_updatesLocalStatus', () {
   final viewModel = AvailabilityChoiceViewModel();
   final testDate = DateTime(2025, 6, 15);
   
@@ -128,7 +128,7 @@ import 'package:violette_front/models/...'  ;
 
 void main() {
   group('NomDeLaClasse', () {
-    test('devrait faire X quand Y', () {
+    test('methodName_whenCondition_expectedResult', () {
       // Arrange - Préparer les données
       final input = ...;
       
@@ -145,7 +145,7 @@ void main() {
 ### 2. Test ViewModel léger
 
 ```dart
-test('devrait mettre à jour l\'état observable', () {
+test('onAction_whenItemsArePresent_updatesObservableState', () {
   // Créer le ViewModel
   final viewModel = MonViewModel();
   
@@ -189,7 +189,7 @@ final showDates = TestDataBuilders.createTestShowDatesForMonth(
 
 ### ✅ À FAIRE
 
-- **Noms descriptifs** : `test('devrait retourner null quand utilisateur inexistant')`
+- **Noms techniques anglais** au format `methodName_whenCondition_expectedResult` : `test('getUser_whenUserDoesNotExist_returnsNull')` (aligné sur la convention des tests back)
 - **AAA pattern** : Arrange / Act / Assert
 - **Un seul concept par test**
 - **Tests indépendants** : chaque test peut tourner seul
