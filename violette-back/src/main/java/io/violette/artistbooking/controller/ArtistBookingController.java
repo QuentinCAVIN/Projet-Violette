@@ -45,10 +45,7 @@ public class ArtistBookingController {
     @Inject
     CurrentUserContextProvider currentUserContextProvider;
 
-    // ------------------------------------------------------------------
     // Manager — sélection
-    // ------------------------------------------------------------------
-
     /**
      * Sélectionne un artiste pour une date (MANAGER).
      * Crée un booking en statut {@code SELECTED}.
@@ -71,10 +68,7 @@ public class ArtistBookingController {
         return Response.status(Response.Status.CREATED).entity(dto).build();
     }
 
-    // ------------------------------------------------------------------
     // Manager — désélection
-    // ------------------------------------------------------------------
-
     /**
      * Désélectionne un artiste (MANAGER).
      * Supprime le booking. Uniquement possible si le statut est {@code SELECTED}.
@@ -95,10 +89,7 @@ public class ArtistBookingController {
         return Response.noContent().build();
     }
 
-    // ------------------------------------------------------------------
     // Manager — annulation d'un booking
-    // ------------------------------------------------------------------
-
     /**
      * Annule une réservation en statut {@code PENDING_CONFIRMATION} ou {@code CONFIRMED} (MANAGER).
      * Rompt l'engagement ferme ou la demande en cours — seul le gérant peut le faire.
@@ -120,10 +111,7 @@ public class ArtistBookingController {
         return Response.ok(dto).build();
     }
 
-    // ------------------------------------------------------------------
     // Manager — envoi des demandes de confirmation
-    // ------------------------------------------------------------------
-
     /**
      * Envoie les demandes de confirmation à tous les artistes sélectionnés d'une date (MANAGER).
      * Passe tous les bookings {@code SELECTED} en {@code PENDING_CONFIRMATION}.
@@ -145,10 +133,7 @@ public class ArtistBookingController {
         return Response.ok(dtos).build();
     }
 
-    // ------------------------------------------------------------------
     // Manager — lecture des bookings d'une date
-    // ------------------------------------------------------------------
-
     /**
      * Retourne tous les bookings d'une date de spectacle (MANAGER).
      */
@@ -168,10 +153,7 @@ public class ArtistBookingController {
         return Response.ok(dtos).build();
     }
 
-    // ------------------------------------------------------------------
     // Artiste — réponse à une demande de confirmation
-    // ------------------------------------------------------------------
-
     /**
      * L'artiste accepte ou refuse une demande de confirmation (ARTIST).
      * Transitions autorisées depuis {@code PENDING_CONFIRMATION} uniquement.
@@ -202,10 +184,7 @@ public class ArtistBookingController {
                 .orElse(Response.status(Response.Status.UNAUTHORIZED).build());
     }
 
-    // ------------------------------------------------------------------
     // Artiste — demandes en attente
-    // ------------------------------------------------------------------
-
     /**
      * Retourne les demandes de confirmation en attente pour l'artiste authentifié (ARTIST).
      * Filtre sur le statut {@code PENDING_CONFIRMATION}.

@@ -100,10 +100,7 @@ public class ArtistBookingService {
     @Inject
     ManagerCompanyResolver managerCompanyResolver;
 
-    // ------------------------------------------------------------------
     // Sélection d'un artiste (MANAGER)
-    // ------------------------------------------------------------------
-
     /**
      * Présélectionne ou sélectionne un artiste pour une date — crée un booking en statut {@code SELECTED}.
      *
@@ -201,10 +198,7 @@ public class ArtistBookingService {
         return artistBookingMapper.toDto(booking);
     }
 
-    // ------------------------------------------------------------------
     // Désélection (MANAGER)
-    // ------------------------------------------------------------------
-
     /**
      * Désélectionne ou dépresélectionne un artiste — supprime le booking.
      * Uniquement autorisé si le booking est en statut {@code SELECTED}
@@ -237,10 +231,7 @@ public class ArtistBookingService {
         LOG.info("Booking id={} supprimé (artiste id={} désélectionné)", bookingId, booking.getArtist().getId());
     }
 
-    // ------------------------------------------------------------------
     // Annulation par le gérant (MANAGER)
-    // ------------------------------------------------------------------
-
     /**
      * Annule un booking en statut {@code PENDING_CONFIRMATION} ou {@code CONFIRMED}.
      * Seul le gérant de la compagnie peut rompre l'engagement.
@@ -288,10 +279,7 @@ public class ArtistBookingService {
         return artistBookingMapper.toDto(booking);
     }
 
-    // ------------------------------------------------------------------
     // Propagation système (annulation de date)
-    // ------------------------------------------------------------------
-
     /**
      * Annule en cascade tous les bookings actifs ({@code SELECTED}, {@code PENDING_CONFIRMATION},
      * {@code CONFIRMED}) d'une date de spectacle.
@@ -323,10 +311,7 @@ public class ArtistBookingService {
         LOG.info("{} booking(s) annulé(s) en cascade pour showDateId={}", activeBookings.size(), showDateId);
     }
 
-    // ------------------------------------------------------------------
     // Envoi des demandes de confirmation (MANAGER)
-    // ------------------------------------------------------------------
-
     /**
      * Envoie les demandes de confirmation ferme pour tous les artistes {@code SELECTED} d'une date.
      * Passe tous les bookings {@code SELECTED} en {@code PENDING_CONFIRMATION}
@@ -377,10 +362,7 @@ public class ArtistBookingService {
                 .toList();
     }
 
-    // ------------------------------------------------------------------
     // Réponse artiste
-    // ------------------------------------------------------------------
-
     /**
      * Enregistre la réponse d'un artiste à une demande de confirmation.
      * Vérifie que l'artiste qui répond est bien le destinataire du booking.
@@ -448,10 +430,7 @@ public class ArtistBookingService {
         return artistBookingMapper.toDto(booking);
     }
 
-    // ------------------------------------------------------------------
     // Lecture — artiste courant
-    // ------------------------------------------------------------------
-
     /**
      * Retourne les bookings en attente de réponse pour l'artiste authentifié.
      * Statut filtré : {@code PENDING_CONFIRMATION}.
@@ -494,10 +473,7 @@ public class ArtistBookingService {
                 .toList();
     }
 
-    // ------------------------------------------------------------------
     // Lecture — manager
-    // ------------------------------------------------------------------
-
     /**
      * Retourne tous les bookings d'une date de spectacle.
      *
@@ -514,10 +490,7 @@ public class ArtistBookingService {
                 .toList();
     }
 
-    // ------------------------------------------------------------------
     // Règles métier — méthodes privées
-    // ------------------------------------------------------------------
-
     /**
      * Vérifie que la date est en statut {@code OPTION} ou {@code CONFIRMED}.
      * Utilisé pour la présélection/sélection d'artistes ({@code createBooking}).
