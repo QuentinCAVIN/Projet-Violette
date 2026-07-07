@@ -18,6 +18,17 @@ la section « Résorbé depuis v0.4.0 » pour tracer l'évolution.
 
 ## Frontend
 
+- **DETTE-7 — Widget partagé pour les messages d'erreur globaux (login/register).** Le même bloc d'affichage d'erreur est dupliqué dans `login_form.dart` et `register_form.dart`.
+- **DETTE-8 — Réinitialisation du mot de passe.** Le bouton « Mot de passe oublié » est inactif ; fonctionnalité Firebase à implémenter.
+- **DETTE-9 — Mapper les erreurs Firebase Auth.** Messages utilisateur neutres (éviter de révéler qu'un compte existe déjà). Voir `login_viewmodel.dart` et `register_viewmodel.dart`.
+- **DETTE-10 — Bouton « 2 weeks » du calendrier TableCalendar.** Contrôle mort dans `availability_calendar.dart` ; retirer ou activer.
+- **DETTE-11 — Thème pour les couleurs de texte des jours colorés.** `day_cell.dart` utilise encore `Colors.white` en dur.
+- **DETTE-12 — Affichage multi-rôles sur l'écran d'accueil.** Seul `roles[0]` est affiché dans `home_view.dart`.
+- **DETTE-13 — Stream temps réel pour le planning manager.** `loadShowDates()` interroge le repository à chaque chargement (acceptable MVP).
+- **DETTE-14 — Plafond d'artistes inférieur aux sélections existantes.** Comportement UI à définir dans `manager_date_detail_viewmodel.dart`.
+- **DETTE-15 — Sémantique visuelle preselected vs confirmed.** Clarifier les pills selon le contexte manager/artiste (`booking_status_pill.dart`).
+- **DETTE-16 — Sous-types artiste.** Différencier chanteur, danseur, échassier, etc. (`role.dart`).
+- **DETTE-17 — Statut `postponed` pour les dates reportées.** Cas de force majeure avec client engagé (`show_date_status.dart`).
 - La navigation stack n'est pas encore totalement maîtrisée : certains retours utilisent `clearStackAndShow` comme correction temporaire.
 - Les couches REST manuelles (`Dio`, remote data sources, mappers) coexistent avec le client OpenAPI généré.
 - Le client OpenAPI généré `violette_api_client/` est utilisé principalement pour le domaine `user`. Les domaines `availability`, `showDate` et `booking` utilisent encore Dio manuel, JSON et mappers dédiés.

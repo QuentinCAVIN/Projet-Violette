@@ -11,8 +11,7 @@ class BookingStatusPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // TODO(v0.5.0): clarifier la sémantique visuelle de preselected vs confirmed
-    // selon le contexte (manager/artist) pour éviter l'ambiguïté métier.
+    // DETTE-15 : clarifier la sémantique visuelle de preselected vs confirmed selon le contexte
     Color color = status.color;
     String label = status.displayName;
 

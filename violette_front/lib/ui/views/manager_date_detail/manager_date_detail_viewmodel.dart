@@ -263,9 +263,8 @@ class ManagerDateDetailViewModel extends BaseViewModel {
     }
 
     // Quand aucun besoin n'est encore configuré (0), on n'applique pas
-    // de plafond bloquant côté UI pour ne pas bloquer le gérant dans sa réservation
-    //TODO : Que se passe t il si le plafond est congiguré avec un montant inférieur
-    // au nombre d'artistes sélectionnés ? 
+    // de plafond bloquant côté UI pour ne pas bloquer le gérant dans sa réservation.
+    // DETTE-14 : définir le comportement quand le plafond est inférieur au nombre d'artistes déjà sélectionnés
     if (currentShowDate.totalRequiredArtists > 0 &&
         currentShowDate.selectedCount >= currentShowDate.totalRequiredArtists) {
       return false;

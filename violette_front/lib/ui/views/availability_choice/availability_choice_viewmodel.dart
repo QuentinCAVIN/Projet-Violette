@@ -15,11 +15,7 @@ import 'package:violette_front/repositories/show_date_repository.dart';
 import 'package:violette_front/repositories/availability_repository.dart';
 import '../../../app/app.locator.dart';
 
-// TODO: Refactoriser la classe quand des tests unitaires seront en place
-// certaine variable pourrait être supprimmé comme _lastTappedDay ou selectDay
 class AvailabilityChoiceViewModel extends BaseViewModel {
-  // Attributs du widget DayCell a rajouter ici?
-
   final _navigationService = locator<NavigationService>();
   final ShowDateRepository _showDateRepository = locator<ShowDateRepository>();
   final SnackbarService _snackbarService = locator<SnackbarService>();
@@ -202,10 +198,6 @@ class AvailabilityChoiceViewModel extends BaseViewModel {
     // On force un retour vers Home pour éviter de revenir sur une pile manager legacy.
     await _navigationService.clearStackAndShow(Routes.homeView);
   }
-
-//****************************************************************************//
-//HELPERS                                                                     //
-//****************************************************************************//
 
   void _showAccessibleSnackbar({
     required String message,

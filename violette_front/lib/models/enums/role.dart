@@ -1,5 +1,6 @@
 enum Role {
-  artist, //TODO différencier plus tard le role artiste : chanteur, danseur , echassier , musicien, performeur , comédien
+  // DETTE-16 : différencier les sous-types artiste (chanteur, danseur, échassier, etc.)
+  artist,
   manager,
 }
 

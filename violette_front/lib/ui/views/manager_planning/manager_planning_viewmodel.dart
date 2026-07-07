@@ -28,7 +28,7 @@ class ManagerPlanningViewModel extends BaseViewModel {
   Future<void> loadShowDates() async {
     await runBusyFuture(
       () async {
-        //TODO: Ok pour le MVP mais à optimiser plus tard avec un stream
+        // DETTE-13 : remplacer le polling par un stream temps réel post-MVP
         final allDates = await _showDateRepository.getAllShowDates();
         showDates = allDates
             .where((date) => !_isHiddenFromPlanning(date.status))
