@@ -101,7 +101,7 @@ class ArtistAvailabilityRepositoryTest {
 
     @Test
     @Transactional
-    @DisplayName("findByShowDateId — retourne toutes les disponibilités d'une même date")
+    @DisplayName("findByShowDateId — agrège les disponibilités de tous les artistes pour une date")
     void givenMultipleArtistsForSameDate_whenFindByShowDateId_thenReturnAll() {
         VioletteUserEntity manager = buildAndPersistUser("avail-mgr-3", "avail-mgr-3@test.com", Set.of(UserRole.MANAGER));
         VioletteUserEntity artist1 = buildAndPersistUser("avail-artist-3a", "avail-artist-3a@test.com", Set.of(UserRole.ARTIST));
@@ -125,7 +125,7 @@ class ArtistAvailabilityRepositoryTest {
 
     @Test
     @Transactional
-    @DisplayName("findByArtistId — retourne les disponibilités de l'artiste sur toutes les dates")
+    @DisplayName("findByArtistId — agrège les disponibilités d'un artiste sur plusieurs dates")
     void givenArtistWithAvailabilitiesOnMultipleDates_whenFindByArtistId_thenReturnAllDatesForArtist() {
         VioletteUserEntity manager = buildAndPersistUser("avail-mgr-4", "avail-mgr-4@test.com", Set.of(UserRole.MANAGER));
         VioletteUserEntity artist = buildAndPersistUser("avail-artist-4", "avail-artist-4@test.com", Set.of(UserRole.ARTIST));

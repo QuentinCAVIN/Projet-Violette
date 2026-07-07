@@ -123,7 +123,7 @@ class ShowDateRepositoryTest {
 
     @Test
     @Transactional
-    @DisplayName("findByCompanyId — retourne toutes les dates triées par eventDate croissant")
+    @DisplayName("findByCompanyId — retourne les dates de la compagnie dans l'ordre chronologique eventDate asc")
     void givenMultipleShowDatesForCompany_whenFindByCompanyId_thenReturnAllOrderedByEventDateAsc() {
         CabaretCompanyEntity company = buildAndPersistCompany("sd-mgr-5", "sd-mgr-5@test.com", "Compagnie Multi-Dates");
 

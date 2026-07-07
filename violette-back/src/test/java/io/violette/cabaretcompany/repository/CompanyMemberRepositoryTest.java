@@ -67,7 +67,7 @@ class CompanyMemberRepositoryTest {
 
     @Test
     @Transactional
-    @DisplayName("findByCompanyId — retourne tous les membres d'une compagnie")
+    @DisplayName("findByCompanyId — liste tous les artistes membres d'une compagnie")
     void givenMembersInCompany_whenFindByCompanyId_thenReturnAll() {
         VioletteUserEntity manager = buildAndPersistUser("uid-mgr-list", "mgr-list@test.com", "Manager", "List", Set.of(UserRole.MANAGER));
         VioletteUserEntity a1 = buildAndPersistUser("uid-a1-list", "a1@list.test", "Artiste", "Un", Set.of(UserRole.ARTIST));
@@ -90,7 +90,7 @@ class CompanyMemberRepositoryTest {
 
     @Test
     @Transactional
-    @DisplayName("findByArtistId — retourne toutes les appartenances d'un artiste")
+    @DisplayName("findByArtistId — expose les appartenances multi-compagnies d'un meme artiste")
     void givenArtistInMultipleCompanies_whenFindByArtistId_thenReturnAllMemberships() {
         VioletteUserEntity manager1 = buildAndPersistUser("uid-mgr-multi-1", "mgr-m1@test.com", "M1", "Manager", Set.of(UserRole.MANAGER));
         VioletteUserEntity manager2 = buildAndPersistUser("uid-mgr-multi-2", "mgr-m2@test.com", "M2", "Manager", Set.of(UserRole.MANAGER));

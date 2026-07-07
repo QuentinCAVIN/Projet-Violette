@@ -116,7 +116,7 @@ class ArtistBookingRepositoryTest {
 
     @Test
     @Transactional
-    @DisplayName("findByShowDateIdAndArtistId — retourne la réservation existante pour la paire date / artiste")
+    @DisplayName("findByShowDateIdAndArtistId — retrouve une réservation par clé composite date et artiste")
     void givenExistingBooking_whenFindByShowDateIdAndArtistId_thenReturnsIt() {
         VioletteUserEntity manager = buildAndPersistUser("bk-mgr-3", "bk-mgr-3@test.com", Set.of(UserRole.MANAGER));
         VioletteUserEntity artist = buildAndPersistUser("bk-artist-3", "bk-artist-3@test.com", Set.of(UserRole.ARTIST));
@@ -134,7 +134,7 @@ class ArtistBookingRepositoryTest {
 
     @Test
     @Transactional
-    @DisplayName("findByShowDateIdAndArtistId — retourne vide quand aucune réservation n'existe pour la paire")
+    @DisplayName("findByShowDateIdAndArtistId — retourne Optional vide quand la paire date/artiste est absente")
     void givenNoBookingForArtistOnDate_whenFindByShowDateIdAndArtistId_thenReturnsEmpty() {
         VioletteUserEntity manager = buildAndPersistUser("bk-mgr-4", "bk-mgr-4@test.com", Set.of(UserRole.MANAGER));
         VioletteUserEntity artist = buildAndPersistUser("bk-artist-4", "bk-artist-4@test.com", Set.of(UserRole.ARTIST));
@@ -153,7 +153,7 @@ class ArtistBookingRepositoryTest {
 
     @Test
     @Transactional
-    @DisplayName("findByShowDateId — retourne toutes les réservations d'une même date")
+    @DisplayName("findByShowDateId — liste toutes les réservations d'une même date quel que soit le statut")
     void givenMultipleBookingsForSameDate_whenFindByShowDateId_thenReturnAll() {
         VioletteUserEntity manager = buildAndPersistUser("bk-mgr-5", "bk-mgr-5@test.com", Set.of(UserRole.MANAGER));
         VioletteUserEntity artist1 = buildAndPersistUser("bk-artist-5a", "bk-artist-5a@test.com", Set.of(UserRole.ARTIST));
@@ -172,7 +172,7 @@ class ArtistBookingRepositoryTest {
 
     @Test
     @Transactional
-    @DisplayName("findByArtistId — retourne les réservations de l'artiste sur toutes les dates")
+    @DisplayName("findByArtistId — liste les réservations d'un artiste sur l'ensemble de ses dates")
     void givenArtistBookedOnMultipleDates_whenFindByArtistId_thenReturnAllDates() {
         VioletteUserEntity manager = buildAndPersistUser("bk-mgr-6", "bk-mgr-6@test.com", Set.of(UserRole.MANAGER));
         VioletteUserEntity artist = buildAndPersistUser("bk-artist-6", "bk-artist-6@test.com", Set.of(UserRole.ARTIST));
@@ -222,7 +222,7 @@ class ArtistBookingRepositoryTest {
 
     @Test
     @Transactional
-    @DisplayName("countActiveBookingsForSkillRequirement — compte une réservation au statut SELECTED")
+    @DisplayName("countActiveBookingsForSkillRequirement — SELECTED compte dans le plafond de capacité par compétence")
     void countActiveBookingsForSkillRequirement_countsSelected() {
         ShowDateSkillRequirementEntity skillReq = buildSkillReqWithDate("bk-cap-1");
         persistBookingForSkillReq(skillReq, "bk-cap-a1", BookingStatus.SELECTED);
@@ -234,7 +234,7 @@ class ArtistBookingRepositoryTest {
 
     @Test
     @Transactional
-    @DisplayName("countActiveBookingsForSkillRequirement — compte une réservation en attente de confirmation")
+    @DisplayName("countActiveBookingsForSkillRequirement — PENDING_CONFIRMATION compte dans le plafond de capacité")
     void countActiveBookingsForSkillRequirement_countsPendingConfirmation() {
         ShowDateSkillRequirementEntity skillReq = buildSkillReqWithDate("bk-cap-2");
         persistBookingForSkillReq(skillReq, "bk-cap-a2", BookingStatus.PENDING_CONFIRMATION);
@@ -246,7 +246,7 @@ class ArtistBookingRepositoryTest {
 
     @Test
     @Transactional
-    @DisplayName("countActiveBookingsForSkillRequirement — compte une réservation confirmée")
+    @DisplayName("countActiveBookingsForSkillRequirement — CONFIRMED compte dans le plafond de capacité")
     void countActiveBookingsForSkillRequirement_countsConfirmed() {
         ShowDateSkillRequirementEntity skillReq = buildSkillReqWithDate("bk-cap-3");
         persistBookingForSkillReq(skillReq, "bk-cap-a3", BookingStatus.CONFIRMED);

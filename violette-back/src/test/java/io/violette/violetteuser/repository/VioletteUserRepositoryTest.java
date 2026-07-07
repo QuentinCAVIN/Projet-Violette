@@ -24,7 +24,7 @@ class VioletteUserRepositoryTest {
 
     @Test
     @Transactional
-    @DisplayName("findByFirebaseUid — retourne l'utilisateur quand il existe")
+    @DisplayName("findByFirebaseUid — relit roles, skills et identite apres persistance")
     void givenExistingUser_whenFindByFirebaseUid_thenReturnUser() {
         VioletteUserEntity user = buildUser(
                 "uid-find-001",
@@ -53,7 +53,7 @@ class VioletteUserRepositoryTest {
 
     @Test
     @Transactional
-    @DisplayName("findByFirebaseUid — retourne vide quand le firebaseUid est inconnu")
+    @DisplayName("findByFirebaseUid — retourne Optional vide sans exception quand aucun utilisateur ne correspond")
     void givenUnknownFirebaseUid_whenFindByFirebaseUid_thenReturnEmpty() {
         var found = repository.findByFirebaseUid("uid-inexistant-12345");
         assertTrue(found.isEmpty());
@@ -61,7 +61,7 @@ class VioletteUserRepositoryTest {
 
     @Test
     @Transactional
-    @DisplayName("findByEmail — retourne l'utilisateur quand il existe")
+    @DisplayName("findByEmail — retrouve le profil complet par adresse email unique")
     void givenExistingUser_whenFindByEmail_thenReturnUser() {
         VioletteUserEntity user = buildUser(
                 "uid-email-001",
@@ -116,7 +116,7 @@ class VioletteUserRepositoryTest {
 
     @Test
     @Transactional
-    @DisplayName("findByEmail — retourne vide quand l'email est inconnu")
+    @DisplayName("findByEmail — retourne Optional vide quand l'email n'est pas en base")
     void givenUnknownEmail_whenFindByEmail_thenReturnEmpty() {
         var found = repository.findByEmail("nobody@nowhere.com");
         assertTrue(found.isEmpty());

@@ -67,7 +67,7 @@ class ShowDateSkillRequirementRepositoryTest {
 
     @Test
     @Transactional
-    @DisplayName("findByShowDateId — retourne tous les besoins liés à une date")
+    @DisplayName("findByShowDateId — liste les besoins par compétence pour une date")
     void givenMultipleSkillRequirementsForSameDate_whenFindByShowDateId_thenReturnAll() {
         ShowDateEntity showDate = buildAndPersistShowDate("req-mgr-2", "req-mgr-2@test.com");
 
@@ -142,7 +142,7 @@ class ShowDateSkillRequirementRepositoryTest {
 
     @Test
     @Transactional
-    @DisplayName("sumRequiredCountByShowDateId — retourne 0 quand aucun besoin n'existe pour la date")
+    @DisplayName("sumRequiredCountByShowDateId — retourne 0 sans erreur quand la date n'a aucun besoin")
     void sumRequiredCountByShowDateId_whenNoRequirementsExist_returnsZero() {
         ShowDateEntity showDate = buildAndPersistShowDate("req-mgr-7", "req-mgr-7@test.com");
 
