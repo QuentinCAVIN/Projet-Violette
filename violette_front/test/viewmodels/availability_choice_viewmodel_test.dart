@@ -17,11 +17,11 @@ import '../helpers/test_helpers.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('AvailabilityChoiceViewModel Tests -', () {
+  group('AvailabilityChoiceViewModel - Choix de disponibilités', () {
     setUp(() => registerServices());
     tearDown(() => locator.reset());
 
-    group('getStatusForDay -', () {
+    group('Statut de disponibilité par jour', () {
       test(
           'getStatusForDay_whenNoShowDateExists_returnsNull',
           () {
@@ -803,7 +803,7 @@ void main() {
       );
     });
 
-    group('navigation -', () {
+    group('Navigation depuis le calendrier', () {
       test('onBackPressed_whenCalled_clearsStackAndShowsHome', () async {
         final navigationService = getAndRegisterNavigationService();
         when(() => navigationService.clearStackAndShow(

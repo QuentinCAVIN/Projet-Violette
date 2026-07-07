@@ -4,7 +4,7 @@ import 'package:violette_front/data/remote/booking_remote_data_source.dart';
 import 'package:violette_front/models/enums/booking_status.dart';
 
 void main() {
-  group('BookingRemoteDataSource.respondToRequest', () {
+  group('BookingRemoteDataSource - Réponse à une demande de confirmation', () {
     test(
       'respondToRequest_whenAccepting_fetchesPendingThenPatchesRespondWithAcceptTrue',
       () async {
@@ -222,7 +222,7 @@ void main() {
     });
   });
 
-  group('BookingRemoteDataSource.cancelBooking', () {
+  group('BookingRemoteDataSource - Annulation d\'une réservation', () {
     test(
       'cancelBooking_whenBookingExists_fetchesShowDateBookingsThenPatchesCancelWithoutBody',
       () async {
@@ -306,7 +306,7 @@ void main() {
     });
   });
 
-  group('BookingRemoteDataSource.sendConfirmationRequests', () {
+  group('BookingRemoteDataSource - Envoi des demandes de confirmation', () {
     test(
       'sendConfirmationRequests_whenCalled_postsSendConfirmationsWithoutBody',
       () async {
@@ -382,7 +382,7 @@ void main() {
     );
   });
 
-  group('BookingRemoteDataSource.toggleSelection', () {
+  group('BookingRemoteDataSource - Bascule de sélection', () {
     test(
       'toggleSelection_whenSelecting_postsBookingWithShowDateIdAndArtistId',
       () async {
@@ -489,7 +489,7 @@ void main() {
     );
   });
 
-  group('BookingRemoteDataSource.getBookingsForDate', () {
+  group('BookingRemoteDataSource - Récupération des réservations d\'une date', () {
     test(
       'getBookingsForDate_whenBackendReturnsBookings_returnsArtistBookingList',
       () async {
@@ -594,7 +594,7 @@ void main() {
     );
   });
 
-  group('BookingRemoteDataSource.getPendingRequestsForArtist', () {
+  group('BookingRemoteDataSource - Demandes en attente pour un artiste', () {
     test(
       'getPendingRequestsForArtist_whenCalled_fetchesPendingAndReturnsArtistBookings',
       () async {

@@ -34,7 +34,7 @@ void main() {
     });
   });
 
-  group('AvailabilityStatus - Labels', () {
+  group('AvailabilityStatus - Libellés d\'affichage', () {
     test('label_whenStatusIsAvailable_returnsDisponibleLabel', () {
       expect(AvailabilityStatus.available.label, 'Disponible');
     });
@@ -52,7 +52,7 @@ void main() {
     });
   });
 
-  group('AvailabilityStatus - Serialization (enum → string)', () {
+  group('AvailabilityStatus - Sérialisation enum vers string', () {
     test('name_whenStatusIsAvailable_returnsAvailableString', () {
       expect(AvailabilityStatus.available.name, 'available');
     });

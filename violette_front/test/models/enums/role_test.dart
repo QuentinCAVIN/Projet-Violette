@@ -29,7 +29,7 @@ void main() {
     });
   });
 
-  group('Role - Labels', () {
+  group('Role - Libellés d\'affichage', () {
     test('label_whenRoleIsArtist_returnsArtisteLabel', () {
       expect(Role.artist.label, 'Artiste');
     });
@@ -39,7 +39,7 @@ void main() {
     });
   });
 
-  group('Role - Serialization (enum → string)', () {
+  group('Role - Sérialisation enum vers string', () {
     test('name_whenRoleIsArtist_returnsArtistString', () {
       expect(Role.artist.name, 'artist');
     });

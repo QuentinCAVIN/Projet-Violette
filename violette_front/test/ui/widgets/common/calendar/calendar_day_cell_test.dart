@@ -8,7 +8,7 @@ void main() {
     await initializeDateFormatting('fr_FR', null);
   });
 
-  group('CalendarDayCell Tests -', () {
+  group('CalendarDayCell - Cellule de jour du calendrier', () {
     testWidgets(
         'whenColorIsNullAndDayIsNotSelectedOrToday_rendersPlainTextWithoutDecoration',
         (WidgetTester tester) async {

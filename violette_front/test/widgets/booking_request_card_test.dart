@@ -6,7 +6,7 @@ import 'package:violette_front/models/show_date.dart';
 import 'package:violette_front/ui/widgets/booking_request_card.dart';
 
 void main() {
-  group('BookingRequestCard -', () {
+  group('BookingRequestCard - Carte de demande de réservation', () {
     final showDate = ShowDate(
       id: 'sd-1',
       title: 'Cabaret',

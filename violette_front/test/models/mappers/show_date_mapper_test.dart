@@ -3,7 +3,7 @@ import 'package:violette_front/models/enums/show_date_status.dart';
 import 'package:violette_front/models/mappers/show_date_mapper.dart';
 
 void main() {
-  group('ShowDateMapper', () {
+  group('ShowDateMapper - Conversion JSON ↔ domaine', () {
     test(
       'fromJson_whenPayloadIsComplete_mapsIdTitleMeetingTimeLocationAndCounters',
       () {

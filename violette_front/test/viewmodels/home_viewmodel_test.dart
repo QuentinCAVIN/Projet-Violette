@@ -15,11 +15,11 @@ import 'package:stacked_services/stacked_services.dart';
 import '../helpers/test_helpers.dart';
 
 void main() {
-  group('HomeViewModel Tests -', () {
+  group('HomeViewModel - Écran d\'accueil artiste', () {
     setUp(() => registerServices());
     tearDown(() => locator.reset());
 
-    group('respondToRequest -', () {
+    group('Réponse à une demande de confirmation', () {
       test(
           'respondToRequest_whenDateIdIsNull_doesNotCallRepository',
           () async {
@@ -142,7 +142,7 @@ void main() {
       });
     });
 
-    group('loadShowDatesForPendingRequests -', () {
+    group('Chargement des dates pour demandes en attente', () {
       test(
         'loadShowDatesForPendingRequests_whenShowDateInMyAvailableList_doesNotCallGetShowDateById',
         () async {

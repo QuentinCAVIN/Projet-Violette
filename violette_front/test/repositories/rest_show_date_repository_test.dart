@@ -16,7 +16,7 @@ void main() {
     registerFallbackValue(DateTime.utc(2000, 1, 1));
   });
 
-  group('RestShowDateRepository.addShowDate', () {
+  group('RestShowDateRepository - Création d\'une date', () {
     late _MockShowDateRemoteDataSource remote;
     late RestShowDateRepository repository;
 
@@ -57,7 +57,7 @@ void main() {
     });
   });
 
-  group('RestShowDateRepository.deleteShowDate', () {
+  group('RestShowDateRepository - Suppression d\'une date', () {
     late _MockShowDateRemoteDataSource remote;
     late RestShowDateRepository repository;
 
@@ -131,7 +131,7 @@ void main() {
     });
   });
 
-  group('RestShowDateRepository.updateShowDate', () {
+  group('RestShowDateRepository - Mise à jour d\'une date', () {
     late _MockShowDateRemoteDataSource remote;
     late RestShowDateRepository repository;
 

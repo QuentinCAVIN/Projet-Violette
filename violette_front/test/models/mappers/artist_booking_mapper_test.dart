@@ -3,8 +3,8 @@ import 'package:violette_front/models/enums/booking_status.dart';
 import 'package:violette_front/models/mappers/artist_booking_mapper.dart';
 
 void main() {
-  group('ArtistBookingMapper', () {
-    group('findPendingBookingIdForShowDate', () {
+  group('ArtistBookingMapper - Conversion JSON ↔ domaine', () {
+    group('Recherche du booking en attente pour une date', () {
       test('findPendingBookingIdForShowDate_whenShowDateIdMatchesAsJsonNumber_returnsBookingId', () {
         final items = <Map<String, dynamic>>[
           {'id': 10, 'showDateId': 5, 'status': 'PENDING_CONFIRMATION'},
@@ -121,7 +121,7 @@ void main() {
       });
     });
 
-    group('findBookingIdForArtistId', () {
+    group('Recherche du booking par identifiant artiste', () {
       test('findBookingIdForArtistId_whenArtistIdMatches_returnsBookingId', () {
         final items = <Map<String, dynamic>>[
           {'id': 100, 'artistId': 2, 'status': 'SELECTED'},
@@ -138,7 +138,7 @@ void main() {
       });
     });
 
-    group('parseBookingList', () {
+    group('Parsing d\'une liste JSON de réservations', () {
       test('parseBookingList_whenDataIsDirectList_returnsParsedList', () {
         final data = [
           {'id': 1, 'showDateId': 2},
@@ -154,7 +154,7 @@ void main() {
       });
     });
 
-    group('toArtistBooking', () {
+    group('Conversion JSON vers ArtistBooking', () {
       test('toArtistBooking_whenStatusIsSelected_returnsPreselectedBooking', () {
         final json = <String, dynamic>{
           'id': 42,
@@ -251,7 +251,7 @@ void main() {
       });
     });
 
-    group('toArtistBookingList', () {
+    group('Conversion JSON vers liste de réservations', () {
       test('toArtistBookingList_whenSomeEntriesHaveNoValidStatus_skipsInvalidEntries', () {
         final items = <Map<String, dynamic>>[
           {'id': 1, 'artistId': 1, 'showDateId': 7, 'status': 'SELECTED'},

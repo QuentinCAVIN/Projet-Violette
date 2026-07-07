@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:violette_front/data/remote/show_date_remote_data_source.dart';
 
 void main() {
-  group('ShowDateRemoteDataSource.getMyCompanyId', () {
+  group('ShowDateRemoteDataSource - Récupération de l\'identifiant compagnie', () {
     test('getMyCompanyId_whenBackendReturnsCompany_returnsCompanyId', () async {
       final dio = Dio(BaseOptions(baseUrl: 'http://test'));
 
@@ -80,7 +80,7 @@ void main() {
     });
   });
 
-  group('ShowDateRemoteDataSource.deleteShowDate', () {
+  group('ShowDateRemoteDataSource - Suppression d\'une date', () {
     test('deleteShowDate_whenIdIsNumeric_callsDeleteEndpoint', () async {
       final dio = Dio(BaseOptions(baseUrl: 'http://test'));
       String? deletedPath;
@@ -122,7 +122,7 @@ void main() {
     });
   });
 
-  group('ShowDateRemoteDataSource.updateShowDate', () {
+  group('ShowDateRemoteDataSource - Mise à jour d\'une date', () {
     test('updateShowDate_whenIdIsNumeric_callsPatchEndpointWithFormattedPayload', () async {
       final dio = Dio(BaseOptions(baseUrl: 'http://test'));
       String? patchPath;

@@ -16,11 +16,11 @@ import 'package:stacked_services/stacked_services.dart';
 import '../helpers/test_helpers.dart';
 
 void main() {
-  group('ManagerDateDetailViewModel Tests -', () {
+  group('ManagerDateDetailViewModel - Détail de date côté manager', () {
     setUp(() => registerServices());
     tearDown(() => locator.reset());
 
-    group('initialize -', () {
+    group('Initialisation du détail', () {
       test('initialize_whenShowDateHasId_loadsDetailFromRestRepository', () async {
         final showDateRepository = locator<ShowDateRepository>() as MockShowDateRepository;
         final bookingRepository = locator<BookingRepository>() as MockBookingRepository;
@@ -159,7 +159,7 @@ void main() {
       });
     });
 
-    group('refreshShowDateDetail -', () {
+    group('Rafraîchissement du détail', () {
       test('refreshShowDateDetail_whenCalled_reloadsDetailViaGetShowDateById', () async {
         final showDateRepository =
             locator<ShowDateRepository>() as MockShowDateRepository;
@@ -207,7 +207,7 @@ void main() {
       });
     });
 
-    group('toggleSelection -', () {
+    group('Bascule de sélection d\'un artiste', () {
       test(
           'toggleSelection_whenDateIdIsNull_doesNotCallRepository',
           () async {
@@ -299,7 +299,7 @@ void main() {
       });
     });
 
-    group('sendConfirmation -', () {
+    group('Envoi des demandes de confirmation', () {
       test(
         'sendConfirmation_whenShowDateIsNotConfirmed_doesNotCallRepository',
         () async {
@@ -411,7 +411,7 @@ void main() {
       });
     });
 
-    group('changeShowDateStatus -', () {
+    group('Changement de statut de la date', () {
       test('changeShowDateStatus_whenCallSucceeds_updatesStatusAndReloadsDetail', () async {
         final showDateRepository =
             locator<ShowDateRepository>() as MockShowDateRepository;
@@ -526,7 +526,7 @@ void main() {
       });
     });
 
-    group('cancelShowDate -', () {
+    group('Annulation de la date', () {
       test('cancelShowDate_whenConfirmationIsAccepted_cancelsShowDate', () async {
         final showDateRepository =
             locator<ShowDateRepository>() as MockShowDateRepository;
@@ -692,7 +692,7 @@ void main() {
       });
     });
 
-    group('cancelBooking -', () {
+    group('Annulation d\'une réservation', () {
       test('cancelBooking_whenConfirmationIsAccepted_cancelsBooking', () async {
         final showDateRepository =
             locator<ShowDateRepository>() as MockShowDateRepository;
@@ -826,7 +826,7 @@ void main() {
       });
     });
 
-    group('isSelectionEnabled -', () {
+    group('Autorisation de sélection', () {
       test(
           'isSelectionEnabled_whenBookingIsPreselected_allowsDeselection',
           () {
@@ -1168,7 +1168,7 @@ void main() {
       );
     });
 
-    group('isBookingCheckboxChecked -', () {
+    group('État de la case à cocher de réservation', () {
       test('isBookingCheckboxChecked_whenBookingIsNullRefusedOrCancelled_returnsFalse', () {
         // CANCELLED : un booking annulé n'est pas considéré comme actif.
         final viewModel = ManagerDateDetailViewModel(

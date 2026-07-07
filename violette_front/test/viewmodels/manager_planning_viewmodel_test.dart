@@ -11,11 +11,11 @@ import '../helpers/test_helpers.dart';
 import '../helpers/test_data_builders.dart';
 
 void main() {
-  group('ManagerPlanningViewModel Tests -', () {
+  group('ManagerPlanningViewModel - Planning côté manager', () {
     setUp(() => registerServices());
     tearDown(() => locator.reset());
 
-    group('onDaySelected -', () {
+    group('Sélection d\'un jour dans le calendrier', () {
       test('onDaySelected_whenNoShowDateExists_clearsSelection', () async {
         final showDateRepo = getAndRegisterShowDateRepository();
         when(() => showDateRepo.getAllShowDates())
@@ -171,7 +171,7 @@ void main() {
       });
     });
 
-    group('expanded state -', () {
+    group('État d\'expansion d\'une carte de date', () {
       test('isExpanded_whenNothingWasToggled_returnsFalseByDefault', () async {
         final viewModel = ManagerPlanningViewModel();
         final showDate = TestDataBuilders.createTestShowDate(
@@ -261,7 +261,7 @@ void main() {
       });
     });
 
-    group('loadShowDates -', () {
+    group('Chargement des dates de spectacle', () {
       test('loadShowDates_whenSomeDatesAreCancelledOrArchived_filtersThemOut', () async {
         final showDateRepo = getAndRegisterShowDateRepository();
         final testDate = DateTime(2026, 2, 15);
@@ -331,7 +331,7 @@ void main() {
       });
     });
 
-    group('refreshShowDateAfterStatusChange -', () {
+    group('Rafraîchissement après changement de statut', () {
       test('refreshShowDateAfterStatusChange_whenOneDateChanges_updatesOnlyThatDate', () async {
         final viewModel = ManagerPlanningViewModel();
         final testDate = DateTime(2026, 2, 15);
