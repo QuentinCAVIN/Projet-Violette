@@ -214,7 +214,7 @@ void main() {
         final bookingRepository =
             locator<BookingRepository>() as MockBookingRepository;
 
-        final showDateSansId = ShowDate(
+        final showDateWithoutId = ShowDate(
           id: '',
           title: 'Date sans id',
           date: DateTime(2026, 1, 1),
@@ -223,7 +223,7 @@ void main() {
           totalRequiredArtists: 2,
         );
 
-        final viewModel = ManagerDateDetailViewModel(showDate: showDateSansId);
+        final viewModel = ManagerDateDetailViewModel(showDate: showDateWithoutId);
 
         await viewModel.toggleSelection('artist1', true);
 
@@ -249,7 +249,7 @@ void main() {
           address: 'Adresse',
           totalRequiredArtists: 2,
         );
-        final showDateApresSelection = ShowDate(
+        final showDateAfterSelection = ShowDate(
           id: '7',
           title: 'Test',
           date: DateTime(2026, 1, 1),
@@ -259,7 +259,7 @@ void main() {
           selectedCount: 1,
         );
 
-        final bookingApresSelection = ArtistBooking(
+        final bookingAfterSelection = ArtistBooking(
           artistId: '5',
           dateId: '7',
           status: BookingStatus.preselected,
@@ -284,9 +284,9 @@ void main() {
         when(() => bookingRepository.toggleSelection('7', '5', true))
             .thenAnswer((_) async {});
         when(() => bookingRepository.getBookingsForDate('7'))
-            .thenAnswer((_) async => [bookingApresSelection]);
+            .thenAnswer((_) async => [bookingAfterSelection]);
         when(() => showDateRepository.getShowDateById('7'))
-            .thenAnswer((_) async => showDateApresSelection);
+            .thenAnswer((_) async => showDateAfterSelection);
 
         await viewModel.toggleSelection('5', true);
 
@@ -338,7 +338,7 @@ void main() {
         final bookingRepository =
             locator<BookingRepository>() as MockBookingRepository;
 
-        final showDateSansId = ShowDate(
+        final showDateWithoutId = ShowDate(
           id: '',
           title: 'Date sans id',
           date: DateTime(2026, 1, 1),
@@ -347,7 +347,7 @@ void main() {
           totalRequiredArtists: 2,
         );
 
-        final viewModel = ManagerDateDetailViewModel(showDate: showDateSansId);
+        final viewModel = ManagerDateDetailViewModel(showDate: showDateWithoutId);
 
         await viewModel.sendConfirmation();
 
@@ -374,7 +374,7 @@ void main() {
           status: ShowDateStatus.confirmed,
         );
 
-        final bookingApresEnvoi = ArtistBooking(
+        final bookingAfterConfirmationRequest = ArtistBooking(
           artistId: '5',
           dateId: '7',
           status: BookingStatus.pendingConfirmation,
@@ -399,7 +399,7 @@ void main() {
         when(() => bookingRepository.sendConfirmationRequests('7'))
             .thenAnswer((_) async {});
         when(() => bookingRepository.getBookingsForDate('7'))
-            .thenAnswer((_) async => [bookingApresEnvoi]);
+            .thenAnswer((_) async => [bookingAfterConfirmationRequest]);
 
         await viewModel.sendConfirmation();
 
@@ -625,7 +625,7 @@ void main() {
         final showDateRepository =
             locator<ShowDateRepository>() as MockShowDateRepository;
 
-        final showDateSansId = ShowDate(
+        final showDateWithoutId = ShowDate(
           id: '',
           title: 'Date sans id',
           date: DateTime(2026, 1, 1),
@@ -634,7 +634,7 @@ void main() {
           totalRequiredArtists: 2,
         );
 
-        final viewModel = ManagerDateDetailViewModel(showDate: showDateSansId);
+        final viewModel = ManagerDateDetailViewModel(showDate: showDateWithoutId);
         await viewModel.cancelShowDate();
 
         verifyNever(() => showDateRepository.updateShowDateStatus(
@@ -765,7 +765,7 @@ void main() {
         final bookingRepository =
             locator<BookingRepository>() as MockBookingRepository;
 
-        final showDateSansId = ShowDate(
+        final showDateWithoutId = ShowDate(
           id: '',
           title: 'Date sans id',
           date: DateTime(2026, 1, 1),
@@ -774,7 +774,7 @@ void main() {
           totalRequiredArtists: 2,
         );
 
-        final viewModel = ManagerDateDetailViewModel(showDate: showDateSansId);
+        final viewModel = ManagerDateDetailViewModel(showDate: showDateWithoutId);
         await viewModel.cancelBooking('5');
 
         verifyNever(() => bookingRepository.cancelBooking(any(), any()));
