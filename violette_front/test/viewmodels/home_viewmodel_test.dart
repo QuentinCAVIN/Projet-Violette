@@ -99,7 +99,7 @@ void main() {
       });
 
       test(
-          'respondToRequest_quandArtisteConnecte_rechargeLaListeViaGetPending',
+          'respondToRequest_whenArtistIsLoggedIn_reloadsPendingListViaGetPendingRequests',
           () async {
         final bookingRepository =
             locator<BookingRepository>() as MockBookingRepository;

@@ -61,7 +61,7 @@ void main() {
     tearDown(() => locator.reset());
 
     test(
-      'si addShowDate échoue, ne pas naviguer vers Home et afficher un message explicite',
+      'submitShowDateForm_whenAddShowDateFails_showsExplicitDialogWithoutNavigating',
       () async {
         final viewModel = CreateShowDateViewModel();
         viewModel.titleValue = 'Date test';
@@ -107,7 +107,7 @@ void main() {
     );
 
     test(
-      'si addShowDate réussit, afficher une snackbar puis naviguer vers Home',
+      'submitShowDateForm_whenAddShowDateSucceeds_showsSnackbarThenNavigatesToHome',
       () async {
         final viewModel = CreateShowDateViewModel();
         viewModel.titleValue = 'Date test';

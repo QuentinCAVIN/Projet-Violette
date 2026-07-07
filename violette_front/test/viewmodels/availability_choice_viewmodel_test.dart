@@ -804,7 +804,7 @@ void main() {
     });
 
     group('navigation -', () {
-      test('onBackPressed_clearStackAndShowHome', () async {
+      test('onBackPressed_whenCalled_clearsStackAndShowsHome', () async {
         final navigationService = getAndRegisterNavigationService();
         when(() => navigationService.clearStackAndShow(
               any(),

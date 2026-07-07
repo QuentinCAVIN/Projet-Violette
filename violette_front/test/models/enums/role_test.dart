@@ -4,24 +4,24 @@ import 'package:violette_front/models/enums/role.dart';
 
 void main() {
   group('Role - Mapping string → Role', () {
-    test('"artist" devrait mapper vers Role.artist', () {
+    test('roleFromString_whenValueIsArtist_returnsArtistRole', () {
       final result = roleFromString('artist');
       expect(result, Role.artist);
     });
 
-    test('"manager" devrait mapper vers Role.manager', () {
+    test('roleFromString_whenValueIsManager_returnsManagerRole', () {
       final result = roleFromString('manager');
       expect(result, Role.manager);
     });
 
-    test('valeur invalide devrait lancer une exception', () {
+    test('roleFromString_whenValueIsInvalid_throwsException', () {
       expect(
         () => roleFromString('invalid'),
         throwsA(isA<Exception>()),
       );
     });
 
-    test('chaîne vide devrait lancer une exception', () {
+    test('roleFromString_whenValueIsEmpty_throwsException', () {
       expect(
         () => roleFromString(''),
         throwsA(isA<Exception>()),
@@ -30,21 +30,21 @@ void main() {
   });
 
   group('Role - Labels', () {
-    test('Role.artist devrait avoir le label "Artiste"', () {
+    test('label_whenRoleIsArtist_returnsArtisteLabel', () {
       expect(Role.artist.label, 'Artiste');
     });
 
-    test('Role.manager devrait avoir le label "Gérant"', () {
+    test('label_whenRoleIsManager_returnsGerantLabel', () {
       expect(Role.manager.label, 'Gérant');
     });
   });
 
   group('Role - Serialization (enum → string)', () {
-    test('Role.artist.name devrait retourner "artist"', () {
+    test('name_whenRoleIsArtist_returnsArtistString', () {
       expect(Role.artist.name, 'artist');
     });
 
-    test('Role.manager.name devrait retourner "manager"', () {
+    test('name_whenRoleIsManager_returnsManagerString', () {
       expect(Role.manager.name, 'manager');
     });
   });

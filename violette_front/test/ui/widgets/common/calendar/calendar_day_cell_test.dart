@@ -10,7 +10,7 @@ void main() {
 
   group('CalendarDayCell Tests -', () {
     testWidgets(
-        'When color is null and not selected/today, should render simple text without colored decoration',
+        'whenColorIsNullAndDayIsNotSelectedOrToday_rendersPlainTextWithoutDecoration',
         (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
@@ -32,7 +32,7 @@ void main() {
       expect(textFinder, findsOneWidget);
     });
 
-    testWidgets('When color is provided, should render colored circle',
+    testWidgets('whenColorIsProvided_rendersColoredCircle',
         (WidgetTester tester) async {
       const testColor = Colors.red;
       await tester.pumpWidget(
@@ -54,7 +54,7 @@ void main() {
     });
 
     testWidgets(
-        'whenStatusLabelIsProvided_shouldExposeSemanticsLabelWithDateAndStatus',
+        'whenStatusLabelIsProvided_exposesSemanticsLabelWithDateAndStatus',
         (WidgetTester tester) async {
       final testDay = DateTime(2026, 3, 15);
       await tester.pumpWidget(
@@ -74,7 +74,7 @@ void main() {
     });
 
     testWidgets(
-        'whenStatusLabelIsNull_shouldExposeSemanticsLabelWithDateOnly',
+        'whenStatusLabelIsNull_exposesSemanticsLabelWithDateOnly',
         (WidgetTester tester) async {
       final testDay = DateTime(2026, 3, 15);
       await tester.pumpWidget(

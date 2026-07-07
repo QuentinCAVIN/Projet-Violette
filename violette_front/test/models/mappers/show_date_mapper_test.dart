@@ -5,7 +5,7 @@ import 'package:violette_front/models/mappers/show_date_mapper.dart';
 void main() {
   group('ShowDateMapper', () {
     test(
-      'fromJson_mapsNumericIdDisplayTitleMeetingTimeLocationAndCounters',
+      'fromJson_whenPayloadIsComplete_mapsIdTitleMeetingTimeLocationAndCounters',
       () {
         final showDate = ShowDateMapper.fromJson(<String, dynamic>{
           'id': 7,
@@ -29,7 +29,7 @@ void main() {
       },
     );
 
-    test('fromJson_usesCabaretShowTitleWhenDisplayTitleIsBlank', () {
+    test('fromJson_whenDisplayTitleIsBlank_usesCabaretShowTitle', () {
       final showDate = ShowDateMapper.fromJson(<String, dynamic>{
         'id': 8,
         'displayTitle': '   ',
@@ -43,14 +43,14 @@ void main() {
       expect(showDate.title, 'Titre Cabaret');
     });
 
-    test('fromApiStatus_mapsCancelledToCancelled', () {
+    test('fromApiStatus_whenValueIsCancelled_returnsCancelled', () {
       expect(
         ShowDateMapper.fromApiStatus('CANCELLED'),
         ShowDateStatus.cancelled,
       );
     });
 
-    test('fromApiStatus_mapsArchivedToArchived', () {
+    test('fromApiStatus_whenValueIsArchived_returnsArchived', () {
       expect(
         ShowDateMapper.fromApiStatus('ARCHIVED'),
         ShowDateStatus.archived,

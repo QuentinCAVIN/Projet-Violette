@@ -4,7 +4,7 @@ import 'package:violette_front/models/enums/availability_status.dart';
 
 void main() {
   group('AvailabilityStatus - Transitions de statut', () {
-    test('pending.next devrait retourner available', () {
+    test('next_whenStatusIsPending_returnsAvailable', () {
       // Arrange
       const status = AvailabilityStatus.pending;
 
@@ -15,19 +15,19 @@ void main() {
       expect(result, AvailabilityStatus.available);
     });
 
-    test('available.next devrait retourner ifNeeded', () {
+    test('next_whenStatusIsAvailable_returnsIfNeeded', () {
       const status = AvailabilityStatus.available;
       final result = status.next;
       expect(result, AvailabilityStatus.ifNeeded);
     });
 
-    test('ifNeeded.next devrait retourner unavailable', () {
+    test('next_whenStatusIsIfNeeded_returnsUnavailable', () {
       const status = AvailabilityStatus.ifNeeded;
       final result = status.next;
       expect(result, AvailabilityStatus.unavailable);
     });
 
-    test('unavailable.next devrait retourner available (cycle)', () {
+    test('next_whenStatusIsUnavailable_returnsAvailableAndCyclesBack', () {
       const status = AvailabilityStatus.unavailable;
       final result = status.next;
       expect(result, AvailabilityStatus.available);
@@ -35,39 +35,37 @@ void main() {
   });
 
   group('AvailabilityStatus - Labels', () {
-    test('available devrait avoir le label "Disponible"', () {
+    test('label_whenStatusIsAvailable_returnsDisponibleLabel', () {
       expect(AvailabilityStatus.available.label, 'Disponible');
     });
 
-    test('ifNeeded devrait avoir le label "Si besoin"', () {
+    test('label_whenStatusIsIfNeeded_returnsSiBesoinLabel', () {
       expect(AvailabilityStatus.ifNeeded.label, 'Si besoin');
     });
 
-    test('unavailable devrait avoir le label "Indisponible"', () {
+    test('label_whenStatusIsUnavailable_returnsIndisponibleLabel', () {
       expect(AvailabilityStatus.unavailable.label, 'Indisponible');
     });
 
-    test('pending devrait avoir le label "En attente"', () {
+    test('label_whenStatusIsPending_returnsEnAttenteLabel', () {
       expect(AvailabilityStatus.pending.label, 'En attente');
     });
   });
 
   group('AvailabilityStatus - Serialization (enum → string)', () {
-    test('AvailabilityStatus.available.name devrait retourner "available"', () {
+    test('name_whenStatusIsAvailable_returnsAvailableString', () {
       expect(AvailabilityStatus.available.name, 'available');
     });
 
-    test('AvailabilityStatus.ifNeeded.name devrait retourner "ifNeeded"',
-        () {
+    test('name_whenStatusIsIfNeeded_returnsIfNeededString', () {
       expect(AvailabilityStatus.ifNeeded.name, 'ifNeeded');
     });
 
-    test('AvailabilityStatus.unavailable.name devrait retourner "unavailable"',
-        () {
+    test('name_whenStatusIsUnavailable_returnsUnavailableString', () {
       expect(AvailabilityStatus.unavailable.name, 'unavailable');
     });
 
-    test('AvailabilityStatus.pending.name devrait retourner "pending"', () {
+    test('name_whenStatusIsPending_returnsPendingString', () {
       expect(AvailabilityStatus.pending.name, 'pending');
     });
   });

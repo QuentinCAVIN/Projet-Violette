@@ -38,7 +38,7 @@ void main() {
     tearDown(() => locator.reset());
 
     test(
-      'Sans utilisateur Firebase connecté, devrait naviguer vers Login',
+      'runStartupLogic_whenNoFirebaseUser_navigatesToLogin',
       () async {
         when(() => authService.currentUser).thenReturn(null);
 
@@ -71,7 +71,7 @@ void main() {
     );
 
     test(
-      'Utilisateur Firebase connecté et profil backend présent, devrait naviguer vers Home',
+      'runStartupLogic_whenFirebaseUserHasBackendProfile_navigatesToHome',
       () async {
         const uid = 'firebase-uid-xyz';
         when(() => authService.currentUser).thenReturn(MockFirebaseUser(uid: uid));
@@ -109,7 +109,7 @@ void main() {
     );
 
     test(
-      'Utilisateur Firebase connecté et profil backend absent, devrait déclencher le logout Firebase puis naviguer vers Login',
+      'runStartupLogic_whenBackendProfileIsMissing_logsOutThenNavigatesToLogin',
       () async {
         const uid = 'firebase-sans-profil';
         when(() => authService.currentUser).thenReturn(MockFirebaseUser(uid: uid));
@@ -145,7 +145,7 @@ void main() {
     );
 
     test(
-      'Utilisateur Firebase connecté et erreur backend/réseau, ne devrait pas lever d’exception, devrait exposer un état d’erreur et ne pas naviguer vers Home ni vers Login',
+      'runStartupLogic_whenBackendFails_exposesErrorStateWithoutNavigating',
       () async {
         const uid = 'firebase-uid-err';
         when(() => authService.currentUser).thenReturn(MockFirebaseUser(uid: uid));
