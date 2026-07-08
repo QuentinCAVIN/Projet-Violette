@@ -19,6 +19,7 @@ class GradientBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      constraints: const BoxConstraints.expand(),
       decoration: decoration ?? VioletteTheme.gradientBackground,
       child: SparkleBackground(
         sparkleCount: sparkleCount,
