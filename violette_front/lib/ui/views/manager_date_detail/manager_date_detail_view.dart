@@ -3,6 +3,7 @@ import 'package:stacked/stacked.dart';
 import 'package:violette_front/models/show_date.dart';
 import 'package:violette_front/ui/views/manager_date_detail/manager_date_detail_viewmodel.dart';
 import 'package:violette_front/ui/views/manager_date_detail/widgets/manager_date_detail_body.dart';
+import 'package:violette_front/ui/widgets/common/gradient_background/gradient_background.dart';
 
 /// Vue "Détail d’une date" côté gérant.
 class ManagerDateDetailView extends StackedView<ManagerDateDetailViewModel> {
@@ -20,10 +21,16 @@ class ManagerDateDetailView extends StackedView<ManagerDateDetailViewModel> {
     Widget? child,
   ) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(viewModel.displayedShowDate.title),
       ),
-      body: const ManagerDateDetailBody(),
+      body: const GradientBackground(
+        child: SafeArea(
+          child: ManagerDateDetailBody(),
+        ),
+      ),
     );
   }
 
