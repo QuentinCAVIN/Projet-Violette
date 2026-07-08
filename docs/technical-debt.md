@@ -55,7 +55,7 @@ documentés comme choix assumés pour `v0.5.0` (détail dans `regles-metier.md`)
 - **DETTE-6 — Autoriser l'engagement ferme dès `OPTION` (v0.6.0 / v0.7.0).**
   Retour terrain : les compagnies engagent les artistes dès le stade `OPTION`.
   Le workflow actuel réserve l'envoi des demandes fermes aux dates `CONFIRMED`.
-  Impact à traiter : assouplissement de la garde `validerDateConfirmee` dans
+  Impact à traiter : assouplissement de la garde `assertDateConfirmed` dans
   `sendConfirmationRequests`, révision de la sémantique de `PENDING_CONFIRMATION`,
   tests associés et comptage de la capacité sur les bookings confirmés.
 
@@ -72,8 +72,9 @@ documentés comme choix assumés pour `v0.5.0` (détail dans `regles-metier.md`)
 
 > Les numéros de DETTE servent d'identifiants stables (référencés dans le suivi de
 > sprint et les commits) ; les trous éventuels sont normaux. DETTE-1 (régénération
-> du client API) et DETTE-2 (nommage FR->EN des méthodes back) sont traitées dans
-> le sprint `v0.5.0` courant et suivies hors de ce registre.
+> du client API) est traitée dans le sprint `v0.5.0` courant et suivie hors de ce
+> registre. DETTE-2 (nommage FR->EN des méthodes de garde back) est résorbée en
+> `v0.5.0` (voir « Résorbé depuis v0.4.0 »).
 
 - **DETTE-3 — Audit trail dédié des transitions de statut.** Table d'historique pour tracer les transitions booking/date. Infrastructure Observer déjà prête. Reporté lot 2/3.
 - **DETTE-4 — Retirer `StackedFormGenerator` (`@FormView`)** au profit de formulaires manuels. Abstraction fuyante (cf. « approche hybride » documentée dans `register_form.dart` : controllers passés manuellement au constructeur). Coût de cérémonie disproportionné pour le peu de formulaires du projet. Retrait incrémental, un formulaire à la fois, jamais en big-bang. **Périmètre : v0.7.0.**
@@ -92,6 +93,7 @@ documentés comme choix assumés pour `v0.5.0` (détail dans `regles-metier.md`)
 - **Différenciation visuelle disponibilité / présélection / confirmation** : traitée par la refonte des cartes (statut d'engagement, disponibilité, verrou) et la mise en conformité contraste.
 - **Contraste WCAG 2.2 AA des cartes de planning** : tokens de couleur centralisés dans `VioletteTheme` (`cardSurface`, `textOnCard`, `textOnCardSecondary`, `cardTitle`), appliqués aux cartes artiste et gérant. Bascule des autres écrans sur ces tokens reportée en v0.6.0.
 - **Verrou backend disponibilité / booking `CONFIRMED`** : désormais garanti côté serveur, plus seulement côté frontend.
+- **DETTE-2 — Nommage FR→EN des méthodes de garde privées (backend)** : les gardes métier de `ArtistBookingService` (`validerDateBookable`, `validerDateConfirmee`, `validerDateModifiable`, `validerDisponibiliteArtiste`, `validerCapacite`) ont été renommées avec les préfixes anglais `assert*`, pour s'aligner sur les méthodes `assert*`/`is*` déjà anglaises de la même classe. Renommage via rename-symbol IDE, sans changement de logique ni du contrat API ; 227 tests verts.
 
 ## Évolutions futures
 

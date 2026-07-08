@@ -144,7 +144,7 @@ public class ArtistBookingService {
 
         managerCompanyResolver.assertCurrentManagerOwnsCompany(showDate.getCompany().getId());
 
-        validerDateBookable(showDate);
+        assertDateBookable(showDate);
 
         VioletteUserEntity artist = violetteUserRepository
                 .findByIdOptional(request.artistId())
@@ -155,7 +155,7 @@ public class ArtistBookingService {
 
         assertNotActivelyBooked(existingBooking);
 
-        validerDisponibiliteArtiste(request.showDateId(), request.artistId());
+        assertArtistIsAvailable(request.showDateId(), request.artistId());
 
         ShowDateSkillRequirementEntity skillRequirement = null;
         if (request.skillRequirementId() != null) {
@@ -170,7 +170,7 @@ public class ArtistBookingService {
                 );
             }
 
-            validerCapacite(skillRequirement);
+            assertCapacityNotExceeded(skillRequirement);
         }
 
         ArtistBookingEntity booking;
@@ -219,7 +219,7 @@ public class ArtistBookingService {
 
         managerCompanyResolver.assertCurrentManagerOwnsCompany(booking.getShowDate().getCompany().getId());
 
-        validerDateModifiable(booking.getShowDate());
+        assertDateModifiable(booking.getShowDate());
 
         if (booking.getStatus() != BookingStatus.SELECTED) {
             throw new InvalidBookingTransitionException(
@@ -337,7 +337,7 @@ public class ArtistBookingService {
 
         managerCompanyResolver.assertCurrentManagerOwnsCompany(showDate.getCompany().getId());
 
-        validerDateConfirmee(showDate);
+        assertDateConfirmed(showDate);
 
         List<ArtistBookingEntity> selectedBookings =
                 artistBookingRepository.findByShowDateIdAndStatus(showDateId, BookingStatus.SELECTED);
@@ -404,7 +404,7 @@ public class ArtistBookingService {
             throw new ForbiddenBookingAccessException();
         }
 
-        validerDateModifiable(booking.getShowDate());
+        assertDateModifiable(booking.getShowDate());
 
         if (booking.getStatus() != BookingStatus.PENDING_CONFIRMATION) {
             throw new InvalidBookingTransitionException(
@@ -498,7 +498,7 @@ public class ArtistBookingService {
      * <p>Les statuts {@code INQUIRY}, {@code STAFFED}, {@code CANCELLED} et {@code ARCHIVED}
      * bloquent toute sélection.
      */
-    private void validerDateBookable(ShowDateEntity showDate) {
+    private void assertDateBookable(ShowDateEntity showDate) {
         ShowDateStatus status = showDate.getStatus();
         if (status != ShowDateStatus.OPTION && status != ShowDateStatus.CONFIRMED) {
             throw new ShowDateNotModifiableException(
@@ -516,7 +516,7 @@ public class ArtistBookingService {
      * être transformées en demandes fermes — il faut attendre la confirmation client.
      * Les statuts {@code STAFFED}, {@code CANCELLED} et {@code ARCHIVED} bloquent également.
      */
-    private void validerDateConfirmee(ShowDateEntity showDate) {
+    private void assertDateConfirmed(ShowDateEntity showDate) {
         if (showDate.getStatus() != ShowDateStatus.CONFIRMED) {
             throw new ShowDateNotModifiableException(
                     "L'envoi de demandes de booking ferme n'est autorisé que sur une date CONFIRMED. Statut actuel : "
@@ -530,7 +530,7 @@ public class ArtistBookingService {
      * Utilisé pour les opérations de modification qui restent acceptables
      * pendant les phases autorisées (ex. : désélection, réponse artiste).
      */
-    private void validerDateModifiable(ShowDateEntity showDate) {
+    private void assertDateModifiable(ShowDateEntity showDate) {
         if (showDate.getStatus() == ShowDateStatus.STAFFED
                 || showDate.getStatus() == ShowDateStatus.CANCELLED
                 || showDate.getStatus() == ShowDateStatus.ARCHIVED) {
@@ -595,7 +595,7 @@ public class ArtistBookingService {
      * {@code IF_NEEDED} = disponible si besoin, sélection autorisée mais non prioritaire.
      * Les statuts {@code PENDING} et {@code UNAVAILABLE} restent bloquants.
      */
-    private void validerDisponibiliteArtiste(Long showDateId, Long artistId) {
+    private void assertArtistIsAvailable(Long showDateId, Long artistId) {
         boolean available = artistAvailabilityRepository
                 .findByIdOptional(new ArtistAvailabilityId(showDateId, artistId))
                 .map(a -> a.getStatus() == AvailabilityStatus.AVAILABLE
@@ -611,7 +611,7 @@ public class ArtistBookingService {
      * Vérifie que la capacité requise pour un besoin artistique n'est pas encore atteinte.
      * Les statuts comptant dans la capacité : SELECTED, PENDING_CONFIRMATION, CONFIRMED.
      */
-    private void validerCapacite(ShowDateSkillRequirementEntity skillRequirement) {
+    private void assertCapacityNotExceeded(ShowDateSkillRequirementEntity skillRequirement) {
         long activeCount = artistBookingRepository
                 .countActiveBookingsForSkillRequirement(skillRequirement.getId());
 
