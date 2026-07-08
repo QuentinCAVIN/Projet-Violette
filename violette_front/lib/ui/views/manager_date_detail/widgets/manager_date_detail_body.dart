@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
+import 'package:violette_front/models/artist_booking.dart';
+import 'package:violette_front/models/enums/availability_status.dart';
+import 'package:violette_front/models/enums/booking_status.dart';
 import 'package:violette_front/models/enums/show_date_status.dart';
 import 'package:violette_front/ui/views/manager_date_detail/widgets/booking_status_pill.dart';
 import 'package:violette_front/ui/views/manager_date_detail/widgets/show_date_status_pill.dart';
@@ -38,86 +41,109 @@ class ManagerDateDetailBody extends ViewModelWidget<ManagerDateDetailViewModel> 
             viewModel.isSelectionEnabled(currentShowDate, apiArtistId);
 
         final availability = viewModel.getAvailabilityForArtist(apiArtistId);
+        final isChecked = viewModel.isBookingCheckboxChecked(booking);
+        final artistName = '${artist.firstName} ${artist.lastName}';
 
-        return Opacity(
-          opacity: isEnabled ? 1 : 0.72,
-          child: Card(
-          margin: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 8,
+        return Semantics(
+          container: true,
+          label: _artistLineAccessibilityLabel(
+            artistName: artistName,
+            booking: booking,
+            availability: availability,
+            isChecked: isChecked,
+            isEnabled: isEnabled,
           ),
-          color: theme.cardColor,
-          child: ListTile(
-            leading: SizedBox(
-              width: 24,
-              height: 24,
-              child: Checkbox(
-                value: viewModel.isBookingCheckboxChecked(booking),
-                onChanged: isEnabled
-                    ? (val) => viewModel.toggleSelection(
-                          apiArtistId,
-                          val ?? false,
-                        )
+          checked: isChecked,
+          enabled: isEnabled,
+          onTap: isEnabled
+              ? () => viewModel.toggleSelection(
+                    apiArtistId,
+                    !isChecked,
+                  )
+              : null,
+          child: Opacity(
+            opacity: isEnabled ? 1 : 0.72,
+            child: Card(
+              margin: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 8,
+              ),
+              color: theme.cardColor,
+              child: ListTile(
+                leading: ExcludeSemantics(
+                  child: Checkbox(
+                    value: isChecked,
+                    onChanged: isEnabled
+                        ? (val) => viewModel.toggleSelection(
+                              apiArtistId,
+                              val ?? false,
+                            )
+                        : null,
+                    activeColor: theme.colorScheme.primary,
+                    checkColor: theme.colorScheme.onPrimary,
+                  ),
+                ),
+                title: ExcludeSemantics(
+                  child: Text(
+                    artistName,
+                    style: theme.textTheme.bodyLarge,
+                  ),
+                ),
+                subtitle: ExcludeSemantics(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        artist.email,
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                      if (booking != null) ...[
+                        const SizedBox(height: 4),
+                        BookingStatusPill(
+                          status: booking.status,
+                        ),
+                      ] else if (availability != null) ...[
+                        const SizedBox(height: 4),
+                        AvailabilityStatusPill(
+                          status: availability,
+                        ),
+                      ],
+                      if (!isEnabled)
+                        Text(
+                          "Sélection indisponible",
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                trailing: viewModel.canCancelBooking(booking)
+                    ? PopupMenuButton<String>(
+                        tooltip: 'Actions',
+                        icon: const Icon(Icons.more_vert),
+                        onSelected: (value) {
+                          if (value == 'cancel') {
+                            viewModel.cancelBooking(apiArtistId);
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          PopupMenuItem<String>(
+                            value: 'cancel',
+                            child: Text(
+                              'Annuler la réservation',
+                              style: TextStyle(color: theme.colorScheme.error),
+                            ),
+                          ),
+                        ],
+                      )
                     : null,
-                activeColor: theme.colorScheme.primary,
-                checkColor: theme.colorScheme.onPrimary,
               ),
             ),
-            title: Text(
-              "${artist.firstName} ${artist.lastName}",
-              style: theme.textTheme.bodyLarge,
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  artist.email,
-                  style: theme.textTheme.bodyMedium,
-                ),
-                if (booking != null) ...[
-                  const SizedBox(height: 4),
-                  BookingStatusPill(
-                    status: booking.status,
-                  ),
-                ] else if (availability != null) ...[
-                  const SizedBox(height: 4),
-                  AvailabilityStatusPill(
-                    status: availability,
-                  ),
-                ],
-                if (!isEnabled)
-                  Text(
-                    "Sélection indisponible",
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-              ],
-            ),
-            trailing: viewModel.canCancelBooking(booking)
-                ? PopupMenuButton<String>(
-                    tooltip: 'Actions',
-                    icon: const Icon(Icons.more_vert),
-                    onSelected: (value) {
-                      if (value == 'cancel') {
-                        viewModel.cancelBooking(apiArtistId);
-                      }
-                    },
-                    itemBuilder: (context) => [
-                      PopupMenuItem<String>(
-                        value: 'cancel',
-                        child: Text(
-                          'Annuler la réservation',
-                          style: TextStyle(color: theme.colorScheme.error),
-                        ),
-                      ),
-                    ],
-                  )
-                : null,
           ),
-        ));
+        );
       },
     );
 
@@ -220,6 +246,31 @@ class ManagerDateDetailBody extends ViewModelWidget<ManagerDateDetailViewModel> 
       children: children,
     );
   }
+}
+
+/// Libellé d'accessibilité regroupé pour une ligne artiste du détail gérant.
+String _artistLineAccessibilityLabel({
+  required String artistName,
+  required ArtistBooking? booking,
+  required AvailabilityStatus? availability,
+  required bool isChecked,
+  required bool isEnabled,
+}) {
+  final buffer = StringBuffer(artistName);
+
+  if (booking != null) {
+    buffer.write(', engagement : ${booking.status.displayName}');
+  } else if (availability != null) {
+    buffer.write(', disponibilité : ${availability.label}');
+  }
+
+  buffer.write(isChecked ? ', sélectionnée' : ', non sélectionnée');
+
+  if (!isEnabled) {
+    buffer.write(', sélection indisponible');
+  }
+
+  return buffer.toString();
 }
 
 /// Libellé du bouton d'action pour une transition de statut cible.
