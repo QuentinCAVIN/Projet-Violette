@@ -29,7 +29,7 @@ class RegisterView extends StackedView<RegisterViewModel> with $RegisterView {
   ) {
     return Scaffold(
       body: Container(
-        decoration: VioletteTheme.gradientBackground,
+        decoration: VioletteTheme.authGradientBackground,
         child: SparkleBackground(
           sparkleCount: 25,
           child: SafeArea(

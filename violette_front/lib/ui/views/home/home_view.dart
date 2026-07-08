@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:violette_front/ui/common/ui_helpers.dart';
+import 'package:violette_front/ui/widgets/common/gradient_background/gradient_background.dart';
 
 import '../../../models/enums/role.dart';
 import 'home_viewmodel.dart';
@@ -16,8 +17,11 @@ class HomeView extends StackedView<HomeViewModel> {
     // Pour gérer l'erreur du User null
     if (viewModel.isBusy) {
       return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
+        backgroundColor: Colors.transparent,
+        body: GradientBackground(
+          child: Center(
+            child: CircularProgressIndicator(),
+          ),
         ),
       );
     }
@@ -27,21 +31,26 @@ class HomeView extends StackedView<HomeViewModel> {
     // ce fallback n'est jamais visible en pratique.
     if (currentUser == null) {
       return const Scaffold(
-        body: Center(
-          child: Text("Utilisateur introuvable"),
+        backgroundColor: Colors.transparent,
+        body: GradientBackground(
+          child: Center(
+            child: Text("Utilisateur introuvable"),
+          ),
         ),
       );
     }
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 25.0),
-          child: Center(
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  verticalSpaceLarge,
-                  // SECTION : DEMANDES EN ATTENTE
+      backgroundColor: Colors.transparent,
+      body: GradientBackground(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 25.0),
+            child: Center(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    verticalSpaceLarge,
+                    // SECTION : DEMANDES EN ATTENTE
                     if (viewModel.pendingRequests.isNotEmpty) ...[
                       Align(
                         alignment: Alignment.centerLeft,
@@ -135,7 +144,8 @@ class HomeView extends StackedView<HomeViewModel> {
                       onPressed: viewModel.logOut,
                       child: const Text('Déconnexion'),
                     ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

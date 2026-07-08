@@ -15,6 +15,10 @@ class VioletteTheme {
   // Couleurs de fond
   static const Color backgroundColor = Color(0xFF7B6FD8);
 
+  /// Indigo profond — sommet du dégradé de fond (ciel de cabaret nocturne).
+  /// Contraste blanc/texte : ~15:1 (WCAG AA ✓).
+  static const Color backgroundGradientTop = Color(0xFF1A1145);
+
   // Couleurs de texte
   static const Color textPrimary = Colors.white;
   static const Color textSecondary = Color(0xFFE8E0FF);
@@ -36,15 +40,28 @@ class VioletteTheme {
   static const Color buttonPrimary = Color(0xFF5B4BC4);
   static const Color buttonHover = Color(0xFF4A3BA8);
 
-  /// Dégradé principal de l'application (violet vers rose)
+  /// Dégradé de fond principal — tons foncés uniquement (indigo → violet).
+  /// Blanc (#FFFFFF) sur chaque extrémité : top ~15:1, bottom ~8,8:1 (WCAG AA 4,5:1 ✓).
+  /// Le rose/magenta reste réservé aux accents (pills, boutons), pas au fond.
   static const LinearGradient primaryGradient = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
     colors: [
-      Color(0xFF6B7FD7), // Bleu-violet en haut
-      Color(0xFF8B6FD8), // Violet au milieu
-      Color(0xFFB87FD8), // Violet-rose
-      Color(0xFFE89FD9), // Rose en bas
+      backgroundGradientTop,
+      darkPurple,
+    ],
+  );
+
+  /// Dégradé historique des écrans d'authentification (login, register).
+  /// Conservé tel quel pour ne pas modifier le rendu existant de ces écrans.
+  static const LinearGradient authBackgroundGradient = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [
+      Color(0xFF6B7FD7),
+      Color(0xFF8B6FD8),
+      Color(0xFFB87FD8),
+      Color(0xFFE89FD9),
     ],
     stops: [0.0, 0.3, 0.6, 1.0],
   );
@@ -336,6 +353,13 @@ class VioletteTheme {
   static BoxDecoration get gradientBackground {
     return const BoxDecoration(
       gradient: primaryGradient,
+    );
+  }
+
+  /// Décoration pour les écrans d'authentification (dégradé historique).
+  static BoxDecoration get authGradientBackground {
+    return const BoxDecoration(
+      gradient: authBackgroundGradient,
     );
   }
 
