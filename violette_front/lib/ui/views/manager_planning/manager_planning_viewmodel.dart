@@ -164,6 +164,13 @@ class ManagerPlanningViewModel extends BaseViewModel {
     return _pickCalendarStatus(datesForDay).color;
   }
 
+  /// Libellé de statut pour l'accessibilité du calendrier (null = jour sans date).
+  String? getStatusLabelForDay(DateTime day) {
+    final datesForDay = _findShowDatesForDay(day);
+    if (datesForDay.isEmpty) return null;
+    return _pickCalendarStatus(datesForDay).label;
+  }
+
   ShowDateStatus _pickCalendarStatus(List<ShowDate> datesForDay) {
     // Règle simple v0.4.0 en cas de statuts mixtes sur un même jour :
     // on affiche la couleur du statut le plus "prioritaire" opérationnel.

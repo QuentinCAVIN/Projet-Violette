@@ -32,6 +32,7 @@ class ManagerPlanningView extends StackedView<ManagerPlanningViewModel> {
                 onPageChanged: viewModel.onPageChange,
                 // On peut colorer les jours selon leur statut global
                 dayColorBuilder: viewModel.getColorForDay,
+                dayStatusLabelBuilder: viewModel.getStatusLabelForDay,
               ),
               if (viewModel.isBusy)
                 const Padding(
