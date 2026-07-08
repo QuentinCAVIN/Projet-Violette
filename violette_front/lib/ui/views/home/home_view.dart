@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:violette_front/ui/common/app_theme.dart';
 import 'package:violette_front/ui/common/ui_helpers.dart';
+import 'package:violette_front/ui/views/home/widgets/home_action_card.dart';
 import 'package:violette_front/ui/widgets/common/gradient_background/gradient_background.dart';
 
 import '../../../models/enums/role.dart';
@@ -125,7 +126,7 @@ class HomeView extends StackedView<HomeViewModel> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           if (currentUser.roles.contains(Role.manager)) ...[
-                            _HomeActionCard(
+                            HomeActionCard(
                               icon: Icons.event_available,
                               title: "Créer une nouvelle date",
                               subtitle: "Planifier un spectacle",
@@ -133,7 +134,7 @@ class HomeView extends StackedView<HomeViewModel> {
                               backgroundColor: VioletteTheme.buttonPrimary,
                             ),
                             const SizedBox(height: 14),
-                            _HomeActionCard(
+                            HomeActionCard(
                               icon: Icons.calendar_today,
                               title: "Consulter le planning",
                               subtitle: "Voir toutes les dates",
@@ -143,7 +144,7 @@ class HomeView extends StackedView<HomeViewModel> {
                             ),
                           ],
                           if (currentUser.roles.contains(Role.artist))
-                            _HomeActionCard(
+                            HomeActionCard(
                               icon: Icons.event,
                               title: "Planning Artiste",
                               subtitle: "Gérer mes disponibilités",
@@ -193,75 +194,5 @@ class HomeView extends StackedView<HomeViewModel> {
   @override
   void onViewModelReady(HomeViewModel viewModel) {
     viewModel.loadUser();
-  }
-}
-
-class _HomeActionCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-  final Color backgroundColor;
-  final Color? borderColor;
-
-  const _HomeActionCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-    required this.backgroundColor,
-    this.borderColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: title,
-      child: Material(
-        color: Colors.transparent,
-        child: Ink(
-          decoration: BoxDecoration(
-            color: backgroundColor,
-            borderRadius: BorderRadius.circular(16),
-            border: borderColor == null ? null : Border.all(color: borderColor!),
-          ),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(16),
-            onTap: onTap,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              child: Row(
-                children: [
-                  Icon(icon, size: 24, color: Colors.white),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                              ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          subtitle,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.white.withValues(alpha: 0.92),
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }
