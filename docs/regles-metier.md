@@ -144,7 +144,7 @@ maintenue en v0.5.0.
 
 **Évolution envisagée** : autoriser l'envoi des demandes fermes dès `OPTION`.
 Impact à traiter proprement (hors périmètre gel v0.5.0) : assouplissement de la
-garde `validerDateConfirmee` dans `sendConfirmationRequests`, révision de la
+garde `assertDateConfirmed` dans `sendConfirmationRequests`, révision de la
 sémantique de `PENDING_CONFIRMATION`, mise à jour des tests associés et de la
 capacité (comptage de l'effectif sur les bookings confirmés plutôt que
 présélectionnés). Reporté en v0.6.0 / v0.7.0.
