@@ -47,7 +47,7 @@ class RegisterView extends StackedView<RegisterViewModel> with $RegisterView {
                     children: [
                       const SizedBox(height: 60),
                       const LoginHeader(),
-                      const SizedBox(height: 48),
+                      const SizedBox(height: 64),
                       RegisterForm(
                         firstNameController: firstNameController,
                         lastNameController: lastNameController,
