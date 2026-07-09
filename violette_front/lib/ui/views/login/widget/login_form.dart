@@ -65,16 +65,6 @@ class LoginForm extends ViewModelWidget<LoginViewModel> {
 
         const SizedBox(height: 20),
 
-        // Lien mot de passe oublié - Mort pour l'instant
-        TextButton(
-          onPressed: () {
-            // DETTE-8 : implémenter la réinitialisation du mot de passe
-          },
-          child: const Text('Mot de passe oublié ?(Bouton inactif)'),
-        ),
-
-        const SizedBox(height: 8),
-
         // Lien créer un compte
         TextButton(
           onPressed: viewModel.navigateToRegister,

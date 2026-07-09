@@ -47,7 +47,7 @@ class LoginView extends StackedView<LoginViewModel> with $LoginView {
                   children: [
                     const SizedBox(height: 60),
                     const LoginHeader(),
-                    const SizedBox(height: 48),
+                    const SizedBox(height: 64),
                     LoginForm(
                       emailController: emailController,
                       passwordController: passwordController,
