@@ -4,10 +4,14 @@ import 'package:violette_front/models/artist_booking.dart';
 import 'package:violette_front/models/enums/availability_status.dart';
 import 'package:violette_front/models/enums/booking_status.dart';
 import 'package:violette_front/models/enums/show_date_status.dart';
+import 'package:violette_front/ui/common/app_theme.dart';
 import 'package:violette_front/ui/views/manager_date_detail/widgets/booking_status_pill.dart';
 import 'package:violette_front/ui/views/manager_date_detail/widgets/show_date_status_pill.dart';
 import 'package:violette_front/ui/views/manager_date_detail/manager_date_detail_viewmodel.dart';
 import 'package:violette_front/ui/widgets/common/availability_status_pill.dart';
+
+/// Rouge clair lisible sur fond dégradé sombre (bouton tertiaire).
+const _cancelActionColor = Color(0xFFF0997B);
 
 class ManagerDateDetailBody extends ViewModelWidget<ManagerDateDetailViewModel> {
   final bool isInline;
@@ -25,10 +29,12 @@ class ManagerDateDetailBody extends ViewModelWidget<ManagerDateDetailViewModel> 
     final selectionLabel = currentShowDate.totalRequiredArtists > 0
         ? "Sélection : ${currentShowDate.selectedCount} / ${currentShowDate.totalRequiredArtists}"
         : "Sélection libre";
+    final horizontalMargin = isInline ? 0.0 : 16.0;
 
     final listView = ListView.builder(
       shrinkWrap: isInline,
       physics: isInline ? const NeverScrollableScrollPhysics() : null,
+      padding: EdgeInsets.zero,
       itemCount: viewModel.artistLines.length,
       itemBuilder: (context, index) {
         final line = viewModel.artistLines[index];
@@ -63,83 +69,109 @@ class ManagerDateDetailBody extends ViewModelWidget<ManagerDateDetailViewModel> 
               : null,
           child: Opacity(
             opacity: isEnabled ? 1 : 0.72,
-            child: Card(
-              margin: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 8,
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
               ),
-              color: theme.cardColor,
-              child: ListTile(
-                leading: ExcludeSemantics(
-                  child: Checkbox(
-                    value: isChecked,
-                    onChanged: isEnabled
-                        ? (val) => viewModel.toggleSelection(
-                              apiArtistId,
-                              val ?? false,
-                            )
-                        : null,
-                    activeColor: theme.colorScheme.primary,
-                    checkColor: theme.colorScheme.onPrimary,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  ExcludeSemantics(
+                    child: Checkbox(
+                      value: isChecked,
+                      onChanged: isEnabled
+                          ? (val) => viewModel.toggleSelection(
+                                apiArtistId,
+                                val ?? false,
+                              )
+                          : null,
+                      activeColor: theme.colorScheme.primary,
+                      checkColor: theme.colorScheme.onPrimary,
+                    ),
                   ),
-                ),
-                title: ExcludeSemantics(
-                  child: Text(
-                    artistName,
-                    style: theme.textTheme.bodyLarge,
-                  ),
-                ),
-                subtitle: ExcludeSemantics(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        artist.email,
-                        style: theme.textTheme.bodyMedium,
-                      ),
-                      if (booking != null) ...[
-                        const SizedBox(height: 4),
-                        BookingStatusPill(
-                          status: booking.status,
-                        ),
-                      ] else if (availability != null) ...[
-                        const SizedBox(height: 4),
-                        AvailabilityStatusPill(
-                          status: availability,
-                        ),
-                      ],
-                      if (!isEnabled)
-                        Text(
-                          "Sélection indisponible",
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                trailing: viewModel.canCancelBooking(booking)
-                    ? PopupMenuButton<String>(
-                        tooltip: 'Actions',
-                        icon: const Icon(Icons.more_vert),
-                        onSelected: (value) {
-                          if (value == 'cancel') {
-                            viewModel.cancelBooking(apiArtistId);
-                          }
-                        },
-                        itemBuilder: (context) => [
-                          PopupMenuItem<String>(
-                            value: 'cancel',
-                            child: Text(
-                              'Annuler la réservation',
-                              style: TextStyle(color: theme.colorScheme.error),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ExcludeSemantics(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            artistName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: VioletteTheme.textOnCard,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
+                          const SizedBox(height: 2),
+                          Text(
+                            artist.email,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: VioletteTheme.textOnCardSecondary,
+                              fontSize: 12,
+                            ),
+                          ),
+                          if (!isEnabled) ...[
+                            const SizedBox(height: 4),
+                            const Text(
+                              'Sélection indisponible',
+                              style: TextStyle(
+                                color: VioletteTheme.textOnCardSecondary,
+                                fontSize: 12,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ],
                         ],
-                      )
-                    : null,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    fit: FlexFit.loose,
+                    child: ExcludeSemantics(
+                      child: _buildStatusPill(
+                        booking: booking,
+                        availability: availability,
+                      ),
+                    ),
+                  ),
+                  if (viewModel.canCancelBooking(booking))
+                    PopupMenuButton<String>(
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(
+                        minWidth: 48,
+                        minHeight: 48,
+                      ),
+                      tooltip: 'Actions',
+                      icon: const Icon(
+                        Icons.more_vert,
+                        color: VioletteTheme.textOnCardSecondary,
+                      ),
+                      onSelected: (value) {
+                        if (value == 'cancel') {
+                          viewModel.cancelBooking(apiArtistId);
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        PopupMenuItem<String>(
+                          value: 'cancel',
+                          child: Text(
+                            'Annuler la réservation',
+                            style: TextStyle(color: theme.colorScheme.error),
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
               ),
             ),
           ),
@@ -147,104 +179,184 @@ class ManagerDateDetailBody extends ViewModelWidget<ManagerDateDetailViewModel> 
       },
     );
 
-    final reserveArtistsButton = Padding(
-      padding: const EdgeInsets.all(16),
-      child: SizedBox(
-        width: double.infinity,
-        child: OutlinedButton(
-          onPressed: viewModel.canSendConfirmation
-              ? viewModel.sendConfirmation
-              : null,
-          child: const Text('Réserver les artistes'),
+    final headerSection = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: ShowDateStatusPill(status: currentShowDate.status),
         ),
-      ),
+        const SizedBox(height: 8),
+        Text(
+          selectionLabel,
+          style: const TextStyle(
+            color: VioletteTheme.cardTitle,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
 
-    final children = <Widget>[
-      Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        color: theme.colorScheme.surfaceContainerHighest,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: ShowDateStatusPill(status: currentShowDate.status),
+    final lavenderCardDecoration = BoxDecoration(
+      color: VioletteTheme.cardSurface,
+      borderRadius: BorderRadius.circular(16),
+    );
+
+    final lavenderCardMargin = EdgeInsets.symmetric(horizontal: horizontalMargin);
+
+    final actionsBlock = Padding(
+      padding: EdgeInsets.fromLTRB(
+        horizontalMargin + 16,
+        16,
+        horizontalMargin + 16,
+        16,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Le design actuel suppose une seule transition possible par statut ;
+          // si plusieurs transitions coexistent un jour, remplacer ce bouton unique
+          // par un sélecteur (menu ou boutons multiples).
+          if (availableNextStatuses.isNotEmpty) ...[
+            ElevatedButton(
+              onPressed: () => viewModel.changeShowDateStatus(
+                availableNextStatuses.first,
+              ),
+              child: Text(
+                _statusTransitionActionLabel(availableNextStatuses.first),
+              ),
             ),
             const SizedBox(height: 8),
-            Text(
-              selectionLabel,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 12),
-            // Le design actuel suppose une seule transition possible par statut ;
-            // si plusieurs transitions coexistent un jour, remplacer ce bouton unique
-            // par un sélecteur (menu ou boutons multiples).
-            if (availableNextStatuses.isNotEmpty) ...[
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => viewModel.changeShowDateStatus(
-                    availableNextStatuses.first,
-                  ),
-                  child: Text(
-                    _statusTransitionActionLabel(availableNextStatuses.first),
-                  ),
-                ),
-              ),
-            ],
-            if (viewModel.canCancelShowDate) ...[
-              if (availableNextStatuses.isNotEmpty) const SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton.icon(
-                  onPressed: viewModel.cancelShowDate,
-                  icon: Icon(
-                    Icons.event_busy,
-                    color: theme.colorScheme.error,
-                  ),
-                  label: Text(
-                    'Annuler la date',
-                    style: TextStyle(color: theme.colorScheme.error),
-                  ),
-                ),
-              ),
-            ],
           ],
-        ),
+          OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: VioletteTheme.textPrimary,
+              disabledForegroundColor:
+                  VioletteTheme.textPrimary.withValues(alpha: 0.5),
+              side: BorderSide(
+                color: viewModel.canSendConfirmation
+                    ? VioletteTheme.textPrimary
+                    : VioletteTheme.textPrimary.withValues(alpha: 0.5),
+              ),
+            ),
+            onPressed: viewModel.canSendConfirmation
+                ? viewModel.sendConfirmation
+                : null,
+            child: const Text('Réserver les artistes'),
+          ),
+          if (viewModel.canCancelShowDate) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: viewModel.cancelShowDate,
+                icon: const Icon(
+                  Icons.event_busy,
+                  color: _cancelActionColor,
+                ),
+                label: const Text(
+                  'Annuler la date',
+                  style: TextStyle(color: _cancelActionColor),
+                ),
+              ),
+            ),
+          ],
+        ],
       ),
-      if (viewModel.isBusy)
-        if (isInline)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16),
-            child: Center(
-              child: CircularProgressIndicator(),
+    );
+
+    if (viewModel.isBusy) {
+      return Column(
+        mainAxisSize: isInline ? MainAxisSize.min : MainAxisSize.max,
+        children: [
+          Container(
+            width: double.infinity,
+            margin: lavenderCardMargin,
+            padding: const EdgeInsets.all(16),
+            decoration: lavenderCardDecoration,
+            child: headerSection,
+          ),
+          if (isInline)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Center(
+                child: CircularProgressIndicator(),
+              ),
+            )
+          else
+            const Expanded(
+              child: Center(
+                child: CircularProgressIndicator(),
+              ),
             ),
-          )
-        else
-          const Expanded(
-            child: Center(
-              child: CircularProgressIndicator(),
+        ],
+      );
+    }
+
+    if (isInline) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            width: double.infinity,
+            margin: lavenderCardMargin,
+            padding: const EdgeInsets.all(16),
+            decoration: lavenderCardDecoration,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                headerSection,
+                const SizedBox(height: 12),
+                listView,
+              ],
             ),
-          )
-      else ...[
-        if (isInline)
-          listView
-        else
-          Expanded(child: listView),
-        reserveArtistsButton,
-      ],
-    ];
+          ),
+          actionsBlock,
+        ],
+      );
+    }
 
     return Column(
-      mainAxisSize: isInline ? MainAxisSize.min : MainAxisSize.max,
-      children: children,
+      mainAxisSize: MainAxisSize.max,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          child: Container(
+            width: double.infinity,
+            margin: lavenderCardMargin,
+            padding: const EdgeInsets.all(16),
+            decoration: lavenderCardDecoration,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                headerSection,
+                const SizedBox(height: 12),
+                Expanded(child: listView),
+              ],
+            ),
+          ),
+        ),
+        actionsBlock,
+      ],
     );
+  }
+
+  Widget _buildStatusPill({
+    required ArtistBooking? booking,
+    required AvailabilityStatus? availability,
+  }) {
+    if (booking != null) {
+      return BookingStatusPill(status: booking.status);
+    }
+    if (availability != null) {
+      return AvailabilityStatusPill(status: availability);
+    }
+    return const SizedBox.shrink();
   }
 }
 
