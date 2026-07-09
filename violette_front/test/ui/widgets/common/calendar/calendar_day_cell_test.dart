@@ -1,11 +1,64 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:violette_front/models/enums/availability_status.dart';
+import 'package:violette_front/models/enums/show_date_status.dart';
+import 'package:violette_front/ui/common/app_theme.dart';
 import 'package:violette_front/ui/widgets/common/calendar/calendar_day_cell.dart';
 
 void main() {
   setUpAll(() async {
     await initializeDateFormatting('fr_FR', null);
+  });
+
+  double contrastRatio(Color foreground, Color background) {
+    final foregroundLuminance = foreground.computeLuminance();
+    final backgroundLuminance = background.computeLuminance();
+    final lighter = foregroundLuminance > backgroundLuminance
+        ? foregroundLuminance
+        : backgroundLuminance;
+    final darker = foregroundLuminance > backgroundLuminance
+        ? backgroundLuminance
+        : foregroundLuminance;
+    return (lighter + 0.05) / (darker + 0.05);
+  }
+
+  group('contrastTextForStatusPill', () {
+    test('whenBackgroundIsDark_returnsWhite', () {
+      expect(
+        contrastTextForStatusPill(const Color(0xFF2E7D32)),
+        Colors.white,
+      );
+    });
+
+    test('whenBackgroundIsBright_returnsDarkText', () {
+      expect(
+        contrastTextForStatusPill(const Color(0xFFFFAB00)),
+        VioletteTheme.backgroundGradientTop,
+      );
+    });
+
+    test('meetsWcagAaOnAllAvailabilityStatusColors', () {
+      for (final status in AvailabilityStatus.values) {
+        final textColor = contrastTextForStatusPill(status.color);
+        expect(
+          contrastRatio(textColor, status.color),
+          greaterThanOrEqualTo(4.5),
+          reason: status.name,
+        );
+      }
+    });
+
+    test('meetsWcagAaOnAllShowDateStatusColors', () {
+      for (final status in ShowDateStatus.values) {
+        final textColor = contrastTextForStatusPill(status.color);
+        expect(
+          contrastRatio(textColor, status.color),
+          greaterThanOrEqualTo(4.5),
+          reason: status.name,
+        );
+      }
+    });
   });
 
   group('CalendarDayCell - Cellule de jour du calendrier', () {
@@ -51,6 +104,9 @@ void main() {
 
       expect(decoration.color, testColor);
       expect(decoration.shape, BoxShape.circle);
+
+      final Text dayText = tester.widget(find.text('1'));
+      expect(dayText.style?.color, contrastTextForStatusPill(testColor));
     });
 
     testWidgets(
