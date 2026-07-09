@@ -77,6 +77,16 @@ documentés comme choix assumés pour `v0.5.0` (détail dans `regles-metier.md`)
   probablement dans la transition de route (`PageTransitionsBuilder`) ou une
   couleur peinte par `MaterialApp`/`Stacked` pendant l'animation. À diagnostiquer
   au ralenti (`timeDilation`).
+- **DETTE-19 — Consultation du détail complet d'une date (gérant).** Le détail de
+  date gérant n'existe qu'en inline dans le planning et n'affiche pas les
+  informations complètes de la date (adresse entière, description). La
+  `ManagerShowDateSummaryCard` tronque le titre et l'adresse ; il n'existe pas de
+  vue détail plein écran routée. Choix assumé pour `v0.5.0` : le parcours de
+  démonstration ne passera pas par la consultation détaillée. Options envisagées
+  pour la suite : enrichir le bloc inline (adresse complète + description) ou
+  créer une vue détail plein écran avec navigation depuis le planning.
+  **Périmètre : v0.6.0.**
+  
 
 ## Dette outillage
 
