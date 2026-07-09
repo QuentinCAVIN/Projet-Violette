@@ -102,6 +102,15 @@ class VioletteTheme {
       // Couleur de fond par défaut
       scaffoldBackgroundColor: backgroundColor,
 
+      // Fond des transitions de page Android — indigo du dégradé, pas colorScheme.surface
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: PredictiveBackPageTransitionsBuilder(
+            fallbackColor: backgroundGradientTop,
+          ),
+        },
+      ),
+
       // Typographie
       fontFamily: 'Roboto',
       textTheme: const TextTheme(

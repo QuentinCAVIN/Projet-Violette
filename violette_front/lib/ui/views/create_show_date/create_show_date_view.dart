@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked/stacked_annotations.dart';
 
+import 'package:violette_front/ui/common/app_theme.dart';
 import 'package:violette_front/ui/widgets/common/gradient_background/gradient_background.dart';
 
 import 'widget/show_date_form.dart';
@@ -28,7 +29,7 @@ class CreateShowDateView extends StackedView<CreateShowDateViewModel>
     Widget? child,
   ) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: VioletteTheme.darkPurple,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const Text('Nouvelle date de spectacle'),

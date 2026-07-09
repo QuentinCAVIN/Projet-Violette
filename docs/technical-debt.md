@@ -67,16 +67,18 @@ documentés comme choix assumés pour `v0.5.0` (détail dans `regles-metier.md`)
 - Les actions groupées sur plusieurs dates d'un même jour ne sont pas encore proposées.
 - La release cible prioritairement Android ; les parcours web et iOS restent hors périmètre de validation.
 - Refonte graphique globale (thème night-sky, gradient `primaryGradient` non branché en fond de Scaffold, harmonisation complète des pills) reportée en v0.6.0. La mise en conformité contraste WCAG AA des cartes de planning a été traitée en v0.5.0 (voir « Résorbé depuis v0.4.0 »).
-- **DETTE-18 — Micro-flash violet en transition d'écran (v0.6.0).** Apparu avec
-  l'intégration du fond dégradé. Bref flash (~200 ms) de la couleur
-  `colorScheme.surface` (violet `0xFF7B6FD8`) pendant l'animation de navigation
-  vers les écrans à AppBar, et traînée similaire à l'ouverture du clavier sur la
-  création de date. Sans impact fonctionnel ni accessibilité. Deux corrections
-  tentées sans effet (alignement `scaffoldBackgroundColor` sur l'indigo ;
-  inversion de l'imbrication `GradientBackground`/`Scaffold`) — la cause se situe
-  probablement dans la transition de route (`PageTransitionsBuilder`) ou une
-  couleur peinte par `MaterialApp`/`Stacked` pendant l'animation. À diagnostiquer
-  au ralenti (`timeDilation`).
+- **DETTE-18 — Micro-flash violet en transition d'écran (résorbé v0.5.0).**
+  Deux causes distinctes sous un seul ticket :
+  1. Flash (~200 ms) de `colorScheme.surface` (violet historique) peint par le
+     `PageTransitionsBuilder` Android pendant l'animation de route, en dehors de
+     tout Scaffold — d'ou l'inefficacite des deux premieres tentatives
+     (alignement `scaffoldBackgroundColor`, inversion `GradientBackground`/
+     `Scaffold`). Corrige via `pageTransitionsTheme` avec
+     `PredictiveBackPageTransitionsBuilder(fallbackColor: backgroundGradientTop)`.
+  2. Trainee a l'ouverture du clavier : le Scaffold expose sa propre
+     `backgroundColor` pendant le resize du body (`create_show_date`, `login`,
+     `register`). Corrige en fixant cette couleur sur la teinte basse du
+     gradient de chaque ecran (`darkPurple` / `pinkAccent`).
 - **DETTE-19 — Consultation du détail complet d'une date (gérant).** Le détail de
   date gérant n'existe qu'en inline dans le planning et n'affiche pas les
   informations complètes de la date (adresse entière, description). La

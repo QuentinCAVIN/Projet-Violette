@@ -25,6 +25,7 @@ class LoginView extends StackedView<LoginViewModel> with $LoginView {
     Widget? child,
   ) {
     return Scaffold(
+      backgroundColor: VioletteTheme.pinkAccent,
       body: GradientBackground(
         decoration: VioletteTheme.authGradientBackground,
         child: SafeArea(
