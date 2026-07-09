@@ -28,6 +28,7 @@ class RegisterView extends StackedView<RegisterViewModel> with $RegisterView {
     Widget? child,
   ) {
     return Scaffold(
+      backgroundColor: VioletteTheme.pinkAccent,
       body: Container(
         decoration: VioletteTheme.authGradientBackground,
         child: SparkleBackground(
