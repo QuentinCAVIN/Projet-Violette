@@ -42,6 +42,20 @@ allprojects {
     }
 }
 
+// Force la cohérence JVM 17 même pour les plugins qui fixent leur propre
+// compileOptions (ex. sign_in_with_apple en 1.8) — appliqué après évaluation
+// de chaque sous-projet pour écraser leur valeur.
+subprojects {
+    afterEvaluate {
+        extensions.findByType<com.android.build.gradle.BaseExtension>()?.apply {
+            compileOptions {
+                sourceCompatibility = JavaVersion.VERSION_17
+                targetCompatibility = JavaVersion.VERSION_17
+            }
+        }
+    }
+}
+
 subprojects {
     project.evaluationDependsOn(":app")
 }
