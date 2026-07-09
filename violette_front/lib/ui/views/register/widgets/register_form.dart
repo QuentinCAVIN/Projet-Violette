@@ -1,10 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 
+import 'package:violette_front/ui/common/app_theme.dart';
 import 'package:violette_front/ui/views/register/register_viewmodel.dart';
 
 import '../../../../models/enums/role.dart';
 import '../register_view.form.dart';
+
+/// Texte saisi — foncé pour contraste sur le verre clair des écrans auth.
+const _authFieldTextStyle = TextStyle(
+  color: VioletteTheme.textOnCard,
+  fontSize: 16,
+  fontWeight: FontWeight.w500,
+);
+
+/// Placeholder — ton atténué lisible sur fond clair (surcharge du thème global).
+const _authFieldHintStyle = TextStyle(
+  color: VioletteTheme.textOnCardSecondary,
+  fontSize: 16,
+  fontWeight: FontWeight.w400,
+);
 
 /// Formulaire d'inscription avec approche hybride Stacked :
 /// les [TextEditingController] sont passés au constructeur car ils sont générés
@@ -35,8 +50,10 @@ class RegisterForm extends ViewModelWidget<RegisterViewModel> {
         //Prénom
         TextFormField(
           controller: firstNameController,
+          style: _authFieldTextStyle,
           decoration: InputDecoration(
             hintText: 'Prénom',
+            hintStyle: _authFieldHintStyle,
             errorText: viewModel.firstNameValidationMessage,
           ),
           keyboardType: TextInputType.name,
@@ -46,8 +63,10 @@ class RegisterForm extends ViewModelWidget<RegisterViewModel> {
         // Champ Nom
         TextFormField(
           controller: lastNameController,
+          style: _authFieldTextStyle,
           decoration: InputDecoration(
             hintText: 'Nom',
+            hintStyle: _authFieldHintStyle,
             errorText: viewModel.lastNameValidationMessage,
           ),
           keyboardType: TextInputType.name,
@@ -57,8 +76,10 @@ class RegisterForm extends ViewModelWidget<RegisterViewModel> {
         // Champ Email
         TextFormField(
           controller: emailController,
+          style: _authFieldTextStyle,
           decoration: InputDecoration(
             hintText: 'Email',
+            hintStyle: _authFieldHintStyle,
             errorText: viewModel.emailValidationMessage,
           ),
           keyboardType: TextInputType.emailAddress,
@@ -91,8 +112,10 @@ class RegisterForm extends ViewModelWidget<RegisterViewModel> {
         // Champ Mot de passe
         TextFormField(
           controller: passwordController,
+          style: _authFieldTextStyle,
           decoration: InputDecoration(
             hintText: 'Mot de passe',
+            hintStyle: _authFieldHintStyle,
             errorText: viewModel.passwordValidationMessage,
           ),
           obscureText: true,
@@ -103,8 +126,10 @@ class RegisterForm extends ViewModelWidget<RegisterViewModel> {
         // Champ Confirmation du mot de passe
         TextFormField(
           controller: passwordConfirmationController,
+          style: _authFieldTextStyle,
           decoration: InputDecoration(
             hintText: 'Confirmation du mot de passe',
+            hintStyle: _authFieldHintStyle,
             errorText: viewModel.passwordConfirmationValidationMessage,
           ),
           obscureText: true,
