@@ -30,9 +30,16 @@ class VioletteTheme {
   static const Color textOnCardSecondary = Color(0xFF564F6F);
   static const Color cardTitle = darkPurple;
 
-  // Couleurs pour les champs de saisie
+  // Couleurs pour les champs de saisie (verre dépoli — WCAG 2.2 AA)
   static const Color inputBackground =
-      Color(0x33FFFFFF); // Blanc à 20% d'opacité
+      Color(0x73FFFFFF); // Blanc ~45 % d'opacité (verre dépoli, non opaque)
+  static const Color inputHint =
+      Color(0xCCFFFFFF); // Blanc ~80 % — placeholder lisible sur fond dépoli
+  static const TextStyle inputTextStyle = TextStyle(
+    color: textPrimary,
+    fontSize: 16,
+    fontWeight: FontWeight.w500,
+  );
   static const Color inputBorder = Color(0x66FFFFFF); // Blanc à 40% d'opacité
   static const Color inputFocusedBorder = Color(0xFFFFFFFF);
 
@@ -144,11 +151,7 @@ class VioletteTheme {
           fontWeight: FontWeight.w500,
           color: textPrimary,
         ),
-        bodyLarge: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.normal,
-          color: textPrimary,
-        ),
+        bodyLarge: inputTextStyle,
         bodyMedium: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.normal,
@@ -227,7 +230,7 @@ class VioletteTheme {
 
         // Style du texte
         hintStyle: const TextStyle(
-          color: textHint,
+          color: inputHint,
           fontSize: 16,
           fontWeight: FontWeight.w400,
         ),

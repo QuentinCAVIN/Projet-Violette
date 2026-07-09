@@ -1,5 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:violette_front/ui/common/app_theme.dart';
+
+/// Seuil WCAG 2.2 AA (1.4.3) pour le contraste texte/fond.
+const double _wcagAaContrastRatio = 4.5;
+
+/// Retourne une couleur de texte contrastée (WCAG 2.2 AA) sur [background].
+Color contrastTextForStatusPill(Color background) {
+  const candidates = <Color>[
+    Colors.white,
+    VioletteTheme.backgroundGradientTop,
+    Colors.black,
+  ];
+
+  Color? bestCandidate;
+  var bestContrast = 0.0;
+
+  for (final candidate in candidates) {
+    final contrast = _contrastRatio(candidate, background);
+    if (contrast >= _wcagAaContrastRatio) {
+      return candidate;
+    }
+    if (contrast > bestContrast) {
+      bestContrast = contrast;
+      bestCandidate = candidate;
+    }
+  }
+
+  return bestCandidate!;
+}
+
+double _contrastRatio(Color foreground, Color background) {
+  final foregroundLuminance = foreground.computeLuminance();
+  final backgroundLuminance = background.computeLuminance();
+  final lighter = foregroundLuminance > backgroundLuminance
+      ? foregroundLuminance
+      : backgroundLuminance;
+  final darker = foregroundLuminance > backgroundLuminance
+      ? backgroundLuminance
+      : foregroundLuminance;
+  return (lighter + 0.05) / (darker + 0.05);
+}
 
 class CalendarDayCell extends StatelessWidget {
   final DateTime day;
@@ -55,8 +96,8 @@ class CalendarDayCell extends StatelessWidget {
             ? Border.all(width: 2, color: Colors.black.withValues(alpha: 0.4))
             : null,
       );
-      textStyle = const TextStyle(
-        color: Colors.white,
+      textStyle = TextStyle(
+        color: contrastTextForStatusPill(color!),
         fontSize: 14,
         fontWeight: FontWeight.bold,
       );

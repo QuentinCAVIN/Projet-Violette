@@ -1,8 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
+import 'package:violette_front/ui/common/app_theme.dart';
 import 'package:violette_front/ui/views/login/login_viewmodel.dart';
 
 import '../login_view.form.dart';
+
+/// Texte saisi — foncé pour contraste sur le verre clair des écrans auth.
+const _authFieldTextStyle = TextStyle(
+  color: VioletteTheme.textOnCard,
+  fontSize: 16,
+  fontWeight: FontWeight.w500,
+);
+
+/// Placeholder — ton atténué lisible sur fond clair (surcharge du thème global).
+const _authFieldHintStyle = TextStyle(
+  color: VioletteTheme.textOnCardSecondary,
+  fontSize: 16,
+  fontWeight: FontWeight.w400,
+);
 
 class LoginForm extends ViewModelWidget<LoginViewModel> {
   final TextEditingController emailController;
@@ -21,8 +36,10 @@ class LoginForm extends ViewModelWidget<LoginViewModel> {
         //Email
         TextFormField(
           controller: emailController,
+          style: _authFieldTextStyle,
           decoration: InputDecoration(
             hintText: 'Email',
+            hintStyle: _authFieldHintStyle,
             errorText: viewModel.emailValidationMessage,
           ),
           keyboardType: TextInputType.emailAddress,
@@ -32,8 +49,10 @@ class LoginForm extends ViewModelWidget<LoginViewModel> {
         //Mot de passe
         TextFormField(
           controller: passwordController,
+          style: _authFieldTextStyle,
           decoration: InputDecoration(
             hintText: 'Mot de passe',
+            hintStyle: _authFieldHintStyle,
             errorText: viewModel.passwordValidationMessage,
           ),
           obscureText: true,
