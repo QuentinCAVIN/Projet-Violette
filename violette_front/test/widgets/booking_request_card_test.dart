@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:violette_front/models/artist_booking.dart';
@@ -187,7 +186,7 @@ void main() {
           final semantics = tester.getSemantics(
             find.text('Nouvelle proposition !'),
           );
-          expect(semantics.hasFlag(SemanticsFlag.isHeader), isTrue);
+          expect(semantics.flagsCollection.isHeader, isTrue);
         },
       );
 
