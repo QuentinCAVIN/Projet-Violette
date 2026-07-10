@@ -166,7 +166,9 @@ class BookingRequestCard extends StatelessWidget {
             else
               Text(
                 booking.status.displayName,
-                style: Theme.of(context).textTheme.bodyLarge,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: VioletteTheme.textOnCard,
+                    ),
               ),
           ],
         ),
