@@ -53,7 +53,7 @@ Référentiel : **WCAG 2.2 AA**, appliqué via les API d'accessibilité de Flutt
 > - **3.1.1 (langue)** : interface déclarée en français (locale fr_FR au niveau application et du composant calendrier), pour une restitution correcte par le lecteur d'écran.
 > - **4.1.3 (messages d'état)** : les confirmations et erreurs (enregistrement de disponibilité) sont annoncées au lecteur d'écran.
 >
-> Le périmètre couvre le parcours artiste ; l'extension des mêmes pratiques aux écrans gérant est un axe d'amélioration identifié.
+> Le parcours artiste est intégralement couvert et validé au lecteur d'écran (voir § 4.1). Les mêmes pratiques ont été étendues au parcours gérant (planning et détail de date), implémentées dans le code ; leur validation au lecteur d'écran est planifiée dans la campagne de recette (voir § 4.2).
 
 ### Demain — front web (fin lot 1)
 
@@ -64,6 +64,8 @@ Lorsque la version web Flutter sera déployée :
 - La **cohérence est garantie** : les trois référentiels partagent le socle WCAG, donc viser WCAG 2.2 AA aujourd'hui pose les fondations réutilisables pour Opquast et RGAA demain, sans retravail du socle.
 
 ## 4. Test au lecteur d'écran (TalkBack)
+
+### 4.1 Parcours artiste — déclaration de disponibilité (testé)
 
 Le parcours artiste de déclaration de disponibilité a été testé manuellement avec **TalkBack** (lecteur d'écran Android), sur appareil physique, avec un jeu de données réel (un artiste membre d'une compagnie, dates de spectacle préremplies).
 
@@ -88,6 +90,17 @@ Au second passage TalkBack, le parcours est restitué en français, le statut de
 ### Limite assumée — composant calendrier tiers
 
 Le calendrier s'appuie sur le composant tiers **table_calendar**, qui impose son propre libellé d'accessibilité sur les cellules (date seule) et empêche d'y annoncer directement le statut. Le statut est donc rendu accessible via la carte de détail (région active annoncée à la sélection), ce qui satisfait l'exigence de fond (information non portée par la seule couleur). L'annonce du statut directement sur la cellule du calendrier nécessiterait un composant exposant ce point ; elle est identifiée comme axe d'amélioration.
+
+### 4.2 Parcours gérant — planning et détail de date (implémenté, vérification lecteur d'écran planifiée)
+
+Les mêmes pratiques d'accessibilité ont été implémentées sur le parcours gérant :
+
+- **1.4.1 (information non portée par la seule couleur)** : le statut des dates du calendrier gérant est verbalisé (`getStatusLabelForDay`), selon le même mécanisme que le parcours artiste.
+- **4.1.2 (nom, rôle, valeur)** : les lignes artiste du détail de date sont regroupées sémantiquement — nom, engagement ou disponibilité, et état de sélection (coché / non coché, sélection indisponible) sont annoncés d'un seul tenant (`_artistLineAccessibilityLabel`).
+- **2.5.5 (taille des cibles tactiles)** : les cases à cocher du détail conservent leur cible tactile Material native de 48 dp (`MaterialTapTargetSize.padded`), la contrainte de taille qui la réduisait sous le seuil ayant été retirée ; le menu d'actions (`PopupMenuButton`) porte une contrainte explicite `minWidth`/`minHeight` de 48 dp.
+- **1.4.3 (contraste)** : le texte des pastilles de statut est calculé pour respecter le ratio AA de 4,5:1 sur le fond de chaque contexte (`contrastTextForStatusPill`, sélection de la teinte de texte la plus contrastée selon la luminance du fond).
+
+La vérification au lecteur d'écran (TalkBack) de ce parcours est **planifiée lors de la campagne de recette** (cahier de recettes, C2.3.1). Les résultats y seront consignés et cette section mise à jour en conséquence.
 
 ## 5. Références
 
