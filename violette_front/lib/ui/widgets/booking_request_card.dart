@@ -5,6 +5,7 @@ import 'package:violette_front/models/show_date.dart';
 
 class BookingRequestCard extends StatelessWidget {
   final ArtistBooking booking;
+
   /// Null si les détails de la date n’ont pas pu être chargés (aucune donnée factice).
   final ShowDate? showDate;
   final VoidCallback onAccept;
@@ -31,58 +32,91 @@ class BookingRequestCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              "Nouvelle proposition !",
-              style: TextStyle(
-                color: Theme.of(context).primaryColor,
-                fontWeight: FontWeight.bold,
+            Semantics(
+              header: true,
+              child: Text(
+                "Nouvelle proposition !",
+                style: TextStyle(
+                  color: Theme.of(context).primaryColor,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             const SizedBox(height: 12),
-            if (showDate != null) ...[
-              Text(
-                showDate!.title,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
-                  const SizedBox(width: 8),
-                  Text(showDate!.formattedDate),
-                  const SizedBox(width: 16),
-                  const Icon(Icons.access_time, size: 16, color: Colors.grey),
-                  const SizedBox(width: 8),
-                  Text(showDate!.formattedMeetingTimeForDisplay),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(Icons.location_on, size: 16, color: Colors.grey),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      showDate!.address,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+            if (showDate != null)
+              Semantics(
+                label: 'Proposition : ${showDate!.title}, '
+                    'le ${showDate!.formattedDate}, '
+                    'rendez-vous a ${showDate!.formattedMeetingTimeForDisplay}, '
+                    'lieu : ${showDate!.address}',
+                child: ExcludeSemantics(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        showDate!.title,
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(Icons.calendar_today,
+                              size: 16, color: Colors.grey),
+                          const SizedBox(width: 8),
+                          Text(showDate!.formattedDate),
+                          const SizedBox(width: 16),
+                          const Icon(Icons.access_time,
+                              size: 16, color: Colors.grey),
+                          const SizedBox(width: 8),
+                          Text(showDate!.formattedMeetingTimeForDisplay),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(Icons.location_on,
+                              size: 16, color: Colors.grey),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              showDate!.address,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                ],
+                ),
+              )
+            else
+              Semantics(
+                label: 'Demande de confirmation. '
+                    'Details de la date indisponibles pour le moment.',
+                child: ExcludeSemantics(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Demande de confirmation',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Détails de la date indisponibles pour le moment',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ] else ...[
-              Text(
-                'Demande de confirmation',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Détails de la date indisponibles pour le moment',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-              ),
-            ],
             const SizedBox(height: 16),
             if (booking.status == BookingStatus.pendingConfirmation)
               Row(
