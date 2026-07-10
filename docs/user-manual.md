@@ -53,9 +53,9 @@ En tant que gérant, vous pilotez les dates de spectacle et la constitution des 
 
 Une fois la date créée, elle apparaît dans votre planning.
 
-#### Définir les besoins artistiques
+#### Définir les besoins artistiques *(fonctionnalité à venir)*
 
-Pour chaque date, vous pouvez indiquer les **compétences nécessaires** (danse, chant, acrobaties, etc.) et le **nombre d'artistes** requis pour chaque compétence. Ces informations servent à constituer l'équipe et à respecter les effectifs.
+La définition détaillée des besoins par compétence (danse, chant, acrobaties, etc.) et du nombre d'artistes requis par compétence est **prévue dans une version ultérieure**. Dans la version actuelle, le champ « Artistes nécessaires » du formulaire de création de date est **informatif** : il n'est pas encore pris en compte pour contraindre la constitution de l'équipe.
 
 #### Consulter les disponibilités
 
@@ -91,6 +91,8 @@ Pour chaque date de spectacle à venir, indiquez votre statut :
 
 Il est conseillé de mettre à jour vos disponibilités régulièrement pour que le gérant dispose d'informations à jour.
 
+> **Disponibilité verrouillée après confirmation.** Une fois que vous êtes **confirmé** sur une date (vous avez accepté une demande de réservation), vous ne pouvez plus modifier votre disponibilité sur cette date. Pour tout désistement, contactez directement le gérant.
+
 #### Répondre aux demandes de réservation
 
 Lorsque le gérant vous envoie une **demande de réservation** pour une date :
@@ -103,7 +105,7 @@ Une réponse rapide facilite l'organisation du gérant.
 
 #### Consulter ses engagements
 
-Lorsque vous **acceptez** une demande, la réservation est **confirmée**. Vous pouvez à tout moment consulter la liste de vos engagements à venir pour suivre les dates sur lesquelles vous êtes retenu.
+Lorsque vous **acceptez** une demande, la réservation est **confirmée**. Depuis le **Planning Artiste**, vous suivez l'état de chaque date où vous êtes impliqué : présélectionné par le gérant, confirmé, ou annulé. Vous pouvez à tout moment consulter la liste de vos engagements à venir pour suivre les dates sur lesquelles vous êtes retenu.
 
 ---
 
