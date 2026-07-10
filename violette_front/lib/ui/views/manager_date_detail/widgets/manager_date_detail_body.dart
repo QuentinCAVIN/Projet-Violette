@@ -13,7 +13,8 @@ import 'package:violette_front/ui/widgets/common/availability_status_pill.dart';
 /// Rouge clair lisible sur fond dégradé sombre (bouton tertiaire).
 const _cancelActionColor = Color(0xFFF0997B);
 
-class ManagerDateDetailBody extends ViewModelWidget<ManagerDateDetailViewModel> {
+class ManagerDateDetailBody
+    extends ViewModelWidget<ManagerDateDetailViewModel> {
   final bool isInline;
 
   const ManagerDateDetailBody({
@@ -210,7 +211,8 @@ class ManagerDateDetailBody extends ViewModelWidget<ManagerDateDetailViewModel> 
       borderRadius: BorderRadius.circular(16),
     );
 
-    final lavenderCardMargin = EdgeInsets.symmetric(horizontal: horizontalMargin);
+    final lavenderCardMargin =
+        EdgeInsets.symmetric(horizontal: horizontalMargin);
 
     final actionsBlock = Padding(
       padding: EdgeInsets.fromLTRB(
