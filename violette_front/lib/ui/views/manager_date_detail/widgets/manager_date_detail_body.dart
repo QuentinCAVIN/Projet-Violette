@@ -90,6 +90,12 @@ class ManagerDateDetailBody extends ViewModelWidget<ManagerDateDetailViewModel> 
                           : null,
                       activeColor: theme.colorScheme.primary,
                       checkColor: theme.colorScheme.onPrimary,
+                      // Bordure visible a l'etat decoche : la carte a un fond blanc,
+                      // sans quoi la case decochee disparait (BOGUE-02).
+                      side: const BorderSide(
+                        color: VioletteTheme.textOnCardSecondary,
+                        width: 2,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
