@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:violette_front/app/app.locator.dart';
+import 'package:violette_front/app/app.router.dart';
+import 'package:violette_front/repositories/user_repository.dart';
 import 'package:violette_front/models/artist_booking.dart';
 import 'package:violette_front/models/enums/booking_status.dart';
 import 'package:violette_front/models/enums/role.dart';
@@ -237,6 +239,140 @@ void main() {
           await viewModel.loadShowDatesForPendingRequests();
 
           expect(viewModel.requestsShowDates['missing'], isNull);
+        },
+      );
+    });
+
+    group('Resolution du profil au chargement (BOGUE-01 / AUTH-REC-04)', () {
+      test(
+        'loadUser_whenBackendProfileIsMissing_logsOutThenNavigatesToLogin',
+        () async {
+          final authService = locator<FirebaseAuthenticationService>()
+              as MockFirebaseAuthenticationService;
+          final userRepository =
+              locator<UserRepository>() as MockUserRepository;
+          final navigationService =
+              locator<NavigationService>() as MockNavigationService;
+
+          const uid = 'firebase-sans-profil';
+          when(() => authService.currentUser)
+              .thenReturn(_MockFirebaseUser(uid: uid));
+          // 404 absorbe en amont par RestUserRepository.getUser : profil absent = null.
+          when(() => userRepository.getUser(uid)).thenAnswer((_) async => null);
+          when(() => authService.logout()).thenAnswer((_) async {});
+          when(
+            () => navigationService.replaceWith<dynamic>(
+              any(),
+              arguments: any(named: 'arguments'),
+              id: any(named: 'id'),
+              preventDuplicates: any(named: 'preventDuplicates'),
+              parameters: any(named: 'parameters'),
+              transition: any(named: 'transition'),
+            ),
+          ).thenAnswer((_) async => null);
+
+          final viewModel = HomeViewModel();
+          await viewModel.loadUser();
+
+          expect(viewModel.currentUser, isNull);
+          verifyInOrder([
+            () => authService.logout(),
+            () => navigationService.replaceWith<dynamic>(
+                  Routes.loginView,
+                  arguments: any(named: 'arguments'),
+                  id: any(named: 'id'),
+                  preventDuplicates: any(named: 'preventDuplicates'),
+                  parameters: any(named: 'parameters'),
+                  transition: any(named: 'transition'),
+                ),
+          ]);
+          verifyNever(
+            () => navigationService.replaceWith<dynamic>(
+              Routes.homeView,
+              arguments: any(named: 'arguments'),
+              id: any(named: 'id'),
+              preventDuplicates: any(named: 'preventDuplicates'),
+              parameters: any(named: 'parameters'),
+              transition: any(named: 'transition'),
+            ),
+          );
+        },
+      );
+
+      test(
+        'loadUser_whenBackendThrows_logsOutThenNavigatesToLogin',
+        () async {
+          final authService = locator<FirebaseAuthenticationService>()
+              as MockFirebaseAuthenticationService;
+          final userRepository =
+              locator<UserRepository>() as MockUserRepository;
+          final navigationService =
+              locator<NavigationService>() as MockNavigationService;
+          final dialogService =
+              locator<DialogService>() as MockDialogService;
+
+          const uid = 'firebase-uid-err';
+          when(() => authService.currentUser)
+              .thenReturn(_MockFirebaseUser(uid: uid));
+          when(() => userRepository.getUser(uid))
+              .thenThrow(Exception('erreur backend simulee'));
+          when(() => authService.logout()).thenAnswer((_) async {});
+          when(
+            () => dialogService.showDialog(
+              title: any(named: 'title'),
+              description: any(named: 'description'),
+              buttonTitle: any(named: 'buttonTitle'),
+              cancelTitle: any(named: 'cancelTitle'),
+              dialogPlatform: any(named: 'dialogPlatform'),
+              barrierDismissible: any(named: 'barrierDismissible'),
+            ),
+          ).thenAnswer((_) async => DialogResponse());
+          when(
+            () => navigationService.replaceWith<dynamic>(
+              any(),
+              arguments: any(named: 'arguments'),
+              id: any(named: 'id'),
+              preventDuplicates: any(named: 'preventDuplicates'),
+              parameters: any(named: 'parameters'),
+              transition: any(named: 'transition'),
+            ),
+          ).thenAnswer((_) async => null);
+
+          final viewModel = HomeViewModel();
+          await viewModel.loadUser();
+
+          expect(viewModel.currentUser, isNull);
+          verify(
+            () => dialogService.showDialog(
+              title: any(named: 'title'),
+              description: any(named: 'description'),
+              buttonTitle: any(named: 'buttonTitle'),
+              cancelTitle: any(named: 'cancelTitle'),
+              dialogPlatform: any(named: 'dialogPlatform'),
+              barrierDismissible: any(named: 'barrierDismissible'),
+            ),
+          ).called(1);
+          verifyInOrder([
+            () => authService.logout(),
+            () => navigationService.replaceWith<dynamic>(
+                  Routes.loginView,
+                  arguments: any(named: 'arguments'),
+                  id: any(named: 'id'),
+                  preventDuplicates: any(named: 'preventDuplicates'),
+                  parameters: any(named: 'parameters'),
+                  transition: any(named: 'transition'),
+                ),
+          ]);
+          verifyNever(
+            () => navigationService.replaceWith<dynamic>(
+              Routes.homeView,
+              arguments: any(named: 'arguments'),
+              id: any(named: 'id'),
+              preventDuplicates: any(named: 'preventDuplicates'),
+              parameters: any(named: 'parameters'),
+              transition: any(named: 'transition'),
+            ),
+          );
         },
       );
     });
