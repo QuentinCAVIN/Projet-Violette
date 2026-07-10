@@ -48,13 +48,12 @@ Le résultat observé des scénarios automatisés référence l'exécution CI r�
 - **Disponibilité** : `PENDING → AVAILABLE | IF_NEEDED | UNAVAILABLE`.
 - **Réservation** : `SELECTED → PENDING_CONFIRMATION → CONFIRMED | REFUSED | CANCELLED`.
 
-### Limites de périmètre v0.4.0 assumées (recettées telles quelles)
+### Limites de périmètre v0.5.0 assumées (recettées telles quelles)
 
 Ces limites sont documentées et **font partie du comportement attendu** de la version livrée. Elles sont recettées en tant que telles, sans être traitées comme des anomalies :
 
 - Le champ « Artistes nécessaires » du formulaire de création de date est informatif : sa valeur n'est pas persistée par `POST /api/show-dates`.
 - Une compagnie unique par défaut (`Dream's Production`) ; pas d'écran de création de compagnie ni de gestion multi-compagnies (le cloisonnement reste néanmoins prouvé par les tests de sécurité).
-- Un booking `CONFIRMED` verrouille la modification de disponibilité de l'artiste sur la date concernée.
 
 ---
 
@@ -79,10 +78,10 @@ Ces limites sont documentées et **font partie du comportement attendu** de la v
 
 | ID | Préconditions | Étapes | Résultat attendu | Résultat observé | Statut | Anomalie |
 |---|---|---|---|---|---|---|
-| **DATE-REC-01** | Gérant connecté. Compagnie `Dream's Production`. | 1. Ouvrir le formulaire de création de date. 2. Renseigner lieu, horaires, cachet et autres champs de la feuille de route. 3. Valider. | Date créée et rattachée à la compagnie du gérant (`POST /api/show-dates` → 201). La date apparaît dans le planning. **Conformément à la limite v0.4.0**, le champ « Artistes nécessaires » est informatif et n'est pas persisté. | _(à compléter — rejeu manuel)_ | | |
+| **DATE-REC-01** | Gérant connecté. Compagnie `Dream's Production`. | 1. Ouvrir le formulaire de création de date. 2. Renseigner lieu, horaires, cachet et autres champs de la feuille de route. 3. Valider. | Date créée et rattachée à la compagnie du gérant (`POST /api/show-dates` → 201). La date apparaît dans le planning. **Conformément à la limite v0.5.0**, le champ « Artistes nécessaires » est informatif et n'est pas persisté. | _(à compléter — rejeu manuel)_ | | |
 | **DATE-REC-02** | Gérant connecté. Au moins une date existante (seed). | 1. Ouvrir le planning gérant. 2. Sélectionner une date dans le calendrier. | Le planning affiche les dates de la compagnie. La pastille du calendrier reflète le statut ; en cas de statuts mixtes sur un même jour, la priorité d'affichage `CONFIRMED > OPTION > INQUIRY > STAFFED > CANCELLED > ARCHIVED` s'applique. | _(à compléter — rejeu manuel)_ | | |
 | **DATE-REC-03** | Gérant connecté. Date existante de sa compagnie. | 1. Ouvrir le détail d'une date. 2. Modifier un champ (ex. lieu ou horaire). 3. Enregistrer. | Mise à jour partielle appliquée (`PATCH /api/show-dates/{id}` → 200). Les champs non renseignés restent inchangés. | _(à compléter — rejeu manuel)_ | | |
-| **DATE-REC-04** | Gérant connecté. Date existante de sa compagnie. | 1. Ouvrir le détail d'une date. 2. Déclencher la suppression. 3. Confirmer. | Date supprimée (`DELETE /api/show-dates/{id}` → 204). La date disparaît du planning. | _(à compléter — rejeu manuel)_ | | |
+| **DATE-REC-04** | Gérant connecté. Date existante de sa compagnie, avec au moins un booking actif. | 1. Ouvrir le détail d'une date. 2. Déclencher « Annuler la date ». 3. Confirmer dans la boîte de dialogue. | La date passe en statut `CANCELLED` et est retirée du planning actif. **Annulation en cascade** : tous les bookings actifs (`SELECTED`, `PENDING_CONFIRMATION`, `CONFIRMED`) de la date passent `CANCELLED` (Observer CDI). L'utilisateur est averti que les artistes engagés sont également annulés. | _(à compléter — rejeu manuel)_ | | |
 | **DATE-REC-05** | Gérant connecté. Date en statut `INQUIRY`. | 1. Faire évoluer le statut de la date `INQUIRY → OPTION → CONFIRMED` via l'action de changement de statut. | Les transitions du cycle de vie sont appliquées et reflétées dans le planning. Le flux minimal `INQUIRY → OPTION → CONFIRMED` (et `CONFIRMED → STAFFED`) est exécutable de bout en bout. | _(à compléter — rejeu manuel)_ | | |
 
 ---
@@ -95,10 +94,10 @@ Ces limites sont documentées et **font partie du comportement attendu** de la v
 
 | ID | Préconditions | Étapes | Résultat attendu | Résultat observé | Statut | Anomalie |
 |---|---|---|---|---|---|---|
-| **DISPO-REC-01** | Artiste connecté (`artiste1@violette.test`). Dates à venir présentes (seed). | 1. Ouvrir la liste des dates disponibles côté artiste. | Seules les dates pertinentes pour l'artiste sont exposées (`GET /api/show-dates/me/available`) ; les dispos des autres artistes ne sont pas visibles. | _(à compléter — rejeu manuel)_ | | |
+| **DISPO-REC-01** | Artiste connecté (`artiste1@violette.test`). Dates à venir présentes (seed). | 1. Ouvrir la liste des dates disponibles côté artiste. | Seules les dates visibles pour l'artiste (statuts `OPTION`, `CONFIRMED`, `STAFFED`) sont exposées (`GET /api/show-dates/me/available`, rôle ARTIST) ; les dispos des autres artistes ne sont pas visibles. | _(à compléter — rejeu manuel)_ | | |
 | **DISPO-REC-02** | Artiste connecté. Date sans disponibilité déclarée. | 1. Ouvrir une date. 2. Déclarer la disponibilité `AVAILABLE`. 3. Valider. | Disponibilité créée (`PUT /api/show-dates/{id}/availabilities/me` → 200), statut `AVAILABLE` confirmé à l'écran et annoncé (accessibilité). | _(à compléter — rejeu manuel)_ | | |
 | **DISPO-REC-03** | Artiste connecté. Disponibilité `AVAILABLE` déjà déclarée sur une date. | 1. Rouvrir la date. 2. Changer la disponibilité en `UNAVAILABLE`. 3. Valider. | Disponibilité mise à jour (upsert), nouveau statut reflété. La clé composite `(show_date, artist)` garantit l'unicité : pas de doublon créé. | _(à compléter — rejeu manuel)_ | | |
-| **DISPO-REC-04** | Artiste connecté. Date sur laquelle l'artiste a un booking `CONFIRMED`. | 1. Ouvrir la date concernée. 2. Tenter de modifier la disponibilité. | La modification est verrouillée (comportement v0.4.0 attendu) ; l'artiste est invité à contacter le gérant pour tout désistement. | _(à compléter — rejeu manuel)_ | | |
+| **DISPO-REC-04** | Artiste connecté. Date sur laquelle l'artiste a un booking `CONFIRMED`. | 1. Ouvrir la date concernée. 2. Tenter de modifier la disponibilité. | La modification est refusée côté serveur (HTTP 409, `AvailabilityLockedByConfirmedBookingException`) : un booking `CONFIRMED` verrouille la disponibilité de l'artiste sur cette date. L'artiste est invité à contacter le gérant pour tout désistement. | _(à compléter — rejeu manuel)_ | | |
 
 ### 3.2 — Scénarios structurels (contrat REST, automatisés)
 
@@ -108,6 +107,9 @@ Ces limites sont documentées et **font partie du comportement attendu** de la v
 | **DISPO-REC-06** | Aucune ligne de disponibilité pour l'artiste sur la date. | `GET /api/show-dates/{id}/availabilities/me`. | Réponse 200 avec statut logique `PENDING` (aucune ligne persistée n'est nécessaire). | CI verte — `ShowDateControllerAvailabilitiesTest` | | |
 | **DISPO-REC-07** | Principal JWT artiste simulé. | `PUT /api/show-dates/{id}/availabilities/me` avec `status = PENDING`. | Réponse 400 : le statut `PENDING` ne peut pas être envoyé explicitement (réservé à l'initialisation). | CI verte — `ShowDateControllerAvailabilitiesTest` | | |
 | **DISPO-REC-08** | Principal **manager** (mauvais rôle). | `PUT /api/show-dates/{id}/availabilities/me`. | Réponse 403 : endpoint réservé au rôle ARTIST. | CI verte — `ShowDateControllerAvailabilitiesTest` | | |
+| **DISPO-REC-09** | Artiste avec un booking `CONFIRMED` sur la date. | `PUT /api/show-dates/{id}/availabilities/me` avec un nouveau statut. | Réponse 409 : `AvailabilityLockedByConfirmedBookingException`. La disponibilité existante reste inchangée. | CI verte — `ArtistAvailabilityServiceTest` | | |
+| **DISPO-REC-10** | Artiste avec un booking `PENDING_CONFIRMATION` (non confirmé) sur la date. | `PUT /api/show-dates/{id}/availabilities/me`. | Réponse 200 : seul un booking `CONFIRMED` verrouille. La modification est acceptée et persistée. | CI verte — `ArtistAvailabilityServiceTest` | | |
+| **DISPO-REC-11** | Un autre artiste possède un booking `CONFIRMED` sur la même date ; l'artiste courant n'en a pas. | `PUT /api/show-dates/{id}/availabilities/me` (artiste courant). | Réponse 200 : le verrou n'affecte que l'artiste concerné par le booking `CONFIRMED`, pas les autres. | CI verte — `ArtistAvailabilityServiceTest` | | |
 
 ---
 
@@ -134,6 +136,9 @@ Ces limites sont documentées et **font partie du comportement attendu** de la v
 | **BOOK-REC-08** | Date non `CONFIRMED` (ex. `OPTION`) avec bookings `SELECTED`. | `POST …/send-confirmations`. | Envoi refusé : les demandes fermes ne sont autorisées que sur une date `CONFIRMED`. | CI verte — tests service `artistbooking` | | |
 | **BOOK-REC-09** | Artiste déjà réservé une fois sur la date. | Seconde tentative de booking du même artiste sur la même date. | Réservation refusée (409) : unicité de réservation par date garantie. | CI verte — tests service `artistbooking` | | |
 | **BOOK-REC-10** | Booking dont le statut n'est plus `SELECTED`. | `DELETE /api/artist-bookings/{id}`. | Désélection refusée (409) : la suppression n'est possible qu'en statut `SELECTED`. | CI verte — tests service `artistbooking` | | |
+| **BOOK-REC-11** | Date `CONFIRMED` avec des bookings actifs (`SELECTED`, `PENDING_CONFIRMATION`, `CONFIRMED`) et des bookings terminaux (`REFUSED`, `CANCELLED`). | Annuler la date (transition vers `CANCELLED`). | Cascade CDI : tous les bookings **actifs** passent `CANCELLED` ; les bookings **terminaux** préexistants (`REFUSED`, `CANCELLED`) restent inchangés. | CI verte — `ShowDateServiceTest` | | |
+| **BOOK-REC-12** | Date `STAFFED` avec un booking `CONFIRMED`. | Annuler ce booking (`cancelBooking`). | Le booking passe `CANCELLED` et la date, redevenue incomplète, repasse `STAFFED → CONFIRMED` (re-staffing, `ShowDateRestaffingObserver`). | CI verte — `ArtistBookingServiceTest` | | |
+| **BOOK-REC-13** | Date `STAFFED` annulée directement (et non un booking). | Annuler la date (transition vers `CANCELLED`). | Les bookings passent `CANCELLED` **sans** re-staffing : la date va en `CANCELLED`, pas en `CONFIRMED` (le re-staffing ne se déclenche que sur annulation d'un booking, pas d'une date). | CI verte — `ShowDateServiceTest` | | |
 
 ---
 
@@ -156,6 +161,18 @@ Les scénarios ci-dessous sont regroupés par domaine pour la lisibilité ; chaq
 
 ---
 
+## Famille 6 — Accessibilité (WCAG 2.2 AA)
+
+> Nature : fonctionnel (lecteur d'écran) + structurel (contraste). Référentiel et détail des critères dans [`docs/accessibilite.md`](accessibilite.md). Le parcours artiste a été testé au lecteur d'écran ; le parcours gérant est implémenté et sa vérification TalkBack est menée pendant cette campagne de recette.
+
+| ID | Préconditions | Étapes | Résultat attendu | Résultat observé | Statut | Anomalie |
+|---|---|---|---|---|---|---|
+| **A11Y-REC-01** | Artiste connecté. TalkBack actif. Parcours de déclaration de disponibilité (Planning Artiste → calendrier → détail). | Parcourir le flux au lecteur d'écran : navigation, sélection d'une date, statut, messages de confirmation. | Parcours restitué en français ; statut de chaque date annoncé à la sélection (non porté par la seule couleur) ; messages de confirmation lus ; titres navigables comme en-têtes. Conforme au § 4.1 de `accessibilite.md`. | _(à compléter — rejeu TalkBack)_ | | |
+| **A11Y-REC-02** | Gérant connecté. TalkBack actif. Planning et détail de date. | Parcourir le flux gérant au lecteur d'écran : calendrier, ligne artiste du détail, actions. | Statut des dates du calendrier verbalisé (`getStatusLabelForDay`) ; lignes artiste annoncées d'un tenant (nom, engagement/disponibilité, état de sélection) ; cibles tactiles atteignables (48 dp). Conforme au § 4.2 de `accessibilite.md`. | _(à compléter — rejeu TalkBack, campagne v0.5.0)_ | | |
+| **A11Y-REC-03** | — (vérification structurelle). | Inspecter le calcul de contraste des pastilles de statut sur les fonds de chaque contexte. | Le texte des pastilles respecte le ratio WCAG AA de 4,5:1 : la teinte la plus contrastée est retenue selon la luminance du fond (`contrastTextForStatusPill`). | _(à compléter — vérification)_ | | |
+
+---
+
 ## Synthèse de couverture
 
 ### Couverture des fonctionnalités attendues
@@ -169,7 +186,7 @@ Les scénarios ci-dessous sont regroupés par domaine pour la lisibilité ; chaq
 | Consultation du planning gérant | Famille 2 (DATE-REC-02) |
 | Consultation des dates côté artiste | Famille 3 (DISPO-REC-01) |
 | Déclaration et mise à jour de disponibilité | Famille 3 (DISPO-REC-02, 03, 05 à 08) |
-| Verrouillage de disponibilité après confirmation | Famille 3 (DISPO-REC-04) |
+| Verrouillage de disponibilité après confirmation (backend 409) | Famille 3 (DISPO-REC-04, 09, 10, 11) |
 | Présélection d'artiste (booking) | Famille 4 (BOOK-REC-01, 07) |
 | Envoi des demandes de confirmation | Famille 4 (BOOK-REC-02, 08) |
 | Réponse artiste (accepter / refuser) | Famille 4 (BOOK-REC-03, 04) |
@@ -179,6 +196,9 @@ Les scénarios ci-dessous sont regroupés par domaine pour la lisibilité ; chaq
 | Cloisonnement inter-compagnies (A01) | Famille 5 (SEC-REC-01 à 05) |
 | Authentification / autorisation HTTP | Famille 5 (SEC-REC-06, 07) |
 | Neutralisation des erreurs serveur | Famille 5 (SEC-REC-08) |
+| Annulation de date en cascade | Famille 2 (DATE-REC-04) ; Famille 4 (BOOK-REC-11, 13) |
+| Re-staffing (STAFFED → CONFIRMED) | Famille 4 (BOOK-REC-12) |
+| Accessibilité (WCAG 2.2 AA) | Famille 6 (A11Y-REC-01 à 03) |
 
 ### Couverture par nature de test (conformité au plan défini)
 
