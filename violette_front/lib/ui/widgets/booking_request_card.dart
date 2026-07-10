@@ -36,9 +36,9 @@ class BookingRequestCard extends StatelessWidget {
           children: [
             Semantics(
               header: true,
-              child: Text(
+              child: const Text(
                 "Nouvelle proposition !",
-                style: const TextStyle(
+                style: TextStyle(
                   color: VioletteTheme.cardTitle,
                   fontWeight: FontWeight.bold,
                 ),
