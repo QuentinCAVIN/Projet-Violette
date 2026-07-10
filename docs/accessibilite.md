@@ -40,11 +40,11 @@ Violette est une application **Flutter native**, livrée d'abord sous forme d'**
 Référentiel : **WCAG 2.2 AA**, appliqué via les API d'accessibilité de Flutter. Les familles de critères réalistes et prioritaires pour Violette :
 
 - **Perceptible** : contrastes de couleur suffisants (texte/fond), respect du redimensionnement de texte défini par le système, alternatives textuelles (`Semantics` labels) pour les éléments non textuels.
-- **Utilisable** : cibles tactiles d'au moins 44×44 px, ordre de focus cohérent, navigation au lecteur d'écran (TalkBack/VoiceOver), pas de dépendance à un seul sens (couleur).
+- **Utilisable** : cibles tactiles d'au moins 44×44 px (48 dp en cible Material), ordre de focus cohérent, navigation au lecteur d'écran (TalkBack/VoiceOver), pas de dépendance à un seul sens (couleur).
 - **Compréhensible** : libellés de formulaires explicites, messages d'erreur clairs (cohérent avec les retours d'erreur déjà structurés côté backend), langue de l'interface déclarée.
 - **Robuste** : exposition correcte des rôles/états des composants à la couche d'accessibilité du système.
 
-> **État d'implémentation.** Le référentiel n'est pas seulement choisi : un parcours principal — la déclaration de disponibilité par l'artiste (Accueil → Sélection des dates → calendrier → détail) — a été rendu accessible et testé au lecteur d'écran (voir § 4). Les critères WCAG 2.2 AA suivants sont implémentés sur ce parcours :
+> **État d'implémentation.** Le référentiel n'est pas seulement choisi : un parcours principal — la déclaration de disponibilité par l'artiste (Accueil → Planning Artiste → calendrier → détail) — a été rendu accessible et testé au lecteur d'écran (voir § 4). Les critères WCAG 2.2 AA suivants sont implémentés sur ce parcours :
 >
 > - **1.1.1 / 1.4.1 (information non portée par la seule couleur)** : le statut de disponibilité, auparavant transmis uniquement par la couleur des cellules, est désormais exposé en texte au lecteur d'écran via la carte de détail (annonce automatique du statut à la sélection d'une date).
 > - **1.4.3 (contraste)** : les couleurs de statut ont été ajustées pour atteindre le ratio AA de 4,5:1 sur texte (available #2E7D32, ifNeeded #E65100, unavailable #C62828, pending #616161).
@@ -71,7 +71,7 @@ Le parcours artiste de déclaration de disponibilité a été testé manuellemen
 
 ### Méthode
 
-Navigation linéaire (balayage) sur l'ensemble du parcours : écran d'accueil, navigation vers la sélection des dates, calendrier, sélection d'une date, consultation du détail, enregistrement d'une disponibilité. Pour chaque élément, vérification de ce que le lecteur d'écran annonce réellement.
+Navigation linéaire (balayage) sur l'ensemble du parcours : écran d'accueil, navigation vers le Planning Artiste, calendrier, sélection d'une date, consultation du détail, enregistrement d'une disponibilité. Pour chaque élément, vérification de ce que le lecteur d'écran annonce réellement.
 
 ### Écarts détectés au premier passage et corrections apportées
 

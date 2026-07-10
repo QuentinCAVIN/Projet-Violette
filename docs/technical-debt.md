@@ -94,8 +94,8 @@ documentés comme choix assumés pour `v0.5.0` (détail dans `regles-metier.md`)
 
 > Les numéros de DETTE servent d'identifiants stables (référencés dans le suivi de
 > sprint et les commits) ; les trous éventuels sont normaux. DETTE-1 (régénération
-> du client API) est traitée dans le sprint `v0.5.0` courant et suivie hors de ce
-> registre. DETTE-2 (nommage FR->EN des méthodes de garde back) est résorbée en
+> du client API `violette_api_client`, enum `ShowDateStatus` obsolète) est reportée
+> en `v0.6.0`. DETTE-2 (nommage FR->EN des méthodes de garde back) est résorbée en
 > `v0.5.0` (voir « Résorbé depuis v0.4.0 »).
 
 - **DETTE-3 — Audit trail dédié des transitions de statut.** Table d'historique pour tracer les transitions booking/date. Infrastructure Observer déjà prête. Reporté lot 2/3.
