@@ -22,8 +22,15 @@ class UserRemoteDataSource {
   /// Appelle GET /api/users/me/profile.
   /// Retourne null si l'utilisateur n'a pas encore de profil backend (404).
   Future<VioletteUserDto?> getMyProfile() async {
-    final response = await _api.apiUsersMeProfileGet();
-    return response.data;
+    try {
+      final response = await _api.apiUsersMeProfileGet();
+      return response.data;
+    } on DioException catch (e) {
+      // Profil backend absent pour cet utilisateur Firebase : contrat de la
+      // methode (retourne null sur 404), consomme par RestUserRepository.getUser.
+      if (e.response?.statusCode == 404) return null;
+      rethrow;
+    }
   }
 
   /// Récupère un profil utilisateur par identifiant backend (usage MANAGER).

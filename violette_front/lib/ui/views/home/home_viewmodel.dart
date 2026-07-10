@@ -70,7 +70,12 @@ class HomeViewModel extends BaseViewModel {
               'et la connexion réseau (adb reverse sur téléphone USB). '
               '\n\n$e',
         );
+        // Aucune session orpheline : on deconnecte Firebase et on renvoie vers
+        // Login plutot que de laisser un ecran "Utilisateur introuvable" fige
+        // avec une session active (BOGUE-01 / AUTH-REC-04).
         currentUser = null;
+        await _authenticationService.logout();
+        _navigationService.replaceWithLoginView();
         return;
       }
 
