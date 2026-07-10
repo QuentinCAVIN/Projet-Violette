@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:violette_front/models/artist_booking.dart';
 import 'package:violette_front/models/enums/booking_status.dart';
 import 'package:violette_front/models/show_date.dart';
 import 'package:violette_front/ui/widgets/booking_request_card.dart';
 
 void main() {
+  setUpAll(() async {
+    await initializeDateFormatting('fr_FR', null);
+  });
+
   group('BookingRequestCard - Carte de demande de réservation', () {
     final showDate = ShowDate(
       id: 'sd-1',
@@ -151,5 +156,72 @@ void main() {
         expect(find.text('1/1/2000'), findsNothing);
       },
     );
+
+    group('Accessibilité', () {
+      testWidgets(
+        'whenRendered_exposesTitleAsSemanticsHeader',
+        (tester) async {
+          await tester.pumpWidget(
+            MaterialApp(
+              home: Scaffold(
+                body: BookingRequestCard(
+                  booking: ArtistBooking(
+                    artistId: 'art-1',
+                    dateId: 'sd-1',
+                    status: BookingStatus.pendingConfirmation,
+                  ),
+                  showDate: showDate,
+                  onAccept: () {},
+                  onRefuse: () {},
+                ),
+              ),
+            ),
+          );
+
+          final headerFinder = find.byWidgetPredicate(
+            (widget) => widget is Semantics && widget.properties.header == true,
+          );
+          expect(headerFinder, findsOneWidget);
+
+          final semantics = tester.getSemantics(
+            find.text('Nouvelle proposition !'),
+          );
+          expect(semantics.flagsCollection.isHeader, isTrue);
+        },
+      );
+
+      testWidgets(
+        'whenShowDateProvided_exposesGroupedSemanticsLabel',
+        (tester) async {
+          await tester.pumpWidget(
+            MaterialApp(
+              home: Scaffold(
+                body: BookingRequestCard(
+                  booking: ArtistBooking(
+                    artistId: 'art-1',
+                    dateId: 'sd-1',
+                    status: BookingStatus.pendingConfirmation,
+                  ),
+                  showDate: showDate,
+                  onAccept: () {},
+                  onRefuse: () {},
+                ),
+              ),
+            ),
+          );
+
+          final groupedFinder = find.byWidgetPredicate(
+            (widget) =>
+                widget is Semantics &&
+                (widget.properties.label?.startsWith('Proposition :') ?? false),
+          );
+          expect(groupedFinder, findsOneWidget);
+
+          final semantics = tester.getSemantics(groupedFinder);
+          expect(semantics.label, contains(showDate.title));
+          expect(semantics.label, contains(showDate.address));
+        },
+      );
+    });
   });
 }
