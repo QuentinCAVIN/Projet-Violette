@@ -13,6 +13,8 @@ Deux catégories sont distinguées :
 - **Bogues détectés en recette v0.5.0** — anomalies remontées lors de la campagne de tests manuels du cahier de recettes (`cahier-de-recettes.md`). La colonne « anomalie liée » de ce cahier référence les identifiants `BOGUE-0X` ci-dessous.
 - **Bogues historiques du projet** — anomalies rencontrées et corrigées au cours des versions antérieures (jusqu'à v0.4.0), tracées dans l'historique Git et le journal des versions (`CHANGELOG.md`).
 
+Les identifiants `BOGUE-XX` sont **uniques dans l'ensemble du document** et stables : c'est ce qui permet au cahier de recettes et au changelog de les référencer sans ambiguïté. Leur numérotation ne reflète pas un ordre chronologique.
+
 ## Barème de gravité
 
 | Gravité | Définition | Traitement attendu |
@@ -94,7 +96,7 @@ Deux catégories sont distinguées :
 
 > Ces anomalies ont été rencontrées et corrigées au cours du développement antérieur. Elles sont tracées dans l'historique Git et le journal des versions (`CHANGELOG.md`), et illustrent le cycle de traitement des bogues sur des natures variées : navigation/plateforme, affichage/données, logique métier.
 
-### BOGUE-05 — Pile de navigation Android incohérente au retour de la vue artiste
+### BOGUE-07 — Pile de navigation Android incohérente au retour de la vue artiste
 
 - **Détection** : rencontrée au cours du développement de la v0.4.0 (parcours artiste, retour Android depuis la vue de déclaration de disponibilité).
 - **Qualification** : **Majeur** · frontend (navigation, vue artiste) · le retour matériel Android laissait une pile de navigation héritée incohérente, dégradant le parcours de l'artiste.
@@ -102,7 +104,7 @@ Deux catégories sont distinguées :
 - **Correctif** : fiabilisation du retour Android de la vue artiste vers `HomeView` via `PopScope` et nettoyage explicite de la pile de navigation. Commit `e2405a0` (`fix(ui): corriger la sélection manager IF_NEEDED et le retour de la vue artiste`).
 - **Vérification** : tests ViewModel ajoutés dans le même commit (`availability_choice_viewmodel_test.dart`, `manager_date_detail_viewmodel_test.dart`).
 
-### BOGUE-06 — Affichage des demandes de confirmation artiste (date factice + actions manquantes)
+### BOGUE-08 — Affichage des demandes de confirmation artiste (date factice + actions manquantes)
 
 - **Détection** : rencontrée lors de la stabilisation du flux artiste pour la v0.4.0 (carte de demande de confirmation, `BookingRequestCard`). Deux symptômes liés au même composant, corrigés ensemble.
 - **Qualification** : **Majeur** · frontend (carte de demande de confirmation artiste) · deux défauts d'affichage sur le parcours de réponse de l'artiste, avec impact utilisateur direct.
@@ -112,7 +114,7 @@ Deux catégories sont distinguées :
 - **Correctif** : résolution des fiches de demande via `getMyAvailableShowDates` (suppression de la date factice) et affichage conditionnel correct des boutons « Confirmer » / « Refuser » sur le statut `PENDING_CONFIRMATION`, dans `booking_request_card.dart`. Commit `2587e34` (`feat(availability): stabiliser le flux artiste pour la v0.4.0`), mergé via PR #39 (`fix/v0.4.0`) avant le tag `v0.4.0`.
 - **Vérification** : tests widget ajoutés dans le même commit (`booking_request_card_test.dart` : boutons de réponse, statut déjà traité, demande sans détail de date).
 
-### BOGUE-07 — Impossible de re-sélectionner un artiste après un booking terminal
+### BOGUE-09 — Impossible de re-sélectionner un artiste après un booking terminal
 
 - **Détection** : rencontrée au cours du développement du domaine booking (v0.4.0). Après un refus ou une annulation, le gérant ne pouvait plus re-sélectionner l'artiste sur la même date.
 - **Qualification** : **Majeur** · backend (domaine `artistbooking`, service de création de booking) · règle métier bloquant une action légitime du gérant ; impact fonctionnel direct.
