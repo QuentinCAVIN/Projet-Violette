@@ -15,6 +15,12 @@ Deux types d'utilisateurs utilisent Violette : le **gérant** (responsable de la
 
 ## 2. Création d'un compte
 
+> **Important — une seule compagnie pour l'instant.** Dans cette version, la création et la gestion
+> de compagnies ne sont pas encore disponibles. **Tous les comptes créés — gérants comme artistes —
+> sont automatiquement rattachés à la même compagnie**, « Dream's Production ». Concrètement, si deux
+> personnes créent un compte gérant, elles administreront la même compagnie et verront les mêmes
+> dates. La gestion de plusieurs compagnies est prévue pour une version ultérieure.
+
 Pour utiliser Violette, vous devez d'abord créer un compte.
 
 1. Accédez à l'écran d'inscription.
@@ -53,6 +59,18 @@ En tant que gérant, vous pilotez les dates de spectacle et la constitution des 
 
 Une fois la date créée, elle apparaît dans votre planning.
 
+#### Annuler une date
+
+Depuis le détail d'une date, le bouton **Annuler la date** la retire du planning.
+
+> **Attention — les artistes engagés sont annulés aussi.** L'annulation d'une date annule
+> automatiquement **toutes les réservations** en cours sur cette date : les artistes présélectionnés
+> ou confirmés voient leur engagement annulé et la date disparaît de leur planning. Une confirmation
+> vous est demandée avant l'annulation.
+
+Si vous annulez la réservation d'un seul artiste sur une date dont l'équipe était complète, la date
+repasse automatiquement au statut **Confirmée** : l'équipe n'est plus au complet.
+
 #### Consulter le détail d'une date
 
 Depuis le planning, sélectionnez une date pour déplier son détail, puis appuyez sur **Détail** pour ouvrir sa fiche complète. Vous y retrouvez l'ensemble de la feuille de route : heure de convocation, adresse complète, contact client, description et effectif, ainsi que le statut de la date et les artistes qui y sont engagés.
@@ -76,6 +94,12 @@ Avant de sélectionner les artistes, consultez les **disponibilités** déclaré
 Parmi les artistes **disponibles**, choisissez ceux que vous souhaitez retenir pour la date. Vous ne pouvez sélectionner que des artistes ayant déclaré être disponibles.
 
 #### Envoyer les demandes de confirmation
+
+> **À savoir — la date doit être confirmée.** Le bouton **Réserver les artistes** n'est actif que
+> lorsque la date est au statut **Confirmée**. Tant qu'elle est en **Option**, vous pouvez
+> présélectionner des artistes (cocher leur nom), mais pas encore leur envoyer de demande ferme :
+> il faut d'abord que le client valide la prestation. Cette contrainte est amenée à évoluer, pour
+> permettre d'envoyer les demandes dès la pose de l'option.
 
 Une fois vos choix effectués, **envoyez les demandes de confirmation** aux artistes sélectionnés. Chaque artiste recevra une demande et pourra accepter ou refuser. Vous pourrez suivre l'état des réponses dans l'application.
 
@@ -116,6 +140,21 @@ Lorsque vous **acceptez** une demande, la réservation est **confirmée**. Depui
 ---
 
 ## 6. Comprendre les statuts de réservation
+
+### Statut d'une date de spectacle
+
+Chaque date affiche un statut, visible dans le planning et sur sa fiche :
+
+| Statut | Ce qu'il signifie | Ce que le gérant peut faire |
+|---|---|---|
+| **Demande client** | Un client a pris contact, le besoin est en cours de qualification. Les informations peuvent être incomplètes. | Aucune sollicitation d'artiste à ce stade. |
+| **Option** | Le devis est envoyé, l'option est posée. La date est ouverte à la préparation. | Consulter les disponibilités et présélectionner des artistes (sans engagement ferme). |
+| **Confirmée** | Le client a validé la prestation. | Envoyer les demandes de réservation fermes aux artistes présélectionnés. |
+| **Équipe complète** | L'effectif est réuni et sécurisé. | La composition de l'équipe est verrouillée. |
+| **Annulée** | La date est abandonnée ou annulée. | Aucune action. Les artistes engagés sont annulés automatiquement. |
+
+Le gérant fait évoluer ce statut avec les boutons **Passer en option**, **Confirmer la date** et
+**Marquer l'équipe complète**.
 
 Une réservation peut passer par plusieurs états :
 
