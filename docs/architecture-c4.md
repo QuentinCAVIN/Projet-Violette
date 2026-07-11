@@ -160,3 +160,15 @@ Les fichiers des diagrammes C4 se trouvent dans le dépôt aux emplacements suiv
 La procédure de régénération (Docker, CLI, en ligne, extension VS Code) est décrite dans [docs/diagrams/README.md](diagrams/README.md).
 
 Le diagramme Container est affiché dans le **README** racine (section « Architecture en bref ») ; les autres se consultent depuis ce document et le dossier `docs/diagrams/`. La documentation détaillée du backend (couches, packages, sécurité, patterns) est dans **`violette-back/ARCHITECTURE.md`**.
+
+---
+
+## 8. Diagrammes de vision produit (avant-projet)
+
+Deux diagrammes complémentaires, issus de la phase d'avant-projet, sont conservés dans `docs/diagrams/` : la cartographie des **bounded contexts DDD** et le **domain storytelling** des flux fonctionnels.
+
+> **Statut de ces diagrammes.** Ils décrivent la **vision produit cible**, définie lors de la phase d'avant-projet, et ne représentent pas le périmètre livré. Les contextes *Vidéo de répétition* et *Messagerie* qui y figurent n'ont pas été implémentés : ils relèvent des versions ultérieures (voir [technical-debt.md](technical-debt.md), « Évolutions futures »). Les contextes effectivement livrés en `v0.5.0` sont **Utilisateurs**, **Compagnie de cabaret**, **Date de spectacle** et **Réservation des artistes** — ceux-là mêmes que détaillent les diagrammes C4 ci-dessus.
+
+![DDD Bounded Contexts](diagrams/ddd-bounded-contexts.png)
+
+![Domain Storytelling](diagrams/domain-storytelling.png)
