@@ -4,7 +4,7 @@ Toutes les versions suivent la convention Semantic Versioning (MAJOR.MINOR.PATCH
 ---
 
 ## v0.5.0 – Sécurisation OWASP, verrou métier, accessibilité et refonte visuelle
-Date : 11-07-2026
+Date : 12-07-2026
 
 ### Sécurité
 
