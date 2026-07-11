@@ -6,6 +6,14 @@ Pour le détail backend, voir [../violette-back/README.md](../violette-back/READ
 
 ---
 
+## Architecture cible (cadrage — Bloc 1)
+
+![Architecture logicielle cible](assets/architecture-cible-bloc1.png)
+
+> Ce schéma est issu du **cadrage du projet** (Bloc 1, compétence C1.5) : il représente l'architecture **cible**, au-delà de la version actuelle. Trois éléments restent hors périmètre à ce stade : l'application **desktop** gérant (seule l'application mobile Android est livrée), le **stockage cloud des vidéos de répétition** et le domaine **communication** (prévus dans les évolutions futures, voir [technical-debt.md](technical-debt.md)). La suite de ce document décrit l'architecture **réellement implémentée**.
+
+---
+
 ## Vue d'ensemble
 
 ```text

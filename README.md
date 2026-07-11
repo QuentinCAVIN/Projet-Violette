@@ -1,5 +1,7 @@
 # Projet Violette
 
+![Violette — Digitaliser la scène du cabaret](docs/assets/couverture-violette.png)
+
 Violette est une application mobile qui aide les **compagnies de cabaret** à organiser leurs spectacles : planification des dates, collecte des disponibilités des artistes et suivi des réservations, dans un outil unique partagé entre **gérants** et **artistes**.
 
 - **Version : v0.5.0** — sécurisation OWASP, verrou métier de disponibilité, accessibilité WCAG 2.2 AA sur les parcours clés, refonte visuelle ([journal des versions](CHANGELOG.md)).
