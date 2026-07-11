@@ -366,11 +366,13 @@ io.violette
 
 ## 6. Lancer le projet en local
 
+> **Pour un démarrage de bout en bout depuis un clone vierge** — création du projet Firebase, comptes de test, alignement des UID du seed, lancement du frontend et vérifications — suivez le guide [docs/demarrage-local.md](../docs/demarrage-local.md). Cette section détaille les options propres au backend (modes de lancement, Docker, variables d'environnement).
+
 ### Prérequis
 
 - Java 21
-- Maven 3.9+
-- MySQL 8+ en cours d'exécution (voir section 7)
+- Maven 3.9+ (ou le wrapper `./mvnw` fourni, aucune installation requise)
+- MySQL 8+ en cours d'exécution (voir section 7) — inutile avec les profils `dev` et `firebase`, qui utilisent H2 en mémoire
 
 ### Mode développement (live reload)
 
@@ -461,35 +463,7 @@ Les deux peuvent être utilisés. Sous Windows PowerShell, l'option `-D` doit ê
 
 #### Lancement local avec Firebase
 
-**Windows (PowerShell)** :
-
-```powershell
-# Définir le Project ID Firebase (obligatoire pour le profil firebase)
-# Remplacer "violette-1f64e" par l'ID de votre projet Firebase si différent
-$env:FIREBASE_PROJECT_ID="violette-1f64e"
-
-# Option 1 : profil via variable d'environnement
-$env:QUARKUS_PROFILE="firebase"
-mvn quarkus:dev
-
-# Option 2 : profil via option Maven (depuis le répertoire violette-back)
-mvn quarkus:dev "-Dquarkus.profile=firebase"
-```
-
-**Linux / macOS** :
-
-```bash
-export FIREBASE_PROJECT_ID="violette-1f64e"
-export QUARKUS_PROFILE="firebase"
-./mvnw quarkus:dev
-```
-
-Alternative avec option Maven :
-
-```bash
-export FIREBASE_PROJECT_ID="violette-1f64e"
-./mvnw quarkus:dev -Dquarkus.profile=firebase
-```
+Les commandes de lancement (définition de `FIREBASE_PROJECT_ID`, profil `firebase`, vérification par `/api/ping`) sont décrites dans [docs/demarrage-local.md](../docs/demarrage-local.md), section 3. Équivalent avec variable d'environnement : définir `QUARKUS_PROFILE=firebase` avant `./mvnw quarkus:dev` a le même effet que l'option `-Dquarkus.profile=firebase`.
 
 Avec le profil `firebase`, la base est déjà H2 en mémoire : **MySQL n'est pas nécessaire** pour tester l'authentification et les endpoints utilisateur en local.
 
