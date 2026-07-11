@@ -3,9 +3,237 @@ Toutes les versions suivent la convention Semantic Versioning (MAJOR.MINOR.PATCH
 
 ---
 
-## [Unreleased] — travaux en cours sur main
+## v0.5.0 – Sécurisation OWASP, verrou métier, accessibilité et refonte visuelle
+Date : 11-07-2026
 
-> Aucun changement non planifié pour le moment après la préparation de `v0.4.0`.
+### Sécurité
+
+#### Added
+- **Garde d'ownership compagnie centralisée** : `ManagerCompanyResolver` (`@ApplicationScoped`) résout
+  la compagnie du gérant à partir du principal JWT courant, et expose
+  `assertCurrentManagerOwnsCompany`. La garde est mutualisée pour l'ensemble des opérations manager
+  (`ShowDateService`, `ArtistAvailabilityService`, `ArtistBookingService`, `CabaretCompanyService`).
+- Exceptions dédiées et mappers HTTP : `ForbiddenCompanyAccessException` et
+  `ForbiddenBookingAccessException`, mappées en **403** avec message neutre.
+- **Cloisonnement inter-compagnies (OWASP A01)** appliqué à tous les domaines :
+  - `showdate` : lecture par id et par compagnie, création, mise à jour, suppression, besoins
+    artistiques et disponibilités (`loadOwnedShowDate`) ;
+  - `artistbooking` : `createBooking`, `deleteBooking`, `sendConfirmationRequests`,
+    `getBookingsForShowDate` ; ownership **artiste** prioritaire sur `respondToRequest` (403) ;
+  - `cabaretcompany` : lecture de la compagnie, des membres et des revues (`getOwnedById`).
+- **`GlobalExceptionMapper`** (`ExceptionMapper<Throwable>`) : neutralise les erreurs 500 par une
+  réponse JSON sans détail technique, assortie d'un identifiant de corrélation, la stacktrace étant
+  journalisée côté serveur (niveau ERROR). Les `WebApplicationException` sont préservées et les
+  15 mappers métier restent prioritaires par spécificité JAX-RS.
+- Suivi automatique des dépendances via **Dependabot** (backend Maven, frontend Flutter, GitHub Actions).
+- Tests d'ownership dédiés : `ManagerCompanyResolverTest` (5 cas), `ShowDateControllerOwnershipTest`
+  (15 cas), `ArtistBookingControllerOwnershipTest` (8 cas), `CabaretCompanyControllerOwnershipTest`
+  (7 cas).
+
+#### Changed
+- Ordre des gardes uniformisé sur le patron **404 → 403 → logique métier** : une ressource
+  appartenant à une autre compagnie renvoie 403, une ressource inexistante 404, sans révéler
+  l'existence de la première.
+- **CORS par profil** : politique permissive en `dev`/`test`, restrictive en production
+  (variable `CORS_ORIGINS`, défaut restrictif) — le global `cors.origins=*` est supprimé.
+- **Swagger UI et spec OpenAPI désactivés en production** : propriétés build-time à défaut restrictif,
+  réactivées explicitement en `dev`/`test`. La génération du client Dart reste possible (spec exportée
+  via `store-schema-directory` en profil `dev`).
+
+### Back-end (Quarkus)
+
+#### Added
+- **Verrou de disponibilité sur booking confirmé** : `ArtistAvailabilityService.upsertMyAvailability`
+  refuse la modification (**409**, `AvailabilityLockedByConfirmedBookingException` + mapper) lorsque
+  l'artiste possède un booking `CONFIRMED` sur la date. Le verrou est **isolé par paire
+  (date, artiste)** : le booking confirmé d'un autre artiste ne bloque pas l'artiste courant, et un
+  booking `PENDING_CONFIRMATION` ne verrouille pas. *Ferme une dette documentée en `v0.4.0`.*
+- **Annulation d'une réservation par le gérant** : `cancelBooking`
+  (`PENDING_CONFIRMATION` | `CONFIRMED` → `CANCELLED`), avec contrôle d'ownership compagnie et
+  publication d'un événement CDI. Nouvel endpoint **`PATCH /api/artist-bookings/{id}/cancel`**
+  (rôle MANAGER).
+- **Annulation d'une date de spectacle** : transitions `INQUIRY` | `OPTION` | `CONFIRMED` | `STAFFED`
+  → `CANCELLED` autorisées (les sorties de `CANCELLED` et les transitions vers `ARCHIVED` restent
+  refusées). Introduction du record `ShowDateStatusChangedEvent` (Observer CDI, symétrique à
+  `BookingStatusChangedEvent`).
+- **Annulation en cascade** : `ShowDateCancellationObserver` réagit à l'annulation d'une date et
+  annule les bookings **actifs** (`SELECTED`, `PENDING_CONFIRMATION`, `CONFIRMED`) via
+  `cancelAllActiveBookingsForShowDate`. Les bookings **terminaux** (`REFUSED`, `CANCELLED`)
+  préexistants sont préservés. Aucun couplage direct entre les domaines `showdate` et `artistbooking`.
+- **Re-staffing automatique** : `ShowDateRestaffingObserver` repasse une date `STAFFED` en `CONFIRMED`
+  à l'annulation d'un booking, l'équipe redevenant incomplète. Découplage par
+  `BookingStatusChangedEvent`. L'annulation d'une **date** `STAFFED` ne déclenche pas de re-staffing
+  parasite : la date reste `CANCELLED`.
+- Nouveau garde `assertShowDateCancellable` (ne bloque que `CANCELLED` et `ARCHIVED`), distinct de la
+  garde de modification appliquée à `deleteBooking` et `respondToRequest`.
+
+#### Changed
+- Retrait du champ « Artistes nécessaires » du formulaire de création de date : la définition des
+  besoins par compétence (`ShowDateSkillRequirement`) est reportée à une version ultérieure.
+
+#### Fixed
+- **Recyclage d'un booking terminal lors d'une re-sélection** : un artiste précédemment `REFUSED` ou
+  `CANCELLED` peut de nouveau être sélectionné sur la même date. Le booking existant est recyclé
+  (`resetBookingForReselection` : retour en `SELECTED`, timeline `requestedAt`/`respondedAt`
+  réinitialisée, `createdAt` conservé), sans créer de seconde ligne — l'unicité
+  `(show_date_id, artist_id)` est préservée. Seuls les bookings **actifs** restent bloquants.
+- Réalignement des compteurs d'auto-increment H2 après le seed (`ALTER TABLE … RESTART WITH 100`),
+  corrigeant une violation de clé primaire (23505) à la création d'une nouvelle date.
+- Correction de la génération de schéma H2 en profils `dev` et `firebase` pour permettre le seed
+  (`import.sql`).
+
+### Front-end (Flutter)
+
+#### Added
+- **Refonte du Planning Artiste** : composants `ArtistShowDateCard` et `DateBadge` ; le ViewModel
+  conserve désormais le **statut de booking complet par date** (`Map<dateId, BookingStatus>` au lieu
+  d'un simple ensemble de dates confirmées), exposant `getBookingStatusForShowDate` et
+  `isBookingCancelledByManager`.
+- Masquage de la section disponibilité lorsque le booking est confirmé (cohérent avec le verrou
+  backend).
+- Compteur « Équipe : N artiste(s) » sur les plannings.
+- **Fond dégradé nocturne** généralisé à l'ensemble des écrans (le dégradé violet → rose est conservé
+  sur les écrans d'authentification et de chargement).
+- **Refonte de l'écran d'accueil** : structuration en trois zones (identité, actions, déconnexion),
+  actions transformées en cartes-lignes accessibles (icône, titre, sous-titre, sémantique bouton),
+  extraction du composant `HomeActionCard`.
+- **Refonte du détail de date gérant** : bandeau et liste fondus sur une carte lavande (`cardSurface`),
+  lignes artiste lisibles, hiérarchisation des actions (primaire, secondaire, tertiaire).
+- **`ShowDateStatusPill`** : statut de date affiché en clair (libellé, couleur, sémantique), et
+  remplacement du menu générique par un **bouton d'action nommé selon la transition** (« Passer en
+  option », « Confirmer la date », « Marquer l'équipe complète »).
+- Refonte de l'en-tête de connexion (logo agrandi, titre sérif « VIOLETTE »).
+- **Fiche de consultation d'une date (gérant)** : accessible depuis le détail inline du planning
+  (bouton « Détail »), elle restitue l'intégralité de la feuille de route — heure de convocation,
+  adresse complète non tronquée, contact client, description, effectif — ainsi que le statut de la
+  date et la liste des artistes avec leur engagement et leur disponibilité. Ces informations étaient
+  saisies à la création mais n'étaient jusqu'ici jamais restituées au gérant. Répartition des rôles :
+  le détail inline reste le poste de travail (sélection, réservation, transitions de statut,
+  annulation) ; la fiche plein écran est une consultation en lecture seule.
+- Icône de lanceur Android.
+
+#### Changed
+- Renommage du bouton d'accès artiste en « **Planning Artiste** ».
+- Renommage de l'action « Demander confirmation » en « **Réserver les artistes** », déplacée sous la
+  liste des artistes pour expliciter le flux (sélectionner, puis réserver).
+- Suppression du lien mort de réinitialisation de mot de passe sur l'écran de connexion (DETTE-8).
+
+#### Fixed
+- Correction du flash de transition violet et des traînées clavier entre les écrans (DETTE-18).
+- Correction du contraste des cartes de planning, du bouton de disponibilité et de la carte gérant.
+
+### Accessibilité (WCAG 2.2 AA)
+
+#### Added
+- **Parcours artiste de déclaration de disponibilité rendu accessible** : annonce du statut au lecteur
+  d'écran (`liveRegion`), langue de l'interface déclarée en français, annonce des messages de
+  confirmation (snackbars), en-têtes navigables. Validé par un **test manuel au lecteur d'écran
+  (TalkBack)** sur appareil physique ; les écarts détectés au premier passage ont été corrigés.
+- **Parcours gérant rendu accessible** : verbalisation du statut des jours du calendrier gérant,
+  regroupement sémantique des lignes artiste du détail de date (nom, engagement, état de sélection),
+  cibles tactiles conformes (48 dp).
+- Couleurs de statut conformes au ratio de contraste AA de 4,5:1 (critère 1.4.3).
+- Helper `contrastTextForStatusPill` : sélection de la teinte de texte la plus contrastée sur les
+  pastilles selon la luminance du fond, couvert par des tests WCAG.
+
+#### Changed
+- Renforcement du contraste des champs de saisie (fond en verre dépoli ~45 % d'opacité, indications
+  atténuées à ~80 %, texte de saisie explicite) et des pastilles de calendrier.
+- Francisation de l'affichage du calendrier (locale du composant `table_calendar`).
+
+### Qualité / Tests / CI
+
+#### Added
+- **Jeu de données de test (seed)** pour le développement local : un gérant, deux artistes et des
+  dates de spectacle préremplies.
+- Tests de non-régression sur les nouveaux comportements métier : cascade d'annulation via la chaîne
+  réelle d'observers, verrou de disponibilité (dont isolation par artiste), `cancelBooking` et
+  re-staffing (11 cas), recyclage de booking terminal (7 cas), `CabaretShowServiceTest` (5 cas).
+
+#### Changed
+- **Seuil de couverture JaCoCo relevé de 30 % à 70 %.** Couverture réelle mesurée : **81 % des lignes,
+  95 % sur les services métier**.
+- Uniformisation du nommage des tests frontend au format `methodName_whenCondition_expectedResult`,
+  aligné sur la convention backend ; libellés `group()` homogénéisés en français ; anglicisation des
+  variables locales de test restantes. La suite frontend compte 209 tests à la clôture de la version.
+- Uniformisation des `@DisplayName` backend au patron « sujet — comportement attendu quand condition »
+  et enrichissement de l'intention métier des tests de repository.
+- Renommage FR → EN des méthodes de garde privées de `ArtistBookingService` (`validerX` → `assertX`),
+  **refactor à iso-comportement** : aucun changement de logique ni du contrat API (DETTE-2).
+- Nettoyage des commentaires : suppression des séparateurs décoratifs et notes personnelles,
+  conversion des TODO orphelins en références de dette (DETTE-7 à DETTE-17).
+- Version Flutter épinglée à **3.44.4** dans la CI pour la reproductibilité.
+
+#### Fixed
+- Alignement de Java et Kotlin sur **JVM 17** pour tous les sous-projets Android.
+- Fiabilisation des notes de release générées depuis le changelog (rendu Markdown).
+
+### Corrections issues de la campagne de recette
+
+> Anomalies détectées lors de la campagne de recette manuelle de la `v0.5.0` et corrigées avant
+> livraison. Le cycle complet (détection, qualification, analyse, correctif, vérification) est
+> documenté dans [`docs/plan-correction-bogues.md`](docs/plan-correction-bogues.md).
+
+#### Fixed
+- **BOGUE-01** — Correction du blocage à la connexion d'une session Firebase sans profil backend :
+  l'utilisateur restait piégé sur l'écran d'accueil, sans possibilité de déconnexion. La session est
+  désormais fermée et l'utilisateur redirigé vers l'écran de connexion.
+- **BOGUE-02** — Correction de la case à cocher de sélection d'artiste, invisible à l'état décoché sur
+  fond clair (détail de date gérant).
+- **BOGUE-03** — Correction du contraste et de l'accessibilité de la carte de demande de réservation
+  (vue artiste) : titre lisible, en-tête sémantique, information regroupée pour le lecteur d'écran.
+- **BOGUE-05** — Correction du bouton « Détail » (planning gérant), qui n'était pas atteignable au
+  lecteur d'écran : il est désormais un arrêt de focus distinct, annoncé comme bouton et activable.
+  Sans ce correctif, la fiche de consultation — et donc la description de la date — restait
+  inaccessible aux utilisateurs de lecteur d'écran (WCAG 2.1.1).
+- **BOGUE-06** — Correction du contraste du texte des pastilles de statut (WCAG 1.4.3). Deux défauts :
+  un style « creux » dont le texte reprenait la couleur du fond, et du texte blanc codé en dur sur des
+  fonds trop clairs (1,90:1 sur l'orange « Option »). La couleur du texte est désormais dérivée de la
+  luminance du fond sur **toutes** les pastilles, sans couleur codée en dur, et un même statut affiché
+  à deux endroits présente le même rendu.
+
+### Documentation
+
+#### Added
+- [`docs/cahier-de-recettes.md`](docs/cahier-de-recettes.md) : cahier de recettes formalisé
+  (49 scénarios — authentification, dates, disponibilités, réservation, sécurité, accessibilité),
+  avec résultat attendu, résultat observé, statut et anomalie liée.
+- [`docs/plan-correction-bogues.md`](docs/plan-correction-bogues.md) : plan de correction des bogues
+  (barème de gravité, cycle de traitement complet par anomalie).
+- [`docs/manuel-mise-a-jour.md`](docs/manuel-mise-a-jour.md) : manuel de mise à jour (utilisateur et
+  exploitant).
+- [`docs/securite-owasp.md`](docs/securite-owasp.md) : couverture du Top 10 OWASP (mesures, preuves,
+  limites assumées).
+- [`docs/accessibilite.md`](docs/accessibilite.md) : référentiel WCAG 2.2 AA, critères implémentés et
+  test au lecteur d'écran.
+
+#### Changed
+- Réalignement de la documentation sur l'état réel du code (accessibilité, dette technique, règles
+  métier) ; suivi des dettes DETTE-18 et DETTE-19.
+- Alignement du manuel d'utilisation sur le comportement `v0.5.0` (verrou de disponibilité, Planning
+  Artiste, besoins artistiques reportés).
+- Ajout du démarrage rapide et des comptes de test au README.
+
+### Known limitations
+- Le client OpenAPI généré (`violette_api_client`) n'est pas régénéré : l'enum `ShowDateStatus` peut
+  encore contenir des valeurs historiques. Régénération reportée en `v0.6.0` (DETTE-1).
+- La définition des besoins artistiques par compétence (`ShowDateSkillRequirement`) n'est pas exposée :
+  le champ « Artistes nécessaires » a été retiré du formulaire de création.
+- **L'édition d'une date après création n'est pas exposée** dans l'interface gérant : une date créée
+  ne peut plus être modifiée depuis l'application (correction d'une faute de frappe, changement
+  d'horaire ou de lieu). La *consultation* de la feuille de route complète est désormais disponible
+  (fiche de détail), mais pas sa modification. L'endpoint `PATCH /api/show-dates/{id}` existe et est
+  couvert par les tests structurels ; seul le parcours d'interface reste à construire (DETTE-19,
+  reporté en `v0.6.0`).
+- La priorité de couleur des pastilles de calendrier reste simplifiée en cas de statuts mixtes : un
+  artiste confirmé peut voir une pastille « si besoin » sur le jour concerné (BOGUE-04, différé en
+  `v0.6.0`).
+- La compagnie unique `Dream's Production` et le rattachement automatique des utilisateurs restent en
+  place ; la gestion multi-compagnies n'est pas exposée — le cloisonnement inter-compagnies est
+  néanmoins garanti et prouvé par les tests de sécurité.
+- Le désistement autonome d'un artiste après confirmation reste hors périmètre : le verrou impose de
+  passer par le gérant.
+- La release vise prioritairement Android ; les parcours web et iOS ne sont pas validés.
 
 ---
 
