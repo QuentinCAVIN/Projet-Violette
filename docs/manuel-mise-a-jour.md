@@ -5,7 +5,7 @@ Ce manuel décrit comment mettre à jour Violette, selon deux points de vue :
 - **Côté utilisateur** (artiste ou gérant) : installer une nouvelle version de l'application sur son téléphone Android.
 - **Côté exploitant** (mainteneur du projet) : publier une nouvelle version en production (backend et application).
 
-Pour l'installation initiale, voir le [README](README.md) (section installation Android). Pour le détail de l'infrastructure de déploiement, voir le [manuel de déploiement](README-deploiement.md).
+Pour l'installation initiale, voir le [guide d'installation](../INSTALLATION.md). Pour le détail de l'infrastructure de déploiement, voir le [manuel de déploiement](../README-deploiement.md).
 
 ---
 
@@ -23,7 +23,7 @@ Violette n'est pas distribuée via le Play Store : les mises à jour se font en 
 
 ### En cas de problème
 
-- **L'installation est bloquée (« source inconnue »)** : c'est normal hors Play Store. Suivez les boutons proposés par le téléphone (**Paramètres** → **Autoriser cette source**), puis relancez l'installation. Voir le [README](README.md) pour le détail.
+- **L'installation est bloquée (« source inconnue »)** : c'est normal hors Play Store. Suivez les boutons proposés par le téléphone (**Paramètres** → **Autoriser cette source**), puis relancez l'installation. Voir le [guide d'installation](../INSTALLATION.md) pour le détail.
 - **L'application ne démarre pas après mise à jour** : redémarrez le téléphone et rouvrez Violette. Si le problème persiste, réinstallez la dernière version depuis le lien direct.
 - **Message « Serveur inaccessible »** : vérifiez votre connexion Internet (Wi-Fi ou données mobiles). Ce message signale que l'application n'a pas pu joindre le service en ligne, indépendamment de la mise à jour.
 
@@ -31,7 +31,7 @@ Violette n'est pas distribuée via le Play Store : les mises à jour se font en 
 
 ## 2. Mise à jour côté exploitant (publication d'une nouvelle version)
 
-Cette section s'adresse au mainteneur du projet. La publication d'une nouvelle version est **entièrement automatisée** par le pipeline CI/CD : elle se déclenche en poussant un **tag de version** `vX.Y.Z`. Le détail de l'infrastructure (Fly.io, Aiven, secrets) figure dans le [manuel de déploiement](README-deploiement.md) ; ce manuel n'en donne que la procédure de mise à jour.
+Cette section s'adresse au mainteneur du projet. La publication d'une nouvelle version est **entièrement automatisée** par le pipeline CI/CD : elle se déclenche en poussant un **tag de version** `vX.Y.Z`. Le détail de l'infrastructure (Fly.io, Aiven, secrets) figure dans le [manuel de déploiement](../README-deploiement.md) ; ce manuel n'en donne que la procédure de mise à jour.
 
 ### Ce que déclenche un tag `vX.Y.Z`
 
