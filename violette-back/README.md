@@ -615,6 +615,45 @@ curl -s -H "Authorization: Bearer YOUR_FIREBASE_JWT" http://localhost:8080/api/u
 Exemple de réponse (200) : `{"firebaseUid":"abc123","email":"user@example.com","name":"Jean Dupont"}`.  
 Sans token ou token invalide : 401 ou 403.
 
+### Régénérer le client Dart (`violette_api_client`)
+
+> Procédure pour la régénération du client généré, planifiée en v0.6.0 (DETTE-1, voir [docs/technical-debt.md](../docs/technical-debt.md)). Configuration : [`openapitools.json`](../openapitools.json) à la racine du monorepo (generator `dart-dio`, version CLI épinglée, sortie `violette_api_client/`).
+
+**Prérequis** : Node.js (le generator est lancé via `npx`, version épinglée dans `openapitools.json`).
+
+**1. Exporter la spécification OpenAPI** — démarrer le backend en profil `dev` (profil par défaut de `quarkus:dev`) :
+
+```bash
+cd violette-back
+./mvnw quarkus:dev
+```
+
+Au démarrage, la spec est écrite dans `violette-back/target/openapi/openapi.yaml` (propriété `quarkus.smallrye-openapi.store-schema-directory`, active en profils `dev` et `test` **uniquement** : un lancement en profil `firebase` n'exporte pas la spec).
+
+**2. Générer le client Dart** :
+
+```bash
+# À la racine du monorepo
+npx openapi-generator-cli generate
+```
+
+Le client est régénéré dans `violette_api_client/`.
+
+**3. Reconstruire les sérialiseurs `built_value` du client généré** :
+
+```bash
+cd violette_api_client
+dart run build_runner build --delete-conflicting-outputs
+```
+
+Le frontend consomme le client par dépendance de chemin (`violette_front/pubspec.yaml`) : relancer ensuite `flutter pub get` dans `violette_front/`.
+
+**Règles importantes** :
+
+- Ne jamais modifier manuellement les fichiers de `violette_api_client/` (ils sont régénérés).
+- Ne jamais importer `violette_api_client` directement dans les ViewModels.
+- Seuls `UserRemoteDataSource` et `UserMapper` utilisent les types générés.
+
 ---
 
 ## 10. Exécuter les tests

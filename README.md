@@ -49,7 +49,6 @@ Ensuite : le [manuel d'utilisation](docs/user-manual.md) pour vous servir de l'a
 | **Stratégie de tests** | Types de tests frontend/backend, profils Quarkus, couverture JaCoCo | [docs/testing-strategy.md](docs/testing-strategy.md) |
 | **Dette technique** | Limites assumées et évolutions futures | [docs/technical-debt.md](docs/technical-debt.md) |
 | **Manuel de déploiement** | Fly.io, Aiven MySQL, pipeline CI/CD, secrets GitHub, checklist soutenance | [README-deploiement.md](README-deploiement.md) |
-| **Migration domaine user** | Setup OpenAPI Generator, client Dart généré, flux REST user | [docs/migration-domaine-user.md](docs/migration-domaine-user.md) |
 | **Préparation v0.4.0** *(document d'époque)* | Checklist documentaire et technique de la release précédente | [docs/release-v0.4.0.md](docs/release-v0.4.0.md) |
 | **Changelog** | Historique des versions | [CHANGELOG.md](CHANGELOG.md) |
 
