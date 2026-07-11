@@ -42,6 +42,7 @@ CANCELLED CANCELLED  CANCELLED
 - En `CONFIRMED`, le gérant peut envoyer des demandes de confirmation aux artistes.
 - En `STAFFED`, l'équipe est considérée complète.
 - `CANCELLED` et `ARCHIVED` sont des états de sortie : les mutations métier doivent être bloquées ou très encadrées.
+- **L'archivage n'est pas encore déclenché en `v0.5.0`** : le statut `ARCHIVED` est défini et protégé (aucune mutation n'est possible depuis cet état, la garde `assertShowDateCancellable` le refuse au même titre que `CANCELLED`), mais **aucune transition ne l'atteint** dans l'application. La flèche `STAFFED → ARCHIVED` du cycle de vie ci-dessus décrit la cible fonctionnelle, pas un flux exécutable aujourd'hui.
 
 ---
 
