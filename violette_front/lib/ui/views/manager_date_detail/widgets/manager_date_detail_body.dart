@@ -4,6 +4,7 @@ import 'package:violette_front/models/artist_booking.dart';
 import 'package:violette_front/models/enums/availability_status.dart';
 import 'package:violette_front/models/enums/booking_status.dart';
 import 'package:violette_front/models/enums/show_date_status.dart';
+import 'package:violette_front/models/show_date.dart';
 import 'package:violette_front/ui/common/app_theme.dart';
 import 'package:violette_front/ui/views/manager_date_detail/widgets/booking_status_pill.dart';
 import 'package:violette_front/ui/views/manager_date_detail/widgets/show_date_status_pill.dart';
@@ -285,7 +286,17 @@ class ManagerDateDetailBody
             margin: lavenderCardMargin,
             padding: const EdgeInsets.all(16),
             decoration: lavenderCardDecoration,
-            child: headerSection,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (!isInline) ...[
+                  _ShowDateInfoBlock(showDate: currentShowDate),
+                  const SizedBox(height: 12),
+                ],
+                headerSection,
+              ],
+            ),
           ),
           if (isInline)
             const Padding(
@@ -342,6 +353,10 @@ class ManagerDateDetailBody
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (!isInline) ...[
+                  _ShowDateInfoBlock(showDate: currentShowDate),
+                  const SizedBox(height: 12),
+                ],
                 headerSection,
                 const SizedBox(height: 12),
                 Expanded(child: listView),
@@ -365,6 +380,153 @@ class ManagerDateDetailBody
       return AvailabilityStatusPill(status: availability);
     }
     return const SizedBox.shrink();
+  }
+}
+
+/// Bloc d'informations complètes de la date (vue plein écran gérant uniquement).
+class _ShowDateInfoBlock extends StatelessWidget {
+  final ShowDate showDate;
+
+  const _ShowDateInfoBlock({required this.showDate});
+
+  String get _staffingValue {
+    if (showDate.totalRequiredArtists > 0) {
+      final noun = showDate.totalRequiredArtists <= 1 ? 'artiste' : 'artistes';
+      return '${showDate.selectedCount} / ${showDate.totalRequiredArtists} $noun';
+    }
+    return 'Sélection libre';
+  }
+
+  String? get _clientContactValue {
+    final name = showDate.clientContactName?.trim();
+    final phone = showDate.clientContactPhone?.trim();
+    final hasName = name != null && name.isNotEmpty;
+    final hasPhone = phone != null && phone.isNotEmpty;
+    if (!hasName && !hasPhone) {
+      return null;
+    }
+    if (hasName && hasPhone) {
+      return '$name — $phone';
+    }
+    return hasName ? name : phone;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final description = showDate.description?.trim();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: VioletteTheme.cardSurface,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Semantics(
+            header: true,
+            child: const Text(
+              'Informations',
+              style: TextStyle(
+                color: VioletteTheme.cardTitle,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _ShowDateInfoLine(
+            icon: Icons.access_time,
+            label: 'Heure de convocation',
+            value: showDate.formattedMeetingTimeForDisplay,
+          ),
+          _ShowDateInfoLine(
+            icon: Icons.place_outlined,
+            label: 'Lieu',
+            value: showDate.address,
+          ),
+          if (_clientContactValue != null)
+            _ShowDateInfoLine(
+              icon: Icons.person_outline,
+              label: 'Contact client',
+              value: _clientContactValue!,
+            ),
+          if (description != null && description.isNotEmpty)
+            _ShowDateInfoLine(
+              icon: Icons.notes_outlined,
+              label: 'Description',
+              value: description,
+            ),
+          _ShowDateInfoLine(
+            icon: Icons.groups_outlined,
+            label: 'Effectif',
+            value: _staffingValue,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Ligne d'information avec icône, libellé et valeur (accessibilité regroupée).
+class _ShowDateInfoLine extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _ShowDateInfoLine({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      container: true,
+      label: '$label : $value',
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: ExcludeSemantics(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                icon,
+                size: 20,
+                color: VioletteTheme.textOnCardSecondary,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: const TextStyle(
+                        color: VioletteTheme.textOnCardSecondary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      value,
+                      style: const TextStyle(
+                        color: VioletteTheme.textOnCard,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
