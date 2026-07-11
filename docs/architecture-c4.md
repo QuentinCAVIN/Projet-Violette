@@ -143,7 +143,7 @@ Les fichiers des diagrammes C4 se trouvent dans le dépôt aux emplacements suiv
 |--------|---------|----------|
 | System Context | `docs/diagrams/c4-context.png` | — |
 | Container | `docs/diagrams/c4-container.png` | — |
-| Component | `docs/diagrams/c4-component.png` | — |
+| Component | `docs/diagrams/c4-component-backend.png` | — |
 | Zoom composant (niveau 4) | `docs/diagrams/c4-component-artistbooking.png` | Source : `c4-component-artistbooking.puml` ; régénération (voir [docs/diagrams/README.md](diagrams/README.md)) |
 
 Ils sont référencés dans le **README** à la racine du projet, dans la section « Architecture ». La documentation détaillée du backend (couches, packages, sécurité, patterns) est dans **`violette-back/ARCHITECTURE.md`**.

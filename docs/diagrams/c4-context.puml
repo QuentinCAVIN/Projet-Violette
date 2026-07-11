@@ -1,0 +1,28 @@
+@startuml c4-context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+LAYOUT_WITH_LEGEND()
+
+title Diagramme C4 — Contexte système de Violette (v0.5.0)
+
+Person(artiste, "Artiste", "Membre ou collaborateur de la compagnie. Déclare ses disponibilités sur les dates de spectacle et répond aux demandes de réservation.")
+Person(gerant, "Gérant", "Responsable de la compagnie. Crée les dates de spectacle et compose les équipes d'artistes.")
+Person_Ext(client, "Client", "Commande un spectacle auprès de la compagnie. N'utilise pas l'application : le gérant saisit la demande.")
+
+System(violette, "Violette", "Application mobile de coordination des spectacles de cabaret : planification des dates, collecte des disponibilités, suivi des réservations.")
+
+System_Ext(firebase, "Firebase Authentication", "Fournisseur d'identité externe. Délivre les jetons JWT qui identifient l'utilisateur et expose les clés publiques permettant de les valider.")
+
+Rel(client, gerant, "Commande un spectacle", "Hors application")
+Rel(artiste, violette, "Utilise")
+Rel(gerant, violette, "Utilise")
+Rel(firebase, violette, "Délivre les jetons JWT identifiant l'utilisateur")
+
+note bottom of violette
+  Violette ne gère ni les mots de passe ni la création
+  des comptes d'authentification : elle délègue l'identité
+  à Firebase, puis valide le jeton et charge les rôles
+  métier (ARTIST, MANAGER) depuis sa propre base.
+end note
+
+@enduml

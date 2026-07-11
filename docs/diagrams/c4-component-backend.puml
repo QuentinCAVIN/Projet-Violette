@@ -1,0 +1,60 @@
+@startuml c4-component-backend
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_WITH_LEGEND()
+
+title Diagramme C4 — Composants du backend Violette (v0.5.0)
+
+Person(artiste, "Artiste", "Déclare ses disponibilités, répond aux demandes de réservation")
+Person(gerant, "Gérant", "Crée les dates, compose les équipes")
+
+Container(app, "Application mobile", "Flutter / Dart (Android)", "Architecture Stacked/MVVM")
+System_Ext(firebase, "Firebase Authentication", "Fournisseur d'identité — délivre les JWT")
+
+Container_Boundary(backend, "Backend Violette — Quarkus / Java 21") {
+
+    Component(security, "Security", "OIDC + CDI", "Valide le JWT Firebase (signature, émetteur, expiration), expose le principal courant et charge les rôles métier depuis la base")
+    Component(ownership, "ManagerCompanyResolver", "CDI @ApplicationScoped", "Garde d'ownership compagnie (OWASP A01) : résout la compagnie du manager authentifié et refuse tout accès hors périmètre (403)")
+    Component(exception, "GlobalExceptionMapper", "JAX-RS ExceptionMapper", "Neutralise les erreurs non mappées : réponse générique + identifiant de corrélation, sans fuite technique")
+
+    Component(userCtrl, "violetteuser", "Controller / Service / Repository", "Comptes et rôles (ARTIST, MANAGER). Rattachement automatique à la compagnie unique (limite v0.5.0)")
+    Component(companyCtrl, "cabaretcompany", "Controller / Service / Repository", "Compagnies, membres et revues")
+    Component(showDateCtrl, "showdate", "Controller / Service / Repository", "Dates de spectacle, cycle de vie des statuts, besoins artistiques, disponibilités des artistes")
+    Component(bookingCtrl, "artistbooking", "Controller / Service / Repository", "Réservations : présélection, demandes fermes, réponses artiste, annulation")
+
+    Component(events, "Événements CDI", "Event / Observer", "Découplage inter-domaines : annulation en cascade des réservations, re-staffing automatique d'une date")
+    Component(mappers, "Mappers", "MapStruct", "Conversion Entity ↔ DTO")
+}
+
+ContainerDb(db, "Base de données", "MySQL (production) / H2 (tests)", "Utilisateurs, compagnies, dates, disponibilités, réservations. Migrations Flyway")
+
+Rel(artiste, app, "Utilise")
+Rel(gerant, app, "Utilise")
+Rel(app, firebase, "S'authentifie", "SDK Firebase")
+Rel_R(firebase, app, "Délivre un JWT")
+Rel(app, security, "Appelle l'API REST avec le JWT", "HTTPS / JSON")
+
+Rel(security, userCtrl, "Charge les rôles de l'utilisateur")
+Rel(security, ownership, "Fournit le principal JWT")
+
+Rel(userCtrl, ownership, "Vérifie l'appartenance compagnie")
+Rel(companyCtrl, ownership, "Vérifie l'appartenance compagnie")
+Rel(showDateCtrl, ownership, "Vérifie l'appartenance compagnie")
+Rel(bookingCtrl, ownership, "Vérifie l'appartenance compagnie")
+
+Rel(showDateCtrl, events, "Publie ShowDateStatusChangedEvent")
+Rel(bookingCtrl, events, "Publie BookingStatusChangedEvent")
+Rel(events, bookingCtrl, "Observe : annule les réservations actives (cascade)")
+Rel(events, showDateCtrl, "Observe : repasse la date en CONFIRMED (re-staffing)")
+
+Rel(userCtrl, mappers, "Utilise")
+Rel(companyCtrl, mappers, "Utilise")
+Rel(showDateCtrl, mappers, "Utilise")
+Rel(bookingCtrl, mappers, "Utilise")
+
+Rel(userCtrl, db, "Lit / écrit", "Hibernate ORM Panache")
+Rel(companyCtrl, db, "Lit / écrit", "Hibernate ORM Panache")
+Rel(showDateCtrl, db, "Lit / écrit", "Hibernate ORM Panache")
+Rel(bookingCtrl, db, "Lit / écrit", "Hibernate ORM Panache")
+
+@enduml
