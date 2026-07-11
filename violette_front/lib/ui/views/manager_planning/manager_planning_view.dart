@@ -7,7 +7,6 @@ import 'package:violette_front/ui/widgets/common/gradient_background/gradient_ba
 
 import 'manager_planning_viewmodel.dart';
 
-
 class ManagerPlanningView extends StackedView<ManagerPlanningViewModel> {
   const ManagerPlanningView({super.key});
 
@@ -47,7 +46,8 @@ class ManagerPlanningView extends StackedView<ManagerPlanningViewModel> {
                   if (viewModel.selectedShowDates.isNotEmpty)
                     Column(
                       children: [
-                        for (final selectedShowDate in viewModel.selectedShowDates) ...[
+                        for (final selectedShowDate
+                            in viewModel.selectedShowDates) ...[
                           ManagerShowDateSummaryCard(
                             showDate: selectedShowDate,
                             onTap: () =>
@@ -59,8 +59,10 @@ class ManagerPlanningView extends StackedView<ManagerPlanningViewModel> {
                             child: viewModel.isExpanded(selectedShowDate)
                                 ? ManagerShowDateInlineDetail(
                                     showDate: selectedShowDate,
-                                    onShowDateUpdated:
-                                        viewModel.refreshShowDateAfterStatusChange,
+                                    onShowDateUpdated: viewModel
+                                        .refreshShowDateAfterStatusChange,
+                                    onOpenFullDetail: () => viewModel
+                                        .navigateToDetail(selectedShowDate),
                                   )
                                 : const SizedBox.shrink(),
                           ),
