@@ -1,6 +1,6 @@
-# Architecture globale — Violette v0.4.0
+# Architecture globale — Violette
 
-Ce document résume l'architecture d'ensemble utilisée par Violette avant la release `v0.4.0`.
+Ce document résume l'architecture d'ensemble de Violette. Il est à jour de la version `v0.5.0` (voir le [journal des versions](../CHANGELOG.md) pour l'historique des évolutions).
 
 Pour le détail backend, voir [../violette-back/README.md](../violette-back/README.md). Pour les diagrammes C4, voir [architecture-c4.md](architecture-c4.md).
 
@@ -121,9 +121,9 @@ Deux stratégies coexistent aujourd'hui :
 
 Cette coexistence est volontaire à court terme. La règle d'architecture reste la même : les types générés ou JSON bruts ne doivent pas remonter dans les ViewModels.
 
-En `v0.4.0`, les flux critiques `availability`, `showDate` et `booking` n'utilisent pas le client généré au runtime : ils passent par `DioClient`, des endpoints explicites et des mappers manuels. Les endpoints récents du domaine booking, dont `GET /api/artist-bookings/me`, sont donc appelés par Dio manuel.
+Aujourd'hui, les flux critiques `availability`, `showDate` et `booking` n'utilisent pas le client généré au runtime : ils passent par `DioClient`, des endpoints explicites et des mappers manuels. Les endpoints récents du domaine booking, dont `GET /api/artist-bookings/me`, sont donc appelés par Dio manuel.
 
-La régénération complète de `violette_api_client/` est reportée après `v0.4.0` pour éviter un diff généré large juste avant tag. Une incohérence potentielle a été observée lors de l'audit : la méthode générée `apiArtistBookingsMeGet` peut être typée comme un DTO unique alors que le backend renvoie une liste. Cette dette n'est pas bloquante pour `v0.4.0`, car ce endpoint généré n'est pas utilisé par le code frontend exécuté.
+La régénération complète de `violette_api_client/` est reportée en `v0.6.0` (DETTE-1, voir [technical-debt.md](technical-debt.md)). Une incohérence potentielle a été observée lors de l'audit : la méthode générée `apiArtistBookingsMeGet` peut être typée comme un DTO unique alors que le backend renvoie une liste. Cette dette n'est pas bloquante pour la version courante, car ce endpoint généré n'est pas utilisé par le code frontend exécuté.
 
 À terme, chaque domaine peut soit adopter le client généré, soit conserver une couche Dio manuelle si elle reste mieux maîtrisée. Dans les deux cas, le repository et les mappers doivent rester la frontière métier.
 

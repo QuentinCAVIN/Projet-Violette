@@ -1,6 +1,6 @@
-# Workflow de réservation artistes — Violette v0.4.0
+# Workflow de réservation artistes — Violette
 
-Ce document décrit le workflow de réservation côté produit. La source de vérité détaillée des statuts et règles métier est [regles-metier.md](regles-metier.md).
+Ce document décrit le workflow de réservation côté produit. Il est à jour de la version `v0.5.0` (voir le [journal des versions](../CHANGELOG.md) pour l'historique des évolutions). La source de vérité détaillée des statuts et règles métier est [regles-metier.md](regles-metier.md).
 
 ---
 
