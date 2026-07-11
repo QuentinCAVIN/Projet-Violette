@@ -1,272 +1,93 @@
-# Projet-Violette
+# Projet Violette
 
-Violette est une application Flutter + backend Quarkus pour aider les compagnies de cabaret à gérer leurs dates de spectacle, les disponibilités artistes et les réservations.
+Violette est une application mobile qui aide les **compagnies de cabaret** à organiser leurs spectacles : planification des dates, collecte des disponibilités des artistes et suivi des réservations, dans un outil unique partagé entre **gérants** et **artistes**.
 
-La release `v0.4.0` stabilise la sortie du code métier frontend de Firestore : les domaines `user`, `availability`, `showDate` et `booking` passent par l'API REST. Firebase Auth reste utilisé pour l'identité et les JWT ; le backend Quarkus devient la source métier principale.
+- **Version : v0.5.0** — sécurisation OWASP, verrou métier de disponibilité, accessibilité WCAG 2.2 AA sur les parcours clés, refonte visuelle ([journal des versions](CHANGELOG.md)).
+- **Stack** : Flutter (Android) · Quarkus / Java 21 · Firebase Auth · MySQL en production, H2 en local.
 
----
-
-<a id="demarrage-rapide"></a>
-## Démarrage rapide (développement local)
-
-> Environnement local : base H2 en mémoire (aucun MySQL requis), authentification Firebase,
-> jeu de données de test préchargé automatiquement au démarrage.
-
-Prérequis : Java 21, Maven, Flutter, un téléphone Android (USB avec débogage activé) ou un émulateur.
-
-### 1. Backend (Quarkus + H2 + seed)
-
-Depuis `violette-back/` :
-
-```powershell
-$env:FIREBASE_PROJECT_ID="violette-1f64e"
-mvn quarkus:dev "-Dquarkus.profile=firebase"
-```
-
-Le backend démarre sur http://localhost:8080. Au lancement, il crée le schéma H2 et charge
-automatiquement le jeu de données de test (1 gérant, 2 artistes, 4 dates de spectacle).
-
-Vérification : `curl http://localhost:8080/api/ping`.
-
-### 2. Frontend (Flutter)
-
-Depuis `violette_front/`, téléphone Android branché en USB :
-
-```powershell
-adb reverse tcp:8080 tcp:8080
-flutter run
-```
-
-<a id="comptes-de-test"></a>
-## Comptes de test (développement local uniquement)
-
-> Ces comptes existent uniquement sur l'environnement de développement local (base H2 jetable,
-> projet Firebase de test). Ils n'ont aucune validité en production. Les mots de passe simples
-> ci-dessous sont destinés au confort de test local et ne reflètent pas la politique de sécurité
-> appliquée en production.
-
-| Rôle | Email | Mot de passe | Données associées |
-|------|-------|--------------|-------------------|
-| Gérant | manager@violette.test | 123456 | Compagnie « Dream's Production », 4 dates de novembre 2026 |
-| Artiste (danse) | artiste1@violette.test | 123456 | Membre de la compagnie, disponibilités préremplies |
-| Artiste (chant) | artiste2@violette.test | 123456 | Membre de la compagnie, disponibilités préremplies |
+| Vous êtes… | Commencez ici |
+|---|---|
+| **Artiste ou gérant** | [Installer l'application](INSTALLATION.md), puis le [manuel d'utilisation](docs/user-manual.md) |
+| **Examinateur** | [Documentation pour les examinateurs](#documentation-pour-les-examinateurs), ci-dessous |
+| **Développeur** | [Démarrage local](docs/demarrage-local.md), puis l'[architecture](docs/architecture.md) |
 
 ---
 
-## Accès rapide
-
-> L’application est actuellement disponible uniquement sur Android.
-- **Installer l'application sur mon téléphone (Android)** :
-    
-  - **Téléchargement le plus simple** (dernière version) : [téléchargement direct (fichier d'installation)](https://github.com/QuentinCAVIN/Projet-Violette/releases/latest/download/app-release.apk).
-  - **Guide complet pas à pas** : lisez [INSTALLATION.md](INSTALLATION.md).
-- **Démarrer en local rapidement** : voir le [démarrage rapide (développement local)](#demarrage-rapide).
-- **Comptes de test local** : voir les [comptes de test](#comptes-de-test).
-- **Comprendre les fonctionnalités** : voir le [manuel utilisateur](docs/user-manual.md).
-- **Voir toutes les versions mises en ligne** : page des versions Violette sur le site [GitHub](https://github.com/QuentinCAVIN/Projet-Violette/releases) (le plus haut = le plus récent).
-- **Développer ou tester le projet** : voir le [lancement rapide développeur](#lancement-rapide).
-
----
 <a id="install-violette-android-telephone"></a>
-## Installer l'application sur votre téléphone Android
+## Installer l'application (artistes et gérants)
 
 L'installation ne demande **aucune compétence technique**. Le guide pas à pas — téléchargement, installation, première connexion, problèmes courants — est dans un document dédié :
 
-**[📱 INSTALLATION.md — Installer Violette sur Android](INSTALLATION.md)**
+**[INSTALLATION.md — Installer Violette sur Android](INSTALLATION.md)**
 
-Pour mettre à jour une application déjà installée, voir le [manuel de mise à jour](docs/manuel-mise-a-jour.md).
-
----
-
-## → Documentation architecture & backend (module architecture logicielle)
-
-La documentation technique backend reste détaillée dans le README du backend :
-
-**[📄 violette-back/README.md](violette-back/README.md)**
+Ensuite : le [manuel d'utilisation](docs/user-manual.md) pour vous servir de l'application, et le [manuel de mise à jour](docs/manuel-mise-a-jour.md) pour passer aux nouvelles versions.
 
 ---
 
-## Documentation
-
-### Pour les examinateurs
+<a id="documentation-pour-les-examinateurs"></a>
+## Documentation pour les examinateurs
 
 | Document | Contenu | Lien |
 |----------|---------|------|
-| **Manuel technique backend** | Architecture, couches, packages, sécurité, démarrage, tests, commandes Maven | [violette-back/README.md](violette-back/README.md) |
-| **Architecture détaillée** | Patterns, DDD, sécurité JWT, flux de requête, décisions de modélisation | [violette-back/ARCHITECTURE.md](violette-back/ARCHITECTURE.md) |
+| **Cahier de recettes** | **(éliminatoire)** 49 scénarios (authentification, dates, disponibilités, réservation, sécurité, accessibilité), résultats observés, anomalies liées | [docs/cahier-de-recettes.md](docs/cahier-de-recettes.md) |
+| **Sécurité (OWASP Top 10)** | **(éliminatoire)** Couverture des 10 failles OWASP : mesures, preuves, limites assumées | [docs/securite-owasp.md](docs/securite-owasp.md) |
+| **Accessibilité** | **(éliminatoire)** Référentiel WCAG 2.2 AA : choix, justification, périmètre et test au lecteur d'écran | [docs/accessibilite.md](docs/accessibilite.md) |
+| **Plan de correction des bogues** | Barème de gravité, cycle complet de traitement par anomalie | [docs/plan-correction-bogues.md](docs/plan-correction-bogues.md) |
 | **Description fonctionnelle** | Contexte métier, acteurs, fonctionnalités, workflow | [docs/functional-spec.md](docs/functional-spec.md) |
+| **Manuel d'installation** | Installation de l'application par un utilisateur final (Android) | [INSTALLATION.md](INSTALLATION.md) |
 | **Manuel d'utilisation** | Guide gérant et artiste, statuts, bonnes pratiques | [docs/user-manual.md](docs/user-manual.md) |
+| **Manuel de mise à jour** | Mise à jour côté utilisateur (APK) et côté exploitant (tag, migrations Flyway) | [docs/manuel-mise-a-jour.md](docs/manuel-mise-a-jour.md) |
 | **Règles métier** | Statuts, disponibilités, présélection, booking ferme | [docs/regles-metier.md](docs/regles-metier.md) |
 | **Workflow de réservation** | Vue workflow et variantes futures | [docs/booking-workflow.md](docs/booking-workflow.md) |
 | **Architecture globale** | Séparation Flutter / Quarkus / Firebase Auth, couches REST frontend | [docs/architecture.md](docs/architecture.md) |
 | **Documentation C4** | Explication des diagrammes C4 (contexte, container, composants, zoom niveau 4) | [docs/architecture-c4.md](docs/architecture-c4.md) |
+| **Manuel technique backend** | Architecture, couches, packages, sécurité, démarrage, tests, commandes Maven | [violette-back/README.md](violette-back/README.md) |
+| **Architecture backend détaillée** | Patterns, DDD, sécurité JWT, flux de requête, décisions de modélisation | [violette-back/ARCHITECTURE.md](violette-back/ARCHITECTURE.md) |
+| **Manuel technique frontend** | Configuration réseau (`API_BASE_URL`), scénarios de lancement | [violette_front/README.md](violette_front/README.md) |
+| **Démarrage local** | Procédure complète depuis un clone vierge (Firebase, seed, backend, frontend) | [docs/demarrage-local.md](docs/demarrage-local.md) |
+| **Comptes de test** | Identifiants de démonstration (gérant et artistes) pour l'environnement de développement local | [docs/demarrage-local.md#comptes-de-test](docs/demarrage-local.md#comptes-de-test) |
+| **Stratégie de tests** | Types de tests frontend/backend, profils Quarkus, couverture JaCoCo | [docs/testing-strategy.md](docs/testing-strategy.md) |
+| **Dette technique** | Limites assumées et évolutions futures | [docs/technical-debt.md](docs/technical-debt.md) |
 | **Manuel de déploiement** | Fly.io, Aiven MySQL, pipeline CI/CD, secrets GitHub, checklist soutenance | [README-deploiement.md](README-deploiement.md) |
-| **Manuel de mise à jour** | Mise à jour côté utilisateur (APK) et côté exploitant (tag, migrations Flyway) | [docs/manuel-mise-a-jour.md](docs/manuel-mise-a-jour.md) |
-| **Migration domaine user** | Setup OpenAPI Generator, client Dart généré, flux REST user, adb reverse, dette résiduelle | [docs/migration-domaine-user.md](docs/migration-domaine-user.md) |
-| **Stratégie de tests** | Tests frontend/backend, profils Quarkus, règles de migration REST | [docs/testing-strategy.md](docs/testing-strategy.md) |
-| **Sécurité (OWASP Top 10)** | Couverture des 10 failles OWASP : mesures, preuves, limites assumées | [docs/securite-owasp.md](docs/securite-owasp.md) |
-| **Accessibilité** | Référentiel WCAG 2.2 AA : choix, justification, périmètre et trajectoire | [docs/accessibilite.md](docs/accessibilite.md) |
-| **Préparation v0.4.0** | Checklist documentaire, tests, tag, Swagger et APK | [docs/release-v0.4.0.md](docs/release-v0.4.0.md) |
-| **Dette technique** | Limites assumées v0.4.0 et évolutions futures | [docs/technical-debt.md](docs/technical-debt.md) |
+| **Migration domaine user** | Setup OpenAPI Generator, client Dart généré, flux REST user | [docs/migration-domaine-user.md](docs/migration-domaine-user.md) |
+| **Préparation v0.4.0** *(document d'époque)* | Checklist documentaire et technique de la release précédente | [docs/release-v0.4.0.md](docs/release-v0.4.0.md) |
 | **Changelog** | Historique des versions | [CHANGELOG.md](CHANGELOG.md) |
 
-### Intégration continue et déploiement
+---
 
-Le pipeline GitHub Actions lance automatiquement les validations backend et frontend sur `main` et branches de travail. Le workflow principal construit l'image Docker backend et publie les artefacts de release sur tag.
+## Contexte & positionnement
 
-Le déploiement en production (Fly.io) et la publication de l'APK Android sont déclenchés par un tag `v*.*.*`.
+Une compagnie de cabaret doit, pour chaque date de spectacle, réunir une équipe d'artistes — souvent indépendants et engagés auprès de plusieurs compagnies. La coordination repose traditionnellement sur des échanges informels (messages, tableurs, téléphone), sources d'oublis, de doubles engagements et de conflits de planning. Violette centralise ce processus : le gérant crée ses dates et compose ses équipes, les artistes déclarent leurs disponibilités et répondent aux demandes de réservation.
+
+→ Acteurs, cas d'usage et workflow détaillés : [description fonctionnelle](docs/functional-spec.md).
+
+## Architecture en bref
+
+Application Flutter (architecture Stacked/MVVM) → API REST Quarkus (monolithe modulaire découpé par domaines métier : `violetteuser`, `cabaretcompany`, `showdate`, `artistbooking`) → MySQL en production, H2 en local. Firebase Auth fournit l'identité (JWT) ; le backend valide le jeton et reste la source de vérité des rôles et des règles métier.
+
+![C4 Container](docs/diagrams/c4-container.png)
+
+→ Vue d'ensemble : [docs/architecture.md](docs/architecture.md) · Diagrammes C4 commentés : [docs/architecture-c4.md](docs/architecture-c4.md) · Architecture backend : [violette-back/ARCHITECTURE.md](violette-back/ARCHITECTURE.md)
+
+<a id="demarrage-rapide"></a>
+## Démarrage local (développeurs)
+
+La procédure complète — prérequis, configuration Firebase (`google-services.json`, alignement des UID du seed), lancement du backend et du frontend, comptes de test, vérifications — est dans **[docs/demarrage-local.md](docs/demarrage-local.md)**. Elle est suivable depuis un clone vierge du dépôt.
+
+## Qualité, tests, sécurité, accessibilité
+
+- **Stratégie de tests et couverture** (JaCoCo, profils Quarkus, tests Flutter) : [docs/testing-strategy.md](docs/testing-strategy.md)
+- **Recette manuelle v0.5.0** : [docs/cahier-de-recettes.md](docs/cahier-de-recettes.md) · anomalies : [docs/plan-correction-bogues.md](docs/plan-correction-bogues.md)
+- **Sécurité** (OWASP Top 10, cloisonnement inter-compagnies, JWT) : [docs/securite-owasp.md](docs/securite-owasp.md)
+- **Accessibilité** (WCAG 2.2 AA, test au lecteur d'écran) : [docs/accessibilite.md](docs/accessibilite.md)
+- **Dette technique et limites assumées** : [docs/technical-debt.md](docs/technical-debt.md)
+
+## Déploiement & intégration continue
+
+Le pipeline GitHub Actions lance automatiquement les validations backend et frontend sur `main` et les branches de travail. Le backend Quarkus est déployé sur **Fly.io** avec une base **MySQL Aiven** ; l'image Docker est publiée sur **GHCR**. Le déploiement en production et la publication de l'APK Android (GitHub Releases) sont déclenchés uniquement par un tag `v*.*.*`, afin de distinguer la CI continue de la release maîtrisée.
 
 → [.github/workflows/backend-ci.yml](.github/workflows/backend-ci.yml) — CI backend (tests + couverture)  
 → [.github/workflows/flutter-ci.yml](.github/workflows/flutter-ci.yml) — CI frontend (`flutter analyze` + `flutter test`)  
 → [.github/workflows/deploy.yml](.github/workflows/deploy.yml) — CI/CD principal (image Docker + Fly.io + APK)
 
-## Déploiement
-
-Le backend Quarkus est déployé sur `Fly.io` et utilise une base `MySQL` hébergée sur `Aiven`. Le pipeline `GitHub Actions` construit et publie l'image Docker sur `GHCR`, puis déclenche le déploiement sur tag `v*.*.*`. L'APK Android de release est publié dans les `GitHub Releases`.
-
-Le déploiement en production est déclenché uniquement via des tags versionnés afin de garantir la stabilité des versions livrées.
-
-Pour le détail des comptes, secrets, étapes manuelles et flux CI/CD, voir [README-deploiement.md](README-deploiement.md).
-
----
-
-## Architecture
-
-### C4 — Contexte système
-
-Vue d'ensemble du système Violette et de ses interactions avec les utilisateurs et services externes.
-
-![C4 Context](docs/diagrams/c4-context.png)
-
-### C4 — Containers
-
-Architecture technique : frontend Flutter, backend Quarkus, bases de données et services externes.
-
-![C4 Container](docs/diagrams/c4-container.png)
-
-### C4 — Components (Backend)
-
-Découpage modulaire du backend par domaine métier (violetteuser, showdate, artistbooking, cabaretcompany).
-
-![C4 Component](docs/diagrams/c4-component.png)
-
-### C4 — Zoom composant (niveau 4) — Domaine artistbooking
-
-Détail des composants et flux à l’intérieur du domaine **artistbooking** (Controller, Service, Repository, Entity, Event, Observer, Mapper). Source : [docs/diagrams/c4-component-artistbooking.puml](docs/diagrams/c4-component-artistbooking.puml). Pour afficher le PNG : générer à partir du .puml (voir [docs/diagrams/README.md](docs/diagrams/README.md)).
-
-![C4 Component Artistbooking](docs/diagrams/c4-component-artistbooking.png)
-
-### Domain-Driven Design — Bounded Contexts
-
-Cartographie des domaines métier avec distinction Core / Supporting / Generic.
-
-![DDD Bounded Contexts](docs/diagrams/ddd-bounded-contexts.png)
-
-### Domain Storytelling
-
-Flux fonctionnels principaux : déclaration de disponibilité, réservation d'artistes, gestion de compagnie.
-
-![Domain Storytelling](docs/diagrams/domain-storytelling.png)
-
----
-
-## État actuel — branche `main`
-
-> Release visée : **v0.4.0**  
-> Dernière version déployée connue : **v0.3.2**
-
-### Front-end (Flutter)
-- Application Flutter avec architecture Stacked.
-- Authentification Firebase avec gestion des rôles (gérant / artiste).
-- Création et gestion des dates de spectacle (ShowDate).
-- Vue Planning gérant avec calendrier et gestion des disponibilités par artiste.
-- Infrastructure de tests unitaires et intégration continue (GitHub Actions).
-- **Migration Firestore → REST côté code métier** : les domaines `user`, `availability`, `showDate` et `booking` utilisent désormais l'API REST backend. Firebase Auth reste le fournisseur d'identité.
-
-### Back-end (Quarkus)
-- Monolithe modulaire structuré par domaine (`violetteuser`, `cabaretcompany`, `showdate`, `artistbooking`).
-- Stack : Quarkus 3.x, Hibernate ORM Panache, Flyway (7 migrations), OpenAPI/Swagger, MapStruct.
-- Schéma SQL relationnel complet pour les domaines métier migrés.
-- Sécurité Firebase JWT via Quarkus OIDC (validée en production depuis v0.3.2), rôles métier (`ARTIST`, `MANAGER`) depuis la base backend.
-- Endpoint de santé : `GET /api/ping` — Swagger UI : `http://localhost:8080/swagger-ui`
-- Documentation API Swagger uniformisée en français (depuis v0.3.2).
-- Tests backend H2 et intégration MySQL/Dev Services, couverture JaCoCo ≥ 30 %, CI GitHub Actions backend.
-- Déployable en local via Docker Compose (MySQL 8 + Quarkus JVM).
-- Déployé en production sur Fly.io (région Paris) avec base MySQL Aiven (depuis v0.3.1).
-- Pipeline CI/CD GitHub Actions : build + tests + image Docker GHCR à chaque push ; déploiement Fly.io + APK Android sur tag `v*.*.*` (depuis v0.3.1).
-
-## Stack technique
-
-- Front : Flutter + Stacked + Firebase Auth + REST backend (`Dio`, remote data sources, repositories, mappers)
-- Back : Quarkus (Java 21), MySQL / H2
-- Client API généré : `violette_api_client/` — package Dart/Dio généré depuis la spec OpenAPI du backend (voir [openapitools.json](openapitools.json)). Aujourd'hui, le domaine `user` l'utilise directement ; les autres domaines REST passent par Dio et des mappers manuels.
-
-## Lancement rapide
-
-### 1. Backend local avec Firebase Auth
-
-```powershell
-cd violette-back
-$env:FIREBASE_PROJECT_ID="violette-1f64e"
-mvn quarkus:dev "-Dquarkus.profile=firebase"
-```
-
-Ce mode utilise H2 en mémoire : MySQL n'est pas nécessaire pour tester l'app Flutter avec JWT Firebase.
-
-### 2. Téléphone Android physique en USB
-
-```powershell
-adb reverse tcp:8080 tcp:8080
-cd violette_front
-flutter pub get
-flutter run
-```
-
-Le frontend utilise par défaut `http://127.0.0.1:8080`, ce qui fonctionne avec `adb reverse`.
-
-### 3. Émulateur Android
-
-```powershell
-cd violette_front
-flutter pub get
-flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8080
-```
-
-### 4. Backend Fly.io
-
-```powershell
-cd violette_front
-flutter run --dart-define=API_BASE_URL=https://violette-back.fly.dev
-```
-
-### 5. Tests
-
-```powershell
-cd violette-back
-mvn verify
-
-cd ../violette_front
-flutter analyze
-flutter test
-```
-
-## Variables principales
-
-| Variable | Où | Rôle | Exemple |
-|---|---|---|---|
-| `API_BASE_URL` | Flutter `--dart-define` | URL de l'API REST utilisée par Dio | `https://violette-back.fly.dev` |
-| `FIREBASE_PROJECT_ID` | Backend profil `firebase` | Project ID utilisé pour valider les JWT Firebase en local | `violette-1f64e` |
-| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD` | Backend profil `dev` | Connexion MySQL locale si le profil dev est utilisé | voir `violette-back/README.md` |
-| `QUARKUS_DATASOURCE_*` | Fly.io | Connexion MySQL Aiven en production | voir `README-deploiement.md` |
-
-## Scénarios courants
-
-| Scénario | Commandes / documentation |
-|---|---|
-| Dev local téléphone USB | Backend `firebase`, puis `adb reverse`, puis `flutter run` |
-| Dev local émulateur | `flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8080` |
-| App mobile sur backend Fly.io | `flutter run --dart-define=API_BASE_URL=https://violette-back.fly.dev` |
-| Build APK production | `flutter build apk --release --dart-define=API_BASE_URL=https://violette-back.fly.dev` |
-| Déploiement release | Créer et pousser un tag `vX.Y.Z`, voir [README-deploiement.md](README-deploiement.md) |
-
-Journal des versions : [CHANGELOG.md](CHANGELOG.md)
+Pour le détail des comptes, secrets et étapes manuelles : [README-deploiement.md](README-deploiement.md).

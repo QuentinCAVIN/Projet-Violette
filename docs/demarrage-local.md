@@ -39,6 +39,7 @@ L'application lit sa configuration Firebase dans deux fichiers :
 2. Placez-le dans `violette_front/android/app/`.
 3. C'est tout : les comptes de test et le seed sont déjà alignés. Passez à la section 3.
 
+<a id="comptes-de-test"></a>
 Comptes de test du projet mainteneur :
 
 | Rôle | E-mail | Mot de passe |
@@ -73,7 +74,7 @@ Comptes de test du projet mainteneur :
    VALUES (1, 'VOTRE_UID_MANAGER_ICI', 'manager@violette.test', 'Marie', 'Gérant', ...
    ```
 
-   > ⚠️ Modification locale de développement : ne la committez pas.
+   > **Attention** : modification locale de développement, ne la committez pas.
 
 6. **Déclarer l'application Android** : *Paramètres du projet* → *Vos applications* → *Ajouter une application* → Android. Dans le champ *Nom du package Android*, saisissez **exactement** :
 
@@ -95,7 +96,7 @@ Comptes de test du projet mainteneur :
    flutterfire configure --project=<votre-project-id>
    ```
 
-   > ⚠️ Modification locale de développement : ne la committez pas.
+   > **Attention** : modification locale de développement, ne la committez pas.
 
 ---
 
