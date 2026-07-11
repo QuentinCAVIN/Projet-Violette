@@ -198,9 +198,10 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          # À aligner avec `flutter --version` sur ta machine locale.
+          # À garder alignée sur flutter-ci.yml : l'APK livré doit être
+          # construit avec la version validée par la CI de test.
           # Vérifier l'existence : https://github.com/flutter/flutter/releases
-          flutter-version: "3.38.3"
+          flutter-version: "3.44.4"
           channel: stable
           cache: true
 
