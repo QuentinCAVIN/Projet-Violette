@@ -471,8 +471,10 @@ class _InlineOpenFullDetailLink extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
+      container: true,
       button: true,
       label: 'Détail, ouvrir la fiche complète de la date',
+      onTap: onPressed,
       child: ExcludeSemantics(
         child: TextButton.icon(
           onPressed: onPressed,
