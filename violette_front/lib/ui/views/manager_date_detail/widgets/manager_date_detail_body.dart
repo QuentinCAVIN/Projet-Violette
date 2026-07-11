@@ -11,8 +11,8 @@ import 'package:violette_front/ui/views/manager_date_detail/widgets/show_date_st
 import 'package:violette_front/ui/views/manager_date_detail/manager_date_detail_viewmodel.dart';
 import 'package:violette_front/ui/widgets/common/availability_status_pill.dart';
 
-/// Rouge clair lisible sur fond dégradé sombre (bouton tertiaire).
-const _cancelActionColor = Color(0xFFF0997B);
+/// Rouge destructif lisible sur fond de carte (cardSurface, WCAG AA).
+const _cancelActionColor = Color(0xFFC62828);
 
 class ManagerDateDetailBody
     extends ViewModelWidget<ManagerDateDetailViewModel> {
@@ -256,11 +256,13 @@ class ManagerDateDetailBody
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: ShowDateStatusPill(status: currentShowDate.status),
-        ),
-        const SizedBox(height: 8),
+        if (!isInline) ...[
+          Align(
+            alignment: Alignment.centerLeft,
+            child: ShowDateStatusPill(status: currentShowDate.status),
+          ),
+          const SizedBox(height: 8),
+        ],
         Text(
           selectionLabel,
           style: const TextStyle(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:violette_front/models/enums/booking_status.dart';
+import 'package:violette_front/ui/widgets/common/calendar/calendar_day_cell.dart';
 
 class BookingStatusPill extends StatelessWidget {
   final BookingStatus status;
@@ -18,14 +19,13 @@ class BookingStatusPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.2),
+        color: color,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color),
       ),
       child: Text(
         label,
         style: TextStyle(
-          color: color,
+          color: contrastTextForStatusPill(color),
           fontSize: 12,
           fontWeight: FontWeight.bold,
         ),

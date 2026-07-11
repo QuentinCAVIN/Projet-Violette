@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:violette_front/models/enums/availability_status.dart';
+import 'package:violette_front/ui/widgets/common/calendar/calendar_day_cell.dart';
 
 class AvailabilityStatusPill extends StatelessWidget {
   final AvailabilityStatus status;
@@ -22,7 +23,10 @@ class AvailabilityStatusPill extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: const TextStyle(color: Colors.white, fontSize: 12),
+        style: TextStyle(
+          color: contrastTextForStatusPill(color),
+          fontSize: 12,
+        ),
       ),
     );
   }
