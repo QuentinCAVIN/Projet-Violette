@@ -7,11 +7,13 @@ import 'package:violette_front/ui/views/manager_date_detail/manager_date_detail_
 class ManagerShowDateInlineDetail extends StatelessWidget {
   final ShowDate showDate;
   final Future<void> Function(ShowDate updatedShowDate)? onShowDateUpdated;
+  final VoidCallback? onOpenFullDetail;
 
   const ManagerShowDateInlineDetail({
     super.key,
     required this.showDate,
     this.onShowDateUpdated,
+    this.onOpenFullDetail,
   });
 
   @override
@@ -23,12 +25,13 @@ class ManagerShowDateInlineDetail extends StatelessWidget {
       ),
       onViewModelReady: (viewModel) => viewModel.initialize(),
       builder: (context, viewModel, child) {
-        return const Card(
-          margin: EdgeInsets.only(top: 8),
+        return Card(
+          margin: const EdgeInsets.only(top: 8),
           child: Padding(
-            padding: EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(8.0),
             child: ManagerDateDetailBody(
               isInline: true,
+              onOpenFullDetail: onOpenFullDetail,
             ),
           ),
         );

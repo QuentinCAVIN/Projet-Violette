@@ -4,6 +4,7 @@ import 'package:violette_front/models/artist_booking.dart';
 import 'package:violette_front/models/enums/availability_status.dart';
 import 'package:violette_front/models/enums/booking_status.dart';
 import 'package:violette_front/models/enums/show_date_status.dart';
+import 'package:violette_front/models/show_date.dart';
 import 'package:violette_front/ui/common/app_theme.dart';
 import 'package:violette_front/ui/views/manager_date_detail/widgets/booking_status_pill.dart';
 import 'package:violette_front/ui/views/manager_date_detail/widgets/show_date_status_pill.dart';
@@ -16,10 +17,12 @@ const _cancelActionColor = Color(0xFFF0997B);
 class ManagerDateDetailBody
     extends ViewModelWidget<ManagerDateDetailViewModel> {
   final bool isInline;
+  final VoidCallback? onOpenFullDetail;
 
   const ManagerDateDetailBody({
     super.key,
     this.isInline = false,
+    this.onOpenFullDetail,
   });
 
   @override
@@ -33,8 +36,8 @@ class ManagerDateDetailBody
     final horizontalMargin = isInline ? 0.0 : 16.0;
 
     final listView = ListView.builder(
-      shrinkWrap: isInline,
-      physics: isInline ? const NeverScrollableScrollPhysics() : null,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       padding: EdgeInsets.zero,
       itemCount: viewModel.artistLines.length,
       itemBuilder: (context, index) {
@@ -43,13 +46,76 @@ class ManagerDateDetailBody
         final apiArtistId = line.apiArtistId;
 
         final booking = viewModel.getBookingForArtist(apiArtistId);
+        final availability = viewModel.getAvailabilityForArtist(apiArtistId);
+        final artistName = '${artist.firstName} ${artist.lastName}';
+
+        if (!isInline) {
+          return Semantics(
+            container: true,
+            label: _artistLineReadOnlyAccessibilityLabel(
+              artistName: artistName,
+              booking: booking,
+              availability: availability,
+            ),
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: ExcludeSemantics(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            artistName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: VioletteTheme.textOnCard,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            artist.email,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: VioletteTheme.textOnCardSecondary,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    fit: FlexFit.loose,
+                    child: ExcludeSemantics(
+                      child: _buildStatusPill(
+                        booking: booking,
+                        availability: availability,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
 
         final isEnabled =
             viewModel.isSelectionEnabled(currentShowDate, apiArtistId);
-
-        final availability = viewModel.getAvailabilityForArtist(apiArtistId);
         final isChecked = viewModel.isBookingCheckboxChecked(booking);
-        final artistName = '${artist.firstName} ${artist.lastName}';
 
         return Semantics(
           container: true,
@@ -214,93 +280,127 @@ class ManagerDateDetailBody
     final lavenderCardMargin =
         EdgeInsets.symmetric(horizontal: horizontalMargin);
 
-    final actionsBlock = Padding(
-      padding: EdgeInsets.fromLTRB(
-        horizontalMargin + 16,
-        16,
-        horizontalMargin + 16,
-        16,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Le design actuel suppose une seule transition possible par statut ;
-          // si plusieurs transitions coexistent un jour, remplacer ce bouton unique
-          // par un sélecteur (menu ou boutons multiples).
-          if (availableNextStatuses.isNotEmpty) ...[
-            ElevatedButton(
-              onPressed: () => viewModel.changeShowDateStatus(
-                availableNextStatuses.first,
-              ),
-              child: Text(
-                _statusTransitionActionLabel(availableNextStatuses.first),
-              ),
+    final inlineHeaderSection = onOpenFullDetail != null
+        ? Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: headerSection),
+              _InlineOpenFullDetailLink(onPressed: onOpenFullDetail!),
+            ],
+          )
+        : headerSection;
+
+    final actionsBlock = isInline
+        ? Padding(
+            padding: EdgeInsets.fromLTRB(
+              horizontalMargin + 16,
+              16,
+              horizontalMargin + 16,
+              16,
             ),
-            const SizedBox(height: 8),
-          ],
-          OutlinedButton(
-            style: OutlinedButton.styleFrom(
-              foregroundColor: VioletteTheme.textPrimary,
-              disabledForegroundColor:
-                  VioletteTheme.textPrimary.withValues(alpha: 0.5),
-              side: BorderSide(
-                color: viewModel.canSendConfirmation
-                    ? VioletteTheme.textPrimary
-                    : VioletteTheme.textPrimary.withValues(alpha: 0.5),
-              ),
-            ),
-            onPressed: viewModel.canSendConfirmation
-                ? viewModel.sendConfirmation
-                : null,
-            child: const Text('Réserver les artistes'),
-          ),
-          if (viewModel.canCancelShowDate) ...[
-            const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: viewModel.cancelShowDate,
-                icon: const Icon(
-                  Icons.event_busy,
-                  color: _cancelActionColor,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Le design actuel suppose une seule transition possible par statut ;
+                // si plusieurs transitions coexistent un jour, remplacer ce bouton unique
+                // par un sélecteur (menu ou boutons multiples).
+                if (availableNextStatuses.isNotEmpty) ...[
+                  ElevatedButton(
+                    onPressed: () => viewModel.changeShowDateStatus(
+                      availableNextStatuses.first,
+                    ),
+                    child: Text(
+                      _statusTransitionActionLabel(availableNextStatuses.first),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: VioletteTheme.textPrimary,
+                    disabledForegroundColor:
+                        VioletteTheme.textPrimary.withValues(alpha: 0.5),
+                    side: BorderSide(
+                      color: viewModel.canSendConfirmation
+                          ? VioletteTheme.textPrimary
+                          : VioletteTheme.textPrimary.withValues(alpha: 0.5),
+                    ),
+                  ),
+                  onPressed: viewModel.canSendConfirmation
+                      ? viewModel.sendConfirmation
+                      : null,
+                  child: const Text('Réserver les artistes'),
                 ),
-                label: const Text(
-                  'Annuler la date',
-                  style: TextStyle(color: _cancelActionColor),
-                ),
-              ),
+                if (viewModel.canCancelShowDate) ...[
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      onPressed: viewModel.cancelShowDate,
+                      icon: const Icon(
+                        Icons.event_busy,
+                        color: _cancelActionColor,
+                      ),
+                      label: const Text(
+                        'Annuler la date',
+                        style: TextStyle(color: _cancelActionColor),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
-          ],
-        ],
-      ),
-    );
+          )
+        : const SizedBox.shrink();
 
     if (viewModel.isBusy) {
-      return Column(
-        mainAxisSize: isInline ? MainAxisSize.min : MainAxisSize.max,
-        children: [
-          Container(
-            width: double.infinity,
-            margin: lavenderCardMargin,
-            padding: const EdgeInsets.all(16),
-            decoration: lavenderCardDecoration,
-            child: headerSection,
-          ),
-          if (isInline)
+      if (isInline) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: double.infinity,
+              margin: lavenderCardMargin,
+              padding: const EdgeInsets.all(16),
+              decoration: lavenderCardDecoration,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  inlineHeaderSection,
+                ],
+              ),
+            ),
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 16),
               child: Center(
                 child: CircularProgressIndicator(),
               ),
-            )
-          else
-            const Expanded(
+            ),
+          ],
+        );
+      }
+
+      return SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: double.infinity,
+              margin: lavenderCardMargin,
+              padding: const EdgeInsets.all(16),
+              decoration: lavenderCardDecoration,
+              child: _ShowDateInfoBlock(showDate: currentShowDate),
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
               child: Center(
                 child: CircularProgressIndicator(),
               ),
             ),
-        ],
+          ],
+        ),
       );
     }
 
@@ -318,7 +418,7 @@ class ManagerDateDetailBody
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                headerSection,
+                inlineHeaderSection,
                 const SizedBox(height: 12),
                 listView,
               ],
@@ -329,28 +429,22 @@ class ManagerDateDetailBody
       );
     }
 
-    return Column(
-      mainAxisSize: MainAxisSize.max,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Expanded(
-          child: Container(
-            width: double.infinity,
-            margin: lavenderCardMargin,
-            padding: const EdgeInsets.all(16),
-            decoration: lavenderCardDecoration,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                headerSection,
-                const SizedBox(height: 12),
-                Expanded(child: listView),
-              ],
-            ),
-          ),
+    return SingleChildScrollView(
+      child: Container(
+        width: double.infinity,
+        margin: lavenderCardMargin,
+        padding: const EdgeInsets.all(16),
+        decoration: lavenderCardDecoration,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _ShowDateInfoBlock(showDate: currentShowDate),
+            const SizedBox(height: 12),
+            listView,
+          ],
         ),
-        actionsBlock,
-      ],
+      ),
     );
   }
 
@@ -366,6 +460,206 @@ class ManagerDateDetailBody
     }
     return const SizedBox.shrink();
   }
+}
+
+/// Lien de navigation vers la fiche complète (détail inline planning uniquement).
+class _InlineOpenFullDetailLink extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const _InlineOpenFullDetailLink({required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'Détail, ouvrir la fiche complète de la date',
+      child: ExcludeSemantics(
+        child: TextButton.icon(
+          onPressed: onPressed,
+          style: TextButton.styleFrom(
+            minimumSize: const Size(48, 48),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            foregroundColor: VioletteTheme.cardTitle,
+            tapTargetSize: MaterialTapTargetSize.padded,
+            visualDensity: VisualDensity.compact,
+          ),
+          icon: const Icon(Icons.open_in_full, size: 18),
+          label: const Text('Détail'),
+        ),
+      ),
+    );
+  }
+}
+
+/// Bloc d'informations complètes de la date (vue plein écran gérant uniquement).
+class _ShowDateInfoBlock extends StatelessWidget {
+  final ShowDate showDate;
+
+  const _ShowDateInfoBlock({required this.showDate});
+
+  String get _staffingValue {
+    if (showDate.totalRequiredArtists > 0) {
+      final noun = showDate.totalRequiredArtists <= 1 ? 'artiste' : 'artistes';
+      return '${showDate.selectedCount} / ${showDate.totalRequiredArtists} $noun';
+    }
+    return 'Sélection libre';
+  }
+
+  String? get _clientContactValue {
+    final name = showDate.clientContactName?.trim();
+    final phone = showDate.clientContactPhone?.trim();
+    final hasName = name != null && name.isNotEmpty;
+    final hasPhone = phone != null && phone.isNotEmpty;
+    if (!hasName && !hasPhone) {
+      return null;
+    }
+    if (hasName && hasPhone) {
+      return '$name — $phone';
+    }
+    return hasName ? name : phone;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final description = showDate.description?.trim();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: VioletteTheme.cardSurface,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Semantics(
+                header: true,
+                child: const Text(
+                  'Informations',
+                  style: TextStyle(
+                    color: VioletteTheme.cardTitle,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const Spacer(),
+              ShowDateStatusPill(status: showDate.status),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _ShowDateInfoLine(
+            icon: Icons.access_time,
+            label: 'Heure de convocation',
+            value: showDate.formattedMeetingTimeForDisplay,
+          ),
+          _ShowDateInfoLine(
+            icon: Icons.place_outlined,
+            label: 'Lieu',
+            value: showDate.address,
+          ),
+          if (_clientContactValue != null)
+            _ShowDateInfoLine(
+              icon: Icons.person_outline,
+              label: 'Contact client',
+              value: _clientContactValue!,
+            ),
+          if (description != null && description.isNotEmpty)
+            _ShowDateInfoLine(
+              icon: Icons.notes_outlined,
+              label: 'Description',
+              value: description,
+            ),
+          _ShowDateInfoLine(
+            icon: Icons.groups_outlined,
+            label: 'Effectif',
+            value: _staffingValue,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Ligne d'information avec icône, libellé et valeur (accessibilité regroupée).
+class _ShowDateInfoLine extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _ShowDateInfoLine({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      container: true,
+      label: '$label : $value',
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: ExcludeSemantics(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                icon,
+                size: 20,
+                color: VioletteTheme.textOnCardSecondary,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: const TextStyle(
+                        color: VioletteTheme.textOnCardSecondary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      value,
+                      style: const TextStyle(
+                        color: VioletteTheme.textOnCard,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Libellé d'accessibilité regroupé pour une ligne artiste en lecture seule.
+String _artistLineReadOnlyAccessibilityLabel({
+  required String artistName,
+  required ArtistBooking? booking,
+  required AvailabilityStatus? availability,
+}) {
+  final buffer = StringBuffer(artistName);
+
+  if (booking != null) {
+    buffer.write(', engagement : ${booking.status.displayName}');
+  } else if (availability != null) {
+    buffer.write(', disponibilité : ${availability.label}');
+  }
+
+  return buffer.toString();
 }
 
 /// Libellé d'accessibilité regroupé pour une ligne artiste du détail gérant.

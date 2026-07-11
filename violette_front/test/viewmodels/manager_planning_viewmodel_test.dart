@@ -1,11 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:stacked_services/stacked_services.dart';
 import 'package:violette_front/app/app.locator.dart';
+import 'package:violette_front/app/app.router.dart';
 import 'package:violette_front/models/availability.dart';
 import 'package:violette_front/models/enums/show_date_status.dart';
 import 'package:violette_front/models/show_date.dart';
 import 'package:violette_front/ui/views/manager_planning/manager_planning_viewmodel.dart';
 import 'package:violette_front/models/enums/availability_status.dart';
-import 'package:mocktail/mocktail.dart';
 
 import '../helpers/test_helpers.dart';
 import '../helpers/test_data_builders.dart';
@@ -99,7 +101,8 @@ void main() {
             .getUser('artist3')); // le status pending ne doit pas être chargé
       });
 
-      test('onDaySelected_whenGetUserReturnsNull_keepsArtistListEmpty', () async {
+      test('onDaySelected_whenGetUserReturnsNull_keepsArtistListEmpty',
+          () async {
         final showDateRepo = getAndRegisterShowDateRepository();
         final userRepo = getAndRegisterUserRepository();
         final availabilityRepo = getAndRegisterAvailabilityRepository();
@@ -198,8 +201,7 @@ void main() {
         expect(viewModel.expandedShowDateId, isNull);
       });
 
-      test(
-          'toggleExpanded_whenAnotherDateIsOpened_closesPreviousDate',
+      test('toggleExpanded_whenAnotherDateIsOpened_closesPreviousDate',
           () async {
         final viewModel = ManagerPlanningViewModel();
         final firstDate = TestDataBuilders.createTestShowDate(
@@ -218,9 +220,7 @@ void main() {
         expect(viewModel.expandedShowDateId, equals('date-2'));
       });
 
-      test(
-          'onDaySelected_whenDayChanges_resetsExpandedShowDateId',
-          () async {
+      test('onDaySelected_whenDayChanges_resetsExpandedShowDateId', () async {
         final showDateRepo = getAndRegisterShowDateRepository();
         final userRepo = getAndRegisterUserRepository();
         final availabilityRepo = getAndRegisterAvailabilityRepository();
@@ -262,7 +262,8 @@ void main() {
     });
 
     group('Chargement des dates de spectacle', () {
-      test('loadShowDates_whenSomeDatesAreCancelledOrArchived_filtersThemOut', () async {
+      test('loadShowDates_whenSomeDatesAreCancelledOrArchived_filtersThemOut',
+          () async {
         final showDateRepo = getAndRegisterShowDateRepository();
         final testDate = DateTime(2026, 2, 15);
 
@@ -332,7 +333,9 @@ void main() {
     });
 
     group('Rafraîchissement après changement de statut', () {
-      test('refreshShowDateAfterStatusChange_whenOneDateChanges_updatesOnlyThatDate', () async {
+      test(
+          'refreshShowDateAfterStatusChange_whenOneDateChanges_updatesOnlyThatDate',
+          () async {
         final viewModel = ManagerPlanningViewModel();
         final testDate = DateTime(2026, 2, 15);
         final unchangedDate = ShowDate(
@@ -374,14 +377,17 @@ void main() {
         expect(viewModel.showDates.last.id, 'date-2');
         expect(viewModel.showDates.last.status, ShowDateStatus.option);
         expect(viewModel.selectedShowDates.first.id, 'date-1');
-        expect(viewModel.selectedShowDates.first.status, ShowDateStatus.inquiry);
+        expect(
+            viewModel.selectedShowDates.first.status, ShowDateStatus.inquiry);
         expect(viewModel.selectedShowDates.last.id, 'date-2');
         expect(viewModel.selectedShowDates.last.status, ShowDateStatus.option);
         expect(viewModel.showDatePicked?.id, 'date-2');
         expect(viewModel.showDatePicked?.status, ShowDateStatus.option);
       });
 
-      test('refreshShowDateAfterStatusChange_whenDateBecomesCancelled_removesItFromLists', () async {
+      test(
+          'refreshShowDateAfterStatusChange_whenDateBecomesCancelled_removesItFromLists',
+          () async {
         final viewModel = ManagerPlanningViewModel();
         final testDate = DateTime(2026, 2, 15);
         final activeDate = ShowDate(
@@ -412,6 +418,44 @@ void main() {
         expect(viewModel.showDates, isEmpty);
         expect(viewModel.selectedShowDates, isEmpty);
         expect(viewModel.showDatePicked, isNull);
+      });
+    });
+
+    group('Navigation vers le détail plein écran', () {
+      test(
+          'navigateToDetail_whenCalled_navigatesToManagerDateDetailViewWithShowDate',
+          () {
+        final navigationService =
+            locator<NavigationService>() as MockNavigationService;
+        when(
+          () => navigationService.navigateTo<dynamic>(
+            any(),
+            arguments: any(named: 'arguments'),
+            id: any(named: 'id'),
+            preventDuplicates: any(named: 'preventDuplicates'),
+            parameters: any(named: 'parameters'),
+            transition: any(named: 'transition'),
+          ),
+        ).thenAnswer((_) async => null);
+
+        final showDate = TestDataBuilders.createTestShowDate(
+          id: 'date-1',
+          title: 'Gala Violette',
+        );
+        final viewModel = ManagerPlanningViewModel();
+
+        viewModel.navigateToDetail(showDate);
+
+        verify(
+          () => navigationService.navigateTo<dynamic>(
+            Routes.managerDateDetailView,
+            arguments: ManagerDateDetailViewArguments(showDate: showDate),
+            id: any(named: 'id'),
+            preventDuplicates: any(named: 'preventDuplicates'),
+            parameters: any(named: 'parameters'),
+            transition: any(named: 'transition'),
+          ),
+        ).called(1);
       });
     });
   });
