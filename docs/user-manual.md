@@ -40,6 +40,10 @@ Votre connexion est sécurisée : seul vous pouvez accéder à votre espace avec
 
 Vous accédez ensuite à votre tableau de bord. Les fonctionnalités affichées dépendent de votre rôle : le gérant voit la gestion des dates et des réservations ; l'artiste voit ses disponibilités et ses demandes en attente.
 
+<img src="assets/manuel-01-accueil-gerant.png" alt="Écran d'accueil d'un gérant" width="340">
+
+*L'écran d'accueil d'un gérant : le profil est affiché, avec les deux actions principales — créer une date ou consulter le planning.*
+
 ---
 
 ## 4. Utilisation pour un gérant
@@ -57,7 +61,15 @@ En tant que gérant, vous pilotez les dates de spectacle et la constitution des 
    - l'heure de rendez-vous ;
    - les coordonnées du contact client.
 
+<img src="assets/manuel-02-creation-date.png" alt="Formulaire de création d'une date de spectacle rempli" width="340">
+
+*Le formulaire de création rempli, prêt à valider. Relisez bien chaque champ avant d'appuyer sur « Créer la date » : l'édition n'est pas possible après création (voir plus bas).*
+
 Une fois la date créée, elle apparaît dans votre planning.
+
+<img src="assets/manuel-03-planning-gerant.png" alt="Planning gérant avec des dates de différents statuts" width="340">
+
+*Le planning gérant : chaque jour porte la couleur du statut de sa date — gris « Demande client », orange « Option », vert « Confirmée », bleu « Équipe complète » (voir le détail des statuts en section 6). Sélectionnez un jour pour afficher la date correspondante.*
 
 #### Annuler une date
 
@@ -77,6 +89,10 @@ Depuis le planning, sélectionnez une date pour déplier son détail, puis appuy
 
 > **Vérifiez vos informations avant de valider la création.** Une date créée ne peut pas encore être modifiée depuis l'application : la fiche est consultable, mais l'édition n'est pas disponible dans cette version.
 
+<img src="assets/manuel-06-fiche-consultation.png" alt="Fiche de consultation complète d'une date" width="340">
+
+*La fiche de consultation d'une date : toute la feuille de route en lecture seule — heure de convocation, lieu complet, contact client, description, effectif, statut et disponibilités des artistes.*
+
 #### Définir les besoins artistiques *(fonctionnalité à venir)*
 
 La définition détaillée des besoins par compétence (danse, chant, acrobaties, etc.) et du nombre d'artistes requis par compétence est **prévue dans une version ultérieure**. Dans la version actuelle, le champ « Artistes nécessaires » du formulaire de création de date est **informatif** : il n'est pas encore pris en compte pour contraindre la constitution de l'équipe.
@@ -93,6 +109,10 @@ Avant de sélectionner les artistes, consultez les **disponibilités** déclaré
 
 Parmi les artistes **disponibles**, choisissez ceux que vous souhaitez retenir pour la date. Vous ne pouvez sélectionner que des artistes ayant déclaré être disponibles.
 
+<img src="assets/manuel-04-preselection-option.png" alt="Détail d'une date en Option avec la liste des artistes" width="340">
+
+*Une date en « Option » : chaque artiste porte sa pastille de disponibilité (vert « Disponible », orange « Si besoin », rouge « Indisponible » — non sélectionnable), avec sa case de sélection. Le bouton « Réserver les artistes » est grisé : l'envoi des demandes n'est possible que sur une date « Confirmée » (voir l'encadré ci-dessous).*
+
 #### Envoyer les demandes de confirmation
 
 > **À savoir — la date doit être confirmée.** Le bouton **Réserver les artistes** n'est actif que
@@ -102,6 +122,10 @@ Parmi les artistes **disponibles**, choisissez ceux que vous souhaitez retenir p
 > permettre d'envoyer les demandes dès la pose de l'option.
 
 Une fois vos choix effectués, **envoyez les demandes de confirmation** aux artistes sélectionnés. Chaque artiste recevra une demande et pourra accepter ou refuser. Vous pourrez suivre l'état des réponses dans l'application.
+
+<img src="assets/manuel-05-date-confirmee.png" alt="Détail de la même date passée en Confirmée" width="340">
+
+*La même date passée en « Confirmée » : la réservation devient possible — le bouton « Réserver les artistes » s'active dès qu'au moins un artiste est coché.*
 
 ---
 
@@ -121,6 +145,10 @@ Pour chaque date de spectacle à venir, indiquez votre statut :
 
 Il est conseillé de mettre à jour vos disponibilités régulièrement pour que le gérant dispose d'informations à jour.
 
+<img src="assets/manuel-07-planning-artiste.png" alt="Planning Artiste avec le calendrier des disponibilités" width="340">
+
+*Le Planning Artiste : chaque jour porte la couleur de votre disponibilité déclarée, et la carte sous le calendrier permet de la consulter et de la modifier pour la date sélectionnée.*
+
 > **Disponibilité verrouillée après confirmation.** Une fois que vous êtes **confirmé** sur une date (vous avez accepté une demande de réservation), vous ne pouvez plus modifier votre disponibilité sur cette date. Pour tout désistement, contactez directement le gérant.
 
 #### Répondre aux demandes de réservation
@@ -132,6 +160,10 @@ Lorsque le gérant vous envoie une **demande de réservation** pour une date :
 3. Votre réponse est enregistrée immédiatement.
 
 Une réponse rapide facilite l'organisation du gérant.
+
+<img src="assets/manuel-08-demande-reservation.png" alt="Demande de réservation en attente côté artiste" width="340">
+
+*Une demande de réservation en attente, affichée dès l'écran d'accueil de l'artiste : « Confirmer » ou « Refuser » en un geste.*
 
 #### Consulter ses engagements
 
