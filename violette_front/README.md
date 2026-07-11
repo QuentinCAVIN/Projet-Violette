@@ -144,19 +144,15 @@ flutter build apk --release --dart-define=API_BASE_URL=https://violette-back.fly
 
 ---
 
-## Golden tests
+## Tests
 
-Pour lancer l'analyse et les tests frontend :
+Pour lancer l'analyse statique et les tests frontend :
 
 ```bash
 flutter analyze
 flutter test
 ```
 
-Les golden tests sont déjà en place. Pour mettre à jour les fichiers de référence :
-
-```bash
-flutter test --update-goldens
-```
-
-Les captures sont stockées sous `test/golden/`.
+> **Golden tests** : la dépendance `golden_toolkit` est déclarée dans `pubspec.yaml`, mais aucun
+> golden test n'est implémenté en v0.5.0. Les tests de stabilité visuelle sont prévus pour une
+> version ultérieure.
