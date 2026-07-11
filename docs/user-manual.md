@@ -53,6 +53,12 @@ En tant que gérant, vous pilotez les dates de spectacle et la constitution des 
 
 Une fois la date créée, elle apparaît dans votre planning.
 
+#### Consulter le détail d'une date
+
+Depuis le planning, sélectionnez une date pour déplier son détail, puis appuyez sur **Détail** pour ouvrir sa fiche complète. Vous y retrouvez l'ensemble de la feuille de route : heure de convocation, adresse complète, contact client, description et effectif, ainsi que le statut de la date et les artistes qui y sont engagés.
+
+> **Vérifiez vos informations avant de valider la création.** Une date créée ne peut pas encore être modifiée depuis l'application : la fiche est consultable, mais l'édition n'est pas disponible dans cette version.
+
 #### Définir les besoins artistiques *(fonctionnalité à venir)*
 
 La définition détaillée des besoins par compétence (danse, chant, acrobaties, etc.) et du nombre d'artistes requis par compétence est **prévue dans une version ultérieure**. Dans la version actuelle, le champ « Artistes nécessaires » du formulaire de création de date est **informatif** : il n'est pas encore pris en compte pour contraindre la constitution de l'équipe.
