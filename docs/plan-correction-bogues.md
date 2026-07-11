@@ -28,7 +28,7 @@ Les identifiants `BOGUE-XX` sont **uniques dans l'ensemble du document** et stab
 
 ## 1. Bogues détectés en recette v0.5.0
 
-> Ces anomalies ont été détectées lors de la campagne de recette manuelle de la v0.5.0. Chaque entrée référence le(s) cas de recette concerné(s).
+> Ces anomalies ont été détectées lors de la campagne de recette manuelle de la v0.5.0, ou lors des vérifications manuelles qui l'ont suivie avant le tag. Chaque entrée référence le(s) cas de recette concerné(s) le cas échéant.
 
 ### BOGUE-01 — Impasse à la connexion d'une session Firebase orpheline
 
@@ -89,6 +89,16 @@ Les identifiants `BOGUE-XX` sont **uniques dans l'ensemble du document** et stab
 - **Analyse** : cause racine commune — **la couleur du texte des pastilles n'était pas dérivée de la luminance de leur fond**. Chaque widget appliquait sa propre règle (couleur du statut, ou blanc en dur), sans mesure. La divergence la plus visible opposait deux affichages du **même statut** : la carte résumée du planning dupliquait le rendu de la pastille avec du blanc codé en dur, tandis que le détail inline utilisait `ShowDateStatusPill` — même fond, deux couleurs de texte.
 - **Correctif** : fond opaque et couleur de texte déterminée par le helper existant `contrastTextForStatusPill(color)` (qui choisit blanc ou texte foncé selon la luminance du fond) sur **toutes** les pastilles de statut ; plus aucune couleur de texte codée en dur. `ManagerShowDateSummaryCard` réutilise désormais `ShowDateStatusPill` au lieu de dupliquer le rendu, ce qui empêche structurellement une nouvelle divergence entre deux affichages du même statut. Branche `fix/a11y-contraste-pastilles-creuses` (PR #112).
 - **Vérification** : ratios recalculés sur l'ensemble des couleurs de `ShowDateStatus`, `BookingStatus` et `AvailabilityStatus` — chaque pastille atteint désormais au moins 4,5:1. Contrôle visuel sur appareil. Le helper `contrastTextForStatusPill` était déjà couvert par des tests WCAG dédiés.
+
+### BOGUE-10 — Artiste non re-sélectionnable après annulation de sa réservation par le gérant
+
+- **Détection** : vérifications manuelles pré-tag v0.5.0, après la clôture de la campagne de recette (parcours gérant : annulation de la réservation d'un artiste depuis le détail de date).
+- **Qualification** : **Majeur** · frontend (détail de date gérant, logique d'activation de la sélection) · après l'annulation, l'artiste reste affiché « annulé » et sa case de sélection reste inactive : le gérant ne peut plus le re-sélectionner sur cette date, sans contournement possible dans l'application.
+- **Comportement attendu** : après l'annulation de sa réservation, l'artiste redevient sélectionnable — le backend recycle les bookings terminaux depuis la v0.5.0 (cf. BOGUE-09 : seuls les bookings **actifs** sont bloquants).
+- **Comportement observé** : l'artiste porte le badge « annulé » et sa case de sélection reste désactivée ; la re-sélection est impossible depuis l'interface.
+- **Analyse (préliminaire)** : dans `manager_date_detail_viewmodel.dart`, `isSelectionEnabled` retourne `booking.status == preselected` dès qu'un booking existe pour l'artiste : **tout** booking existant — y compris terminal (`cancelled`, `refused`) — désactive la case. Cette règle frontend, antérieure à la v0.5.0, contredit la règle backend introduite par le correctif BOGUE-09 (`resetBookingForReselection` : seuls `SELECTED`, `PENDING_CONFIRMATION` et `CONFIRMED` sont bloquants). Le même chemin de code laisse présager le même symptôme après un refus (`refused`) — à confirmer au rejeu.
+- **Correctif** : **différé** — anomalie détectée après le gel du code de la v0.5.0 ; correction planifiée dans la première version corrective après le tag. Piste : aligner `isSelectionEnabled` sur la règle backend (un booking terminal n'est pas bloquant) ; l'appel `createBooking` existant déclenche déjà le recyclage côté serveur.
+- **Vérification** : à réaliser avec le correctif — rejeu du parcours annulation → re-sélection (cas `refused` inclus) et test ViewModel sur `isSelectionEnabled` en présence d'un booking terminal.
 
 ---
 
