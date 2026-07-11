@@ -153,12 +153,13 @@ La documentation technique backend reste détaillée dans le README du backend :
 | **Manuel technique backend** | Architecture, couches, packages, sécurité, démarrage, tests, commandes Maven | [violette-back/README.md](violette-back/README.md) |
 | **Architecture détaillée** | Patterns, DDD, sécurité JWT, flux de requête, décisions de modélisation | [violette-back/ARCHITECTURE.md](violette-back/ARCHITECTURE.md) |
 | **Description fonctionnelle** | Contexte métier, acteurs, fonctionnalités, workflow | [docs/functional-spec.md](docs/functional-spec.md) |
-| **Manuel utilisateur** | Guide gérant et artiste, statuts, bonnes pratiques | [docs/user-manual.md](docs/user-manual.md) |
+| **Manuel d'utilisation** | Guide gérant et artiste, statuts, bonnes pratiques | [docs/user-manual.md](docs/user-manual.md) |
 | **Règles métier** | Statuts, disponibilités, présélection, booking ferme | [docs/regles-metier.md](docs/regles-metier.md) |
 | **Workflow de réservation** | Vue workflow et variantes futures | [docs/booking-workflow.md](docs/booking-workflow.md) |
 | **Architecture globale** | Séparation Flutter / Quarkus / Firebase Auth, couches REST frontend | [docs/architecture.md](docs/architecture.md) |
 | **Documentation C4** | Explication des diagrammes C4 (contexte, container, composants, zoom niveau 4) | [docs/architecture-c4.md](docs/architecture-c4.md) |
-| **Guide de déploiement** | Fly.io, Aiven MySQL, pipeline CI/CD, secrets GitHub, checklist soutenance | [README-deploiement.md](README-deploiement.md) |
+| **Manuel de déploiement** | Fly.io, Aiven MySQL, pipeline CI/CD, secrets GitHub, checklist soutenance | [README-deploiement.md](README-deploiement.md) |
+| **Manuel de mise à jour** | Mise à jour côté utilisateur (APK) et côté exploitant (tag, migrations Flyway) | [docs/manuel-mise-a-jour.md](docs/manuel-mise-a-jour.md) |
 | **Migration domaine user** | Setup OpenAPI Generator, client Dart généré, flux REST user, adb reverse, dette résiduelle | [docs/migration-domaine-user.md](docs/migration-domaine-user.md) |
 | **Stratégie de tests** | Tests frontend/backend, profils Quarkus, règles de migration REST | [docs/testing-strategy.md](docs/testing-strategy.md) |
 | **Sécurité (OWASP Top 10)** | Couverture des 10 failles OWASP : mesures, preuves, limites assumées | [docs/securite-owasp.md](docs/securite-owasp.md) |

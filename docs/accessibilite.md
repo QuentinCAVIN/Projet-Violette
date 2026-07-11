@@ -40,11 +40,11 @@ Violette est une application **Flutter native**, livrée d'abord sous forme d'**
 Référentiel : **WCAG 2.2 AA**, appliqué via les API d'accessibilité de Flutter. Les familles de critères réalistes et prioritaires pour Violette :
 
 - **Perceptible** : contrastes de couleur suffisants (texte/fond), respect du redimensionnement de texte défini par le système, alternatives textuelles (`Semantics` labels) pour les éléments non textuels.
-- **Utilisable** : cibles tactiles d'au moins 44×44 px, ordre de focus cohérent, navigation au lecteur d'écran (TalkBack/VoiceOver), pas de dépendance à un seul sens (couleur).
+- **Utilisable** : cibles tactiles d'au moins 44×44 px (48 dp en cible Material), ordre de focus cohérent, navigation au lecteur d'écran (TalkBack/VoiceOver), pas de dépendance à un seul sens (couleur).
 - **Compréhensible** : libellés de formulaires explicites, messages d'erreur clairs (cohérent avec les retours d'erreur déjà structurés côté backend), langue de l'interface déclarée.
 - **Robuste** : exposition correcte des rôles/états des composants à la couche d'accessibilité du système.
 
-> **État d'implémentation.** Le référentiel n'est pas seulement choisi : un parcours principal — la déclaration de disponibilité par l'artiste (Accueil → Sélection des dates → calendrier → détail) — a été rendu accessible et testé au lecteur d'écran (voir § 4). Les critères WCAG 2.2 AA suivants sont implémentés sur ce parcours :
+> **État d'implémentation.** Le référentiel n'est pas seulement choisi : un parcours principal — la déclaration de disponibilité par l'artiste (Accueil → Planning Artiste → calendrier → détail) — a été rendu accessible et testé au lecteur d'écran (voir § 4). Les critères WCAG 2.2 AA suivants sont implémentés sur ce parcours :
 >
 > - **1.1.1 / 1.4.1 (information non portée par la seule couleur)** : le statut de disponibilité, auparavant transmis uniquement par la couleur des cellules, est désormais exposé en texte au lecteur d'écran via la carte de détail (annonce automatique du statut à la sélection d'une date).
 > - **1.4.3 (contraste)** : les couleurs de statut ont été ajustées pour atteindre le ratio AA de 4,5:1 sur texte (available #2E7D32, ifNeeded #E65100, unavailable #C62828, pending #616161).
@@ -53,7 +53,7 @@ Référentiel : **WCAG 2.2 AA**, appliqué via les API d'accessibilité de Flutt
 > - **3.1.1 (langue)** : interface déclarée en français (locale fr_FR au niveau application et du composant calendrier), pour une restitution correcte par le lecteur d'écran.
 > - **4.1.3 (messages d'état)** : les confirmations et erreurs (enregistrement de disponibilité) sont annoncées au lecteur d'écran.
 >
-> Le périmètre couvre le parcours artiste ; l'extension des mêmes pratiques aux écrans gérant est un axe d'amélioration identifié.
+> Le parcours artiste est intégralement couvert et validé au lecteur d'écran (voir § 4.1). Les mêmes pratiques ont été étendues au parcours gérant (planning et détail de date), implémentées dans le code ; leur validation au lecteur d'écran est planifiée dans la campagne de recette (voir § 4.2).
 
 ### Demain — front web (fin lot 1)
 
@@ -65,11 +65,13 @@ Lorsque la version web Flutter sera déployée :
 
 ## 4. Test au lecteur d'écran (TalkBack)
 
+### 4.1 Parcours artiste — déclaration de disponibilité (testé)
+
 Le parcours artiste de déclaration de disponibilité a été testé manuellement avec **TalkBack** (lecteur d'écran Android), sur appareil physique, avec un jeu de données réel (un artiste membre d'une compagnie, dates de spectacle préremplies).
 
 ### Méthode
 
-Navigation linéaire (balayage) sur l'ensemble du parcours : écran d'accueil, navigation vers la sélection des dates, calendrier, sélection d'une date, consultation du détail, enregistrement d'une disponibilité. Pour chaque élément, vérification de ce que le lecteur d'écran annonce réellement.
+Navigation linéaire (balayage) sur l'ensemble du parcours : écran d'accueil, navigation vers le Planning Artiste, calendrier, sélection d'une date, consultation du détail, enregistrement d'une disponibilité. Pour chaque élément, vérification de ce que le lecteur d'écran annonce réellement.
 
 ### Écarts détectés au premier passage et corrections apportées
 
@@ -88,6 +90,17 @@ Au second passage TalkBack, le parcours est restitué en français, le statut de
 ### Limite assumée — composant calendrier tiers
 
 Le calendrier s'appuie sur le composant tiers **table_calendar**, qui impose son propre libellé d'accessibilité sur les cellules (date seule) et empêche d'y annoncer directement le statut. Le statut est donc rendu accessible via la carte de détail (région active annoncée à la sélection), ce qui satisfait l'exigence de fond (information non portée par la seule couleur). L'annonce du statut directement sur la cellule du calendrier nécessiterait un composant exposant ce point ; elle est identifiée comme axe d'amélioration.
+
+### 4.2 Parcours gérant — planning et détail de date (implémenté, vérification lecteur d'écran planifiée)
+
+Les mêmes pratiques d'accessibilité ont été implémentées sur le parcours gérant :
+
+- **1.4.1 (information non portée par la seule couleur)** : le statut des dates du calendrier gérant est verbalisé (`getStatusLabelForDay`), selon le même mécanisme que le parcours artiste.
+- **4.1.2 (nom, rôle, valeur)** : les lignes artiste du détail de date sont regroupées sémantiquement — nom, engagement ou disponibilité, et état de sélection (coché / non coché, sélection indisponible) sont annoncés d'un seul tenant (`_artistLineAccessibilityLabel`).
+- **2.5.5 (taille des cibles tactiles)** : les cases à cocher du détail conservent leur cible tactile Material native de 48 dp (`MaterialTapTargetSize.padded`), la contrainte de taille qui la réduisait sous le seuil ayant été retirée ; le menu d'actions (`PopupMenuButton`) porte une contrainte explicite `minWidth`/`minHeight` de 48 dp.
+- **1.4.3 (contraste)** : le texte des pastilles de statut est calculé pour respecter le ratio AA de 4,5:1 sur le fond de chaque contexte (`contrastTextForStatusPill`, sélection de la teinte de texte la plus contrastée selon la luminance du fond).
+
+La vérification au lecteur d'écran (TalkBack) de ce parcours est **planifiée lors de la campagne de recette** (cahier de recettes, C2.3.1). Les résultats y seront consignés et cette section mise à jour en conséquence.
 
 ## 5. Références
 

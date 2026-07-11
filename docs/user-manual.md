@@ -53,9 +53,15 @@ En tant que gérant, vous pilotez les dates de spectacle et la constitution des 
 
 Une fois la date créée, elle apparaît dans votre planning.
 
-#### Définir les besoins artistiques
+#### Consulter le détail d'une date
 
-Pour chaque date, vous pouvez indiquer les **compétences nécessaires** (danse, chant, acrobaties, etc.) et le **nombre d'artistes** requis pour chaque compétence. Ces informations servent à constituer l'équipe et à respecter les effectifs.
+Depuis le planning, sélectionnez une date pour déplier son détail, puis appuyez sur **Détail** pour ouvrir sa fiche complète. Vous y retrouvez l'ensemble de la feuille de route : heure de convocation, adresse complète, contact client, description et effectif, ainsi que le statut de la date et les artistes qui y sont engagés.
+
+> **Vérifiez vos informations avant de valider la création.** Une date créée ne peut pas encore être modifiée depuis l'application : la fiche est consultable, mais l'édition n'est pas disponible dans cette version.
+
+#### Définir les besoins artistiques *(fonctionnalité à venir)*
+
+La définition détaillée des besoins par compétence (danse, chant, acrobaties, etc.) et du nombre d'artistes requis par compétence est **prévue dans une version ultérieure**. Dans la version actuelle, le champ « Artistes nécessaires » du formulaire de création de date est **informatif** : il n'est pas encore pris en compte pour contraindre la constitution de l'équipe.
 
 #### Consulter les disponibilités
 
@@ -91,6 +97,8 @@ Pour chaque date de spectacle à venir, indiquez votre statut :
 
 Il est conseillé de mettre à jour vos disponibilités régulièrement pour que le gérant dispose d'informations à jour.
 
+> **Disponibilité verrouillée après confirmation.** Une fois que vous êtes **confirmé** sur une date (vous avez accepté une demande de réservation), vous ne pouvez plus modifier votre disponibilité sur cette date. Pour tout désistement, contactez directement le gérant.
+
 #### Répondre aux demandes de réservation
 
 Lorsque le gérant vous envoie une **demande de réservation** pour une date :
@@ -103,7 +111,7 @@ Une réponse rapide facilite l'organisation du gérant.
 
 #### Consulter ses engagements
 
-Lorsque vous **acceptez** une demande, la réservation est **confirmée**. Vous pouvez à tout moment consulter la liste de vos engagements à venir pour suivre les dates sur lesquelles vous êtes retenu.
+Lorsque vous **acceptez** une demande, la réservation est **confirmée**. Depuis le **Planning Artiste**, vous suivez l'état de chaque date où vous êtes impliqué : présélectionné par le gérant, confirmé, ou annulé. Vous pouvez à tout moment consulter la liste de vos engagements à venir pour suivre les dates sur lesquelles vous êtes retenu.
 
 ---
 

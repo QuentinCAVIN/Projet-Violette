@@ -30,6 +30,7 @@ la section « Résorbé depuis v0.4.0 » pour tracer l'évolution.
 - **DETTE-16 — Sous-types artiste.** Différencier chanteur, danseur, échassier, etc. (`role.dart`).
 - **DETTE-17 — Statut `postponed` pour les dates reportées.** Cas de force majeure avec client engagé (`show_date_status.dart`).
 - La navigation stack n'est pas encore totalement maîtrisée : certains retours utilisent `clearStackAndShow` comme correction temporaire.
+- **DETTE-20 — Données chargées mais jamais affichées dans `ManagerPlanningViewModel` (v0.6.0).** Les champs `showDatePicked` et `artists`, ainsi que la méthode `_loadArtistsForDate()`, sont maintenus et alimentés à chaque `onDaySelected` mais ne sont lus par aucune vue : le détail inline s'appuie sur `ManagerDateDetailViewModel`. Conséquence : des appels réseau superflus (chargement des disponibilités puis des profils artistes) à chaque sélection de jour. Retrait à traiter avec les tests associés, qui couvrent aujourd'hui ce code.
 - Les couches REST manuelles (`Dio`, remote data sources, mappers) coexistent avec le client OpenAPI généré.
 - Le client OpenAPI généré `violette_api_client/` est utilisé principalement pour le domaine `user`. Les domaines `availability`, `showDate` et `booking` utilisent encore Dio manuel, JSON et mappers dédiés.
 - Une incohérence potentielle existe dans le client généré : `apiArtistBookingsMeGet` semble typé comme un DTO unique alors que le backend renvoie une liste. Ce n'est pas bloquant, car le runtime Flutter appelle `GET /api/artist-bookings/me` via Dio manuel.
@@ -79,23 +80,21 @@ documentés comme choix assumés pour `v0.5.0` (détail dans `regles-metier.md`)
      `backgroundColor` pendant le resize du body (`create_show_date`, `login`,
      `register`). Corrige en fixant cette couleur sur la teinte basse du
      gradient de chaque ecran (`darkPurple` / `pinkAccent`).
-- **DETTE-19 — Consultation du détail complet d'une date (gérant).** Le détail de
-  date gérant n'existe qu'en inline dans le planning et n'affiche pas les
-  informations complètes de la date (adresse entière, description). La
-  `ManagerShowDateSummaryCard` tronque le titre et l'adresse ; il n'existe pas de
-  vue détail plein écran routée. Choix assumé pour `v0.5.0` : le parcours de
-  démonstration ne passera pas par la consultation détaillée. Options envisagées
-  pour la suite : enrichir le bloc inline (adresse complète + description) ou
-  créer une vue détail plein écran avec navigation depuis le planning.
-  **Périmètre : v0.6.0.**
-  
+- **DETTE-19 — Édition d'une date après création (gérant) (v0.6.0).** Le volet
+  *consultation* est résorbé en `v0.5.0` (voir « Résorbé depuis v0.4.0 ») : une fiche
+  plein écran, atteignable depuis le planning, restitue désormais l'intégralité de la
+  feuille de route. En revanche, **aucun parcours d'édition n'existe** : une date créée
+  ne peut plus être modifiée depuis l'application (correction d'une faute de frappe,
+  changement d'horaire ou de lieu). L'endpoint `PATCH /api/show-dates/{id}` existe et est
+  couvert par les tests structurels ; seul le parcours d'interface reste à construire
+  (formulaire pré-rempli, validation, gestion d'erreurs). **Périmètre : v0.6.0.**
 
 ## Dette outillage
 
 > Les numéros de DETTE servent d'identifiants stables (référencés dans le suivi de
 > sprint et les commits) ; les trous éventuels sont normaux. DETTE-1 (régénération
-> du client API) est traitée dans le sprint `v0.5.0` courant et suivie hors de ce
-> registre. DETTE-2 (nommage FR->EN des méthodes de garde back) est résorbée en
+> du client API `violette_api_client`, enum `ShowDateStatus` obsolète) est reportée
+> en `v0.6.0`. DETTE-2 (nommage FR->EN des méthodes de garde back) est résorbée en
 > `v0.5.0` (voir « Résorbé depuis v0.4.0 »).
 
 - **DETTE-3 — Audit trail dédié des transitions de statut.** Table d'historique pour tracer les transitions booking/date. Infrastructure Observer déjà prête. Reporté lot 2/3.
@@ -115,6 +114,7 @@ documentés comme choix assumés pour `v0.5.0` (détail dans `regles-metier.md`)
 - **Différenciation visuelle disponibilité / présélection / confirmation** : traitée par la refonte des cartes (statut d'engagement, disponibilité, verrou) et la mise en conformité contraste.
 - **Contraste WCAG 2.2 AA des cartes de planning** : tokens de couleur centralisés dans `VioletteTheme` (`cardSurface`, `textOnCard`, `textOnCardSecondary`, `cardTitle`), appliqués aux cartes artiste et gérant. Bascule des autres écrans sur ces tokens reportée en v0.6.0.
 - **Verrou backend disponibilité / booking `CONFIRMED`** : désormais garanti côté serveur, plus seulement côté frontend.
+- **Consultation du détail complet d'une date (gérant)** : une fiche plein écran, atteignable depuis le détail inline du planning (bouton « Détail »), restitue l'intégralité de la feuille de route (heure de convocation, adresse complète non tronquée, contact client, description, effectif) ainsi que le statut de la date et la liste des artistes avec leur engagement et leur disponibilité. Répartition des rôles : le détail inline reste le poste de travail (sélection, réservation, transitions de statut, annulation) ; la fiche plein écran est une consultation en lecture seule. Le widget mort `ManagerDateDetailInline` (doublon inutilisé) a été supprimé à cette occasion. L'**édition** d'une date reste hors périmètre (voir DETTE-19).
 - **DETTE-2 — Nommage FR→EN des méthodes de garde privées (backend)** : les gardes métier de `ArtistBookingService` (`validerDateBookable`, `validerDateConfirmee`, `validerDateModifiable`, `validerDisponibiliteArtiste`, `validerCapacite`) ont été renommées avec les préfixes anglais `assert*`, pour s'aligner sur les méthodes `assert*`/`is*` déjà anglaises de la même classe. Renommage via rename-symbol IDE, sans changement de logique ni du contrat API ; 227 tests verts.
 
 ## Évolutions futures
