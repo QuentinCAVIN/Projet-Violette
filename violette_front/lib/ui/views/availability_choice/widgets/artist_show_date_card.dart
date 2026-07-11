@@ -5,6 +5,7 @@ import 'package:violette_front/models/enums/booking_status.dart';
 import 'package:violette_front/models/show_date.dart';
 import 'package:violette_front/ui/common/app_theme.dart';
 import 'package:violette_front/ui/widgets/common/availability_status_pill.dart';
+import 'package:violette_front/ui/widgets/common/calendar/calendar_day_cell.dart';
 import 'package:violette_front/ui/widgets/common/date_badge.dart';
 
 /// Carte structurée d'une date de spectacle pour la vue artiste (planning).
@@ -42,11 +43,9 @@ class ArtistShowDateCard extends StatelessWidget {
       'Équipe : $count ${_artistCountNoun(count)}';
 
   String get _accessibilityLabel {
-    final formattedDate =
-        DateFormat('d MMMM y', 'fr_FR').format(showDate.date);
-    final bookingPart = bookingStatus != null
-        ? ', engagement : $_bookingStatusLabel'
-        : '';
+    final formattedDate = DateFormat('d MMMM y', 'fr_FR').format(showDate.date);
+    final bookingPart =
+        bookingStatus != null ? ', engagement : $_bookingStatusLabel' : '';
     final teamPart =
         ', équipe : ${showDate.selectedCount} ${_artistCountNoun(showDate.selectedCount)}';
     if (isAvailabilityLocked) {
@@ -216,7 +215,7 @@ class _ArtistBookingStatusPill extends StatelessWidget {
     required this.label,
   });
 
-  /// Fond saturé opaque compatible WCAG AA (texte blanc ≥ 4,5:1).
+  /// Fond saturé opaque ; couleur de texte via [contrastTextForStatusPill].
   /// Aligné sur la palette des pills de disponibilité.
   Color get _pillBackgroundColor {
     switch (status) {
@@ -235,18 +234,20 @@ class _ArtistBookingStatusPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final backgroundColor = _pillBackgroundColor;
+
     return Semantics(
       label: 'Engagement : $label',
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: _pillBackgroundColor,
+          color: backgroundColor,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
           label,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: contrastTextForStatusPill(backgroundColor),
             fontSize: 12,
             fontWeight: FontWeight.bold,
           ),

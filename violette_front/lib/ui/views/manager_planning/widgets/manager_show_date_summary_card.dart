@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:violette_front/models/show_date.dart';
 import 'package:violette_front/ui/common/app_theme.dart';
+import 'package:violette_front/ui/views/manager_date_detail/widgets/show_date_status_pill.dart';
 import 'package:violette_front/ui/widgets/common/date_badge.dart';
 
 class ManagerShowDateSummaryCard extends StatelessWidget {
@@ -80,22 +81,7 @@ class ManagerShowDateSummaryCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: showDate.status.color,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                showDate.status.label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
-              ),
-            ),
+            ShowDateStatusPill(status: showDate.status),
           ],
         ),
       ),
