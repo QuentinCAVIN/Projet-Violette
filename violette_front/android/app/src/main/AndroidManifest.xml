@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="violette_front"
+        android:label="Violette"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
