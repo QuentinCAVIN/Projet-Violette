@@ -1,6 +1,8 @@
 @startuml c4-context
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
 
+skinparam backgroundColor #FFFFFF
+
 LAYOUT_WITH_LEGEND()
 
 title Diagramme C4 — Contexte système de Violette (v0.5.0)
