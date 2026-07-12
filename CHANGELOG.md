@@ -4,7 +4,7 @@ Toutes les versions suivent la convention Semantic Versioning (MAJOR.MINOR.PATCH
 ---
 
 ## v0.5.0 – Sécurisation OWASP, verrou métier, accessibilité et refonte visuelle
-Date : 11-07-2026
+Date : 12-07-2026
 
 ### Sécurité
 
@@ -228,6 +228,11 @@ Date : 11-07-2026
 - La priorité de couleur des pastilles de calendrier reste simplifiée en cas de statuts mixtes : un
   artiste confirmé peut voir une pastille « si besoin » sur le jour concerné (BOGUE-04, différé en
   `v0.6.0`).
+- Après l'annulation de la réservation d'un artiste par le gérant, l'artiste reste affiché « annulé »
+  et ne peut plus être re-sélectionné sur la date depuis l'interface : le blocage est purement
+  frontend, le backend accepte la re-sélection (recyclage des bookings terminaux). Anomalie détectée
+  après le gel du code (BOGUE-10, différé ; correctif planifié dans la première version corrective
+  après le tag).
 - La compagnie unique `Dream's Production` et le rattachement automatique des utilisateurs restent en
   place ; la gestion multi-compagnies n'est pas exposée — le cloisonnement inter-compagnies est
   néanmoins garanti et prouvé par les tests de sécurité.

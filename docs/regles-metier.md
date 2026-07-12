@@ -1,6 +1,6 @@
-# Règles métier — Violette v0.4.0
+# Règles métier — Violette
 
-Ce document est la source de vérité métier pour les cycles de vie stabilisés avant la release `v0.4.0`.
+Ce document est la source de vérité métier des cycles de vie de l'application. Il est à jour de la version `v0.5.0` (voir le [journal des versions](../CHANGELOG.md) pour l'historique des évolutions).
 
 Le backend Quarkus porte les règles métier principales. Le frontend Flutter consomme ces règles via l'API REST et les mappe vers ses modèles d'affichage.
 
@@ -61,7 +61,7 @@ CANCELLED CANCELLED  CANCELLED
 - Après une réponse, le retour à `PENDING` n'est pas une transition normale.
 - `IF_NEEDED` remplace l'ancien vocabulaire `CONDITIONAL`.
 - Une disponibilité ne réserve pas l'artiste et ne bloque pas d'autre engagement.
-- Pour la sélection manager (`SELECTED`) : `AVAILABLE` et `IF_NEEDED` sont sélectionnables ; `UNAVAILABLE` et `PENDING` ne le sont pas en v0.4.0.
+- Pour la sélection manager (`SELECTED`) : `AVAILABLE` et `IF_NEEDED` sont sélectionnables ; `UNAVAILABLE` et `PENDING` ne le sont pas dans la version actuelle.
 - `IF_NEEDED` signifie "disponible si besoin" : sélection autorisée, mais priorité métier inférieure à `AVAILABLE`.
 
 ---
@@ -90,8 +90,8 @@ SELECTED | PENDING_CONFIRMATION | CONFIRMED -> CANCELLED
 - `SELECTED` peut exister en `OPTION` pour préparer une équipe sans engagement.
 - `PENDING_CONFIRMATION` ne doit exister que pour une date `CONFIRMED`.
 - `CONFIRMED` signifie que l'artiste a accepté la demande.
-- Si un artiste possède un booking `CONFIRMED` sur une date, il ne peut plus modifier sa disponibilité sur cette date dans l'application `v0.4.0`.
-- Pour modifier un engagement confirmé ou se désister, l'artiste doit contacter le gérant ; le désistement autonome est hors périmètre `v0.4.0`.
+- Si un artiste possède un booking `CONFIRMED` sur une date, il ne peut plus modifier sa disponibilité sur cette date dans l'application — verrou également garanti côté backend depuis la `v0.5.0`.
+- Pour modifier un engagement confirmé ou se désister, l'artiste doit contacter le gérant ; le désistement autonome est hors périmètre `v0.5.0`.
 - `REFUSED` libère la place dans la capacité métier.
 - `CANCELLED` sert à neutraliser un booking devenu inactif.
 

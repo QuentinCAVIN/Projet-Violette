@@ -1,0 +1,38 @@
+@startuml c4-container
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+skinparam backgroundColor #FFFFFF
+
+LAYOUT_WITH_LEGEND()
+
+title Diagramme C4 — Conteneurs du système Violette (v0.5.0)
+
+Person(artiste, "Artiste", "Déclare ses disponibilités sur les dates de spectacle et répond aux demandes de réservation")
+Person(gerant, "Gérant", "Crée les dates de spectacle et compose les équipes d'artistes")
+Person_Ext(client, "Client", "Commande un spectacle à la compagnie (hors application)")
+
+System_Boundary(violette, "Violette") {
+    Container(app, "Application mobile", "Flutter / Dart — Android", "Architecture Stacked/MVVM. Seule interface utilisateur de la v0.5.0")
+    Container(backend, "Backend REST", "Quarkus / Java 21", "Monolithe modulaire découpé par domaines métier. Porte les règles métier et les gardes de sécurité")
+    ContainerDb(db, "Base de données", "MySQL (production) / H2 (tests)", "Utilisateurs, compagnies, dates de spectacle, disponibilités, réservations. Migrations Flyway")
+}
+
+System_Ext(firebase, "Firebase Authentication", "Fournisseur d'identité — délivre les jetons JWT et expose les clés publiques de validation")
+
+Rel(client, gerant, "Commande un spectacle", "Hors application")
+Rel(artiste, app, "Utilise")
+Rel(gerant, app, "Utilise")
+
+Rel(app, firebase, "S'authentifie et reçoit un JWT", "SDK Firebase")
+Rel(app, backend, "Appelle l'API en joignant le JWT", "REST / HTTPS / JSON")
+Rel(backend, firebase, "Récupère les clés publiques pour valider la signature du jeton", "OIDC")
+Rel(backend, db, "Lit et écrit", "Hibernate ORM Panache")
+
+note right of backend
+  Le backend ne délègue pas l'autorisation à Firebase :
+  il valide le JWT (signature, émetteur, expiration),
+  puis charge les rôles métier (ARTIST, MANAGER)
+  depuis sa propre base. Firebase ne fournit que l'identité.
+end note
+
+@enduml

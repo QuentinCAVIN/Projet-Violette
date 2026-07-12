@@ -82,11 +82,11 @@ Cette étape aligne la version Maven utilisée par :
 - `GET /api/ping`, via `quarkus.application.version=@project.version@` ;
 - Swagger / OpenAPI, via `quarkus.smallrye-openapi.info-version=@project.version@`.
 
-Après le tag `v0.4.0`, vérifier :
+Après chaque tag `vX.Y.Z`, vérifier :
 
 ```bash
 curl https://violette-back.fly.dev/api/ping
-# Attendu : {"status":"pong","version":"0.4.0"}
+# Attendu : {"status":"pong","version":"X.Y.Z"} (la version du tag)
 ```
 
 Puis ouvrir Swagger UI et contrôler que la version affichée est `0.4.0` : [https://violette-back.fly.dev/swagger-ui](https://violette-back.fly.dev/swagger-ui).

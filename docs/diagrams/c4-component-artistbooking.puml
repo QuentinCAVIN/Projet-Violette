@@ -1,30 +1,40 @@
 @startuml c4-component-artistbooking
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
 
-title Zoom Backend — Domaine artistbooking (C4 niveau 4)
+skinparam backgroundColor #FFFFFF
 
-' Conteneur backend (contexte du zoom) avec boundary artistbooking à l'intérieur
-Container(backend, "Backend Quarkus", "Java 21, Quarkus", "API REST") {
-    Container_Boundary(artistbooking, "Domaine artistbooking") {
-        Component(controller, "ArtistBookingController", "JAX-RS", "Endpoints REST : sélection, désélection, confirmations, réponses")
-        Component(service, "ArtistBookingService", "Logique métier", "Règles de capacité, disponibilité, transitions de statut")
-        Component(repository, "ArtistBookingRepository", "Panache", "Accès BDD artist_booking")
-        Component(entity, "ArtistBookingEntity", "Aggregate Root", "Réservation + BookingTimeline, BookingStatus")
-        Component(event, "BookingStatusChangedEvent", "CDI Event", "Événement transition de statut")
-        Component(observer, "BookingStatusChangedObserver", "Observer", "Réaction aux changements (log, extension V2)")
-        Component(mapper, "ArtistBookingMapper", "MapStruct", "Entity ↔ DTO")
-    }
+LAYOUT_WITH_LEGEND()
+
+title Zoom Backend — Domaine artistbooking (C4 niveau 4, v0.5.0)
+
+Container_Boundary(artistbooking, "Domaine artistbooking") {
+    Component(controller, "ArtistBookingController", "JAX-RS", "Endpoints REST : sélection, désélection, envoi des demandes de confirmation, réponse artiste, annulation par le gérant")
+    Component(service, "ArtistBookingService", "CDI @ApplicationScoped", "Règles métier : capacité, disponibilité, recyclage d'un booking terminal, transitions de statut, gardes assert*")
+    Component(repository, "ArtistBookingRepository", "Hibernate ORM Panache", "Accès à la table artist_booking. Unicité de la paire (show_date, artist)")
+    Component(entity, "ArtistBookingEntity", "Aggregate Root", "Réservation : BookingStatus, BookingTimeline (createdAt, updatedAt, requestedAt, respondedAt)")
+    Component(mapper, "ArtistBookingMapper", "MapStruct", "Conversion Entity vers DTO")
+    Component(event, "BookingStatusChangedEvent", "CDI Event (record)", "Émis à chaque transition de statut d'un booking")
 }
 
-' Relations internes
-Rel(controller, service, "délègue")
-Rel(service, repository, "persist / find")
-Rel(service, entity, "crée, met à jour")
-Rel(service, mapper, "toDto")
-Rel(service, event, "fire")
-Rel(event, observer, "notifie (CDI)")
+Component_Ext(ownership, "ManagerCompanyResolver", "Package security", "Garde d'ownership compagnie (OWASP A01) : refuse tout accès hors du périmètre du manager authentifié (403)")
+Component_Ext(restaffing, "ShowDateRestaffingObserver", "Domaine showdate — Observer CDI", "Repasse une date STAFFED en CONFIRMED lorsqu'un booking est annulé : l'équipe n'est plus complète")
+ContainerDb_Ext(db, "Base de données", "MySQL / H2", "Table artist_booking")
 
-' Légende
-LAYOUT_WITH_LEGEND()
+Rel(controller, service, "Délègue")
+Rel(service, ownership, "Vérifie l'appartenance compagnie")
+Rel(service, repository, "Persiste et interroge")
+Rel(service, entity, "Crée et met à jour")
+Rel(service, mapper, "Convertit en DTO")
+Rel(service, event, "Publie à chaque transition de statut")
+Rel(event, restaffing, "Notifie (CDI)")
+Rel(repository, db, "Lit et écrit")
+
+note bottom of event
+  Le découplage par événement CDI évite toute dépendance
+  directe entre les domaines artistbooking et showdate.
+  Le même mécanisme porte l'annulation en cascade :
+  ShowDateCancellationObserver écoute l'annulation d'une date
+  et annule les bookings actifs correspondants.
+end note
 
 @enduml

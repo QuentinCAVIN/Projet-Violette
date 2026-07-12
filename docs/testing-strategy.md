@@ -24,7 +24,7 @@ Flyway est **désactivé** en profil test ; Hibernate régénère le schéma via
 |------|-------|-----------|
 | Unitaire Mapper | `flutter_test` (pur Dart) | Contrat DTO API → modèle métier |
 | Unitaire ViewModel | `flutter_test` + `mocktail` | Flux de routage, appels service |
-| Golden tests | `flutter_test` / `golden_toolkit` | Stabilité visuelle des composants ciblés |
+| Golden tests *(non implémentés en v0.5.0)* | `golden_toolkit` (dépendance en place) | Stabilité visuelle des composants — prévu pour une version ultérieure |
 
 ---
 
@@ -128,7 +128,6 @@ cd violette-back
 cd violette_front
 flutter analyze
 flutter test
-flutter test --update-goldens
 ```
 
 ---

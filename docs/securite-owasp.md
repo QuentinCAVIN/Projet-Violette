@@ -43,6 +43,8 @@
 
 **Limite.** Les données personnelles stockées (nom, e-mail, rôles) ne sont pas chiffrées au repos au niveau applicatif (seul le chiffrement au niveau de l'hébergeur s'applique) — acceptable pour la sensibilité des données V1, à réévaluer si des données plus sensibles sont ajoutées.
 
+> **Note — clés client Firebase (choix assumé).** Le dépôt versionne `violette_front/lib/firebase_options.dart`, qui contient les clés d'API **client** Firebase (`apiKey`, `appId`, `projectId`). Ces clés ne sont **pas des secrets** : elles identifient le projet Firebase côté client et sont, par construction, extractibles de tout APK publié. La sécurité ne repose pas sur leur confidentialité, mais sur la validation des JWT côté backend (signature, issuer, audience — cf. A07) et sur la configuration du projet Firebase. L'exclusion de `google-services.json` du dépôt (`.gitignore`) relève de l'hygiène de configuration — ce fichier est propre à chaque projet Firebase et se régénère depuis la console — et non de la protection d'un secret.
+
 ### A03 — Injection · Couvert
 
 **Risque.** Injection SQL, de commande, ou d'expression via des entrées non maîtrisées.

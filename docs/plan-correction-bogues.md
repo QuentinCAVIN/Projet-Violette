@@ -13,6 +13,8 @@ Deux catégories sont distinguées :
 - **Bogues détectés en recette v0.5.0** — anomalies remontées lors de la campagne de tests manuels du cahier de recettes (`cahier-de-recettes.md`). La colonne « anomalie liée » de ce cahier référence les identifiants `BOGUE-0X` ci-dessous.
 - **Bogues historiques du projet** — anomalies rencontrées et corrigées au cours des versions antérieures (jusqu'à v0.4.0), tracées dans l'historique Git et le journal des versions (`CHANGELOG.md`).
 
+Les identifiants `BOGUE-XX` sont **uniques dans l'ensemble du document** et stables : c'est ce qui permet au cahier de recettes et au changelog de les référencer sans ambiguïté. Leur numérotation ne reflète pas un ordre chronologique.
+
 ## Barème de gravité
 
 | Gravité | Définition | Traitement attendu |
@@ -26,7 +28,7 @@ Deux catégories sont distinguées :
 
 ## 1. Bogues détectés en recette v0.5.0
 
-> Ces anomalies ont été détectées lors de la campagne de recette manuelle de la v0.5.0. Chaque entrée référence le(s) cas de recette concerné(s).
+> Ces anomalies ont été détectées lors de la campagne de recette manuelle de la v0.5.0, ou lors des vérifications manuelles qui l'ont suivie avant le tag. Chaque entrée référence le(s) cas de recette concerné(s) le cas échéant.
 
 ### BOGUE-01 — Impasse à la connexion d'une session Firebase orpheline
 
@@ -88,13 +90,23 @@ Deux catégories sont distinguées :
 - **Correctif** : fond opaque et couleur de texte déterminée par le helper existant `contrastTextForStatusPill(color)` (qui choisit blanc ou texte foncé selon la luminance du fond) sur **toutes** les pastilles de statut ; plus aucune couleur de texte codée en dur. `ManagerShowDateSummaryCard` réutilise désormais `ShowDateStatusPill` au lieu de dupliquer le rendu, ce qui empêche structurellement une nouvelle divergence entre deux affichages du même statut. Branche `fix/a11y-contraste-pastilles-creuses` (PR #112).
 - **Vérification** : ratios recalculés sur l'ensemble des couleurs de `ShowDateStatus`, `BookingStatus` et `AvailabilityStatus` — chaque pastille atteint désormais au moins 4,5:1. Contrôle visuel sur appareil. Le helper `contrastTextForStatusPill` était déjà couvert par des tests WCAG dédiés.
 
+### BOGUE-10 — Artiste non re-sélectionnable après annulation de sa réservation par le gérant
+
+- **Détection** : vérifications manuelles pré-tag v0.5.0, après la clôture de la campagne de recette (parcours gérant : annulation de la réservation d'un artiste depuis le détail de date).
+- **Qualification** : **Majeur** · frontend (détail de date gérant, logique d'activation de la sélection) · après l'annulation, l'artiste reste affiché « annulé » et sa case de sélection reste inactive : le gérant ne peut plus le re-sélectionner sur cette date, sans contournement possible dans l'application.
+- **Comportement attendu** : après l'annulation de sa réservation, l'artiste redevient sélectionnable — le backend recycle les bookings terminaux depuis la v0.5.0 (cf. BOGUE-09 : seuls les bookings **actifs** sont bloquants).
+- **Comportement observé** : l'artiste porte le badge « annulé » et sa case de sélection reste désactivée ; la re-sélection est impossible depuis l'interface.
+- **Analyse (préliminaire)** : dans `manager_date_detail_viewmodel.dart`, `isSelectionEnabled` retourne `booking.status == preselected` dès qu'un booking existe pour l'artiste : **tout** booking existant — y compris terminal (`cancelled`, `refused`) — désactive la case. Cette règle frontend, antérieure à la v0.5.0, contredit la règle backend introduite par le correctif BOGUE-09 (`resetBookingForReselection` : seuls `SELECTED`, `PENDING_CONFIRMATION` et `CONFIRMED` sont bloquants). Le même chemin de code laisse présager le même symptôme après un refus (`refused`) — à confirmer au rejeu.
+- **Correctif** : **différé** — anomalie détectée après le gel du code de la v0.5.0 ; correction planifiée dans la première version corrective après le tag. Piste : aligner `isSelectionEnabled` sur la règle backend (un booking terminal n'est pas bloquant) ; l'appel `createBooking` existant déclenche déjà le recyclage côté serveur.
+- **Vérification** : à réaliser avec le correctif — rejeu du parcours annulation → re-sélection (cas `refused` inclus) et test ViewModel sur `isSelectionEnabled` en présence d'un booking terminal.
+
 ---
 
 ## 2. Bogues historiques du projet (jusqu'à v0.4.0)
 
 > Ces anomalies ont été rencontrées et corrigées au cours du développement antérieur. Elles sont tracées dans l'historique Git et le journal des versions (`CHANGELOG.md`), et illustrent le cycle de traitement des bogues sur des natures variées : navigation/plateforme, affichage/données, logique métier.
 
-### BOGUE-05 — Pile de navigation Android incohérente au retour de la vue artiste
+### BOGUE-07 — Pile de navigation Android incohérente au retour de la vue artiste
 
 - **Détection** : rencontrée au cours du développement de la v0.4.0 (parcours artiste, retour Android depuis la vue de déclaration de disponibilité).
 - **Qualification** : **Majeur** · frontend (navigation, vue artiste) · le retour matériel Android laissait une pile de navigation héritée incohérente, dégradant le parcours de l'artiste.
@@ -102,7 +114,7 @@ Deux catégories sont distinguées :
 - **Correctif** : fiabilisation du retour Android de la vue artiste vers `HomeView` via `PopScope` et nettoyage explicite de la pile de navigation. Commit `e2405a0` (`fix(ui): corriger la sélection manager IF_NEEDED et le retour de la vue artiste`).
 - **Vérification** : tests ViewModel ajoutés dans le même commit (`availability_choice_viewmodel_test.dart`, `manager_date_detail_viewmodel_test.dart`).
 
-### BOGUE-06 — Affichage des demandes de confirmation artiste (date factice + actions manquantes)
+### BOGUE-08 — Affichage des demandes de confirmation artiste (date factice + actions manquantes)
 
 - **Détection** : rencontrée lors de la stabilisation du flux artiste pour la v0.4.0 (carte de demande de confirmation, `BookingRequestCard`). Deux symptômes liés au même composant, corrigés ensemble.
 - **Qualification** : **Majeur** · frontend (carte de demande de confirmation artiste) · deux défauts d'affichage sur le parcours de réponse de l'artiste, avec impact utilisateur direct.
@@ -112,7 +124,7 @@ Deux catégories sont distinguées :
 - **Correctif** : résolution des fiches de demande via `getMyAvailableShowDates` (suppression de la date factice) et affichage conditionnel correct des boutons « Confirmer » / « Refuser » sur le statut `PENDING_CONFIRMATION`, dans `booking_request_card.dart`. Commit `2587e34` (`feat(availability): stabiliser le flux artiste pour la v0.4.0`), mergé via PR #39 (`fix/v0.4.0`) avant le tag `v0.4.0`.
 - **Vérification** : tests widget ajoutés dans le même commit (`booking_request_card_test.dart` : boutons de réponse, statut déjà traité, demande sans détail de date).
 
-### BOGUE-07 — Impossible de re-sélectionner un artiste après un booking terminal
+### BOGUE-09 — Impossible de re-sélectionner un artiste après un booking terminal
 
 - **Détection** : rencontrée au cours du développement du domaine booking (v0.4.0). Après un refus ou une annulation, le gérant ne pouvait plus re-sélectionner l'artiste sur la même date.
 - **Qualification** : **Majeur** · backend (domaine `artistbooking`, service de création de booking) · règle métier bloquant une action légitime du gérant ; impact fonctionnel direct.
