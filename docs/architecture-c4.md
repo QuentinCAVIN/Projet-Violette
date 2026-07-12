@@ -17,6 +17,8 @@ Les quatre diagrammes sont versionnés dans le dépôt en PNG avec leur source P
 
 ## 2. Diagramme C4 — System Context
 
+![C4 — Contexte système de Violette](diagrams/c4-context.png)
+
 ### Ce que montre le diagramme
 
 Le diagramme de **contexte système** place **Violette** au centre : c’est l’application dans son ensemble, sans détailler encore sa composition technique. Il répond à la question : *« Qui utilise le système et quels acteurs ou systèmes externes interagissent avec lui ? »*
@@ -42,6 +44,8 @@ Violette est décrite comme l’**application centralisant la planification des 
 
 ## 3. Diagramme C4 — Container
 
+![C4 — Conteneurs du système Violette](diagrams/c4-container.png)
+
 ### Ce que montre le diagramme
 
 Le diagramme **Container** décompose Violette en **conteneurs** : les principales applications et bases de données qui composent la solution. Chaque conteneur a une responsabilité claire et des échanges explicites avec les autres.
@@ -66,6 +70,8 @@ Ce découpage reflète l'architecture réelle de la `v0.5.0` : une application m
 ---
 
 ## 4. Diagramme C4 — Component
+
+![C4 — Composants du backend Violette](diagrams/c4-component-backend.png)
 
 ### Ce que montre le diagramme
 
@@ -121,6 +127,8 @@ Un examinateur peut donc s'appuyer sur les quatre diagrammes pour comprendre le 
 ---
 
 ## 6. Diagramme C4 — Zoom composant (niveau 4)
+
+![C4 — Zoom sur le domaine artistbooking](diagrams/c4-component-artistbooking.png)
 
 Une quatrième vue propose un **zoom** sur un domaine métier du backend : le domaine **artistbooking**. Elle répond à la question : *« À l’intérieur de ce domaine, quels composants (classes ou modules) existent et comment interagissent-ils ? »*
 
