@@ -18,7 +18,7 @@ dependencies:
   stacked: ^3.5.0
   stacked_services: ^1.5.0
   stacked_firebase_auth: ^2.21.0
-  table_calendar: ^3.2.0
+  table_calendar: ^3.2.1
   intl: ^0.20.2
 
   # Client REST généré par OpenAPI Generator — ne pas modifier manuellement
