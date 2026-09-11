@@ -31,6 +31,16 @@ la section « Résorbé depuis v0.4.0 » pour tracer l'évolution.
 - **DETTE-17 — Statut `postponed` pour les dates reportées.** Cas de force majeure avec client engagé (`show_date_status.dart`).
 - La navigation stack n'est pas encore totalement maîtrisée : certains retours utilisent `clearStackAndShow` comme correction temporaire.
 - **DETTE-20 — Données chargées mais jamais affichées dans `ManagerPlanningViewModel` (v0.6.0).** Les champs `showDatePicked` et `artists`, ainsi que la méthode `_loadArtistsForDate()`, sont maintenus et alimentés à chaque `onDaySelected` mais ne sont lus par aucune vue : le détail inline s'appuie sur `ManagerDateDetailViewModel`. Conséquence : des appels réseau superflus (chargement des disponibilités puis des profils artistes) à chaque sélection de jour. Retrait à traiter avec les tests associés, qui couvrent aujourd'hui ce code.
+- **DETTE-21 — Affichage du statut de date côté artiste (v0.6.0).** Un artiste
+  ayant déclaré une disponibilité sans être retenu ne voit pas qu'une date est
+  passée en `STAFFED` : `ArtistShowDateCard` n'affiche pas le statut de la date,
+  alors que `GET /api/show-dates/me/available` expose les dates `STAFFED`. Écart
+  terrain remonté par la compagnie pilote (qualifié par Agathe, sept. 2026),
+  impact purement informationnel : aucun blocage fonctionnel (le pool de
+  remplacement reste intact via `ShowDateRestaffingObserver`). Correctif :
+  réutiliser `ShowDateStatusPill` sur la carte artiste, libellé neutre
+  « Équipe complète » ; cas de recette et accessibilité (annonce lecteur
+  d'écran) à ajouter. Jira : VIOLETTE-204.
 - Les couches REST manuelles (`Dio`, remote data sources, mappers) coexistent avec le client OpenAPI généré.
 - Le client OpenAPI généré `violette_api_client/` est utilisé principalement pour le domaine `user`. Les domaines `availability`, `showDate` et `booking` utilisent encore Dio manuel, JSON et mappers dédiés.
 - Une incohérence potentielle existe dans le client généré : `apiArtistBookingsMeGet` semble typé comme un DTO unique alors que le backend renvoie une liste. Ce n'est pas bloquant, car le runtime Flutter appelle `GET /api/artist-bookings/me` via Dio manuel.
@@ -122,7 +132,11 @@ documentés comme choix assumés pour `v0.5.0` (détail dans `regles-metier.md`)
 - Finaliser la gestion multi-compagnies (compagnie active, création/édition de compagnie, rôles par compagnie).
 - Reprendre la création de date autour de `ShowDateSkillRequirement` (compétences, effectifs, cachets).
 - Améliorer l'UX calendrier : multi-date, statuts mixtes, actions groupées.
-- Ajouter des notifications artistes.
+- Ajouter des notifications artistes — priorité aux demandes de confirmation
+  (l'artiste doit agir) ; inclut aussi la notification des artistes disponibles
+  non retenus au passage d'une date en « Équipe complète » (retour pilote,
+  US VIOLETTE-205 ; attention au cas de re-staffing pour éviter les
+  notifications répétées).
 - Ajouter la suppression encadrée des `ShowDate` et utilisateurs.
 - Automatiser le passage à `STAFFED` quand la capacité confirmée est atteinte.
 - Centraliser davantage les règles métier frontend pour éviter leur duplication dans plusieurs ViewModels.
