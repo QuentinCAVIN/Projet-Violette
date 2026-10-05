@@ -25,7 +25,7 @@ dependencies:
   violette_api_client:
     path: ../violette_api_client
   dio: ^5.10.0
-  built_collection: '>=5.1.1 <6.0.0'
+  built_collection: ^5.1.2
 
 dev_dependencies:
   flutter_test:
